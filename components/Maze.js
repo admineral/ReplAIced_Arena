@@ -1,53 +1,43 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { mazeConfig } from '../config/mazeConfig';
+import React, { useState, useCallback } from 'react';
 
 const Maze = () => {
+    // Maze configuration
+    const mazeConfig = {
+        map: [
+            ['D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D'],
+            ['D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D'],
+            ['D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D'],
+            ['D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D'],
+            ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A'],
+            ['D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D'],
+            ['D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D'],
+            ['D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D'],
+            ['D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D', 'D']
+        ],
+        topRanks: [
+            { name: "Player1", score: 1000 },
+            { name: "Player2", score: 950 },
+            { name: "Player3", score: 900 },
+            { name: "Player4", score: 850 },
+            { name: "Player5", score: 800 },
+        ],
+        cellSize: 40,
+        mazeWidth: 422,
+        mazeHeight: 380,
+        cellGap: 1,
+        allowedCellColor: 'bg-green-700',
+        disallowedCellColor: 'bg-red-700',
+        bubbleColor: 'bg-blue-500',
+        replacedDate: "2024-07-27"
+    };
+
     const [currentStep, setCurrentStep] = useState(0);
     const [hoverInfo, setHoverInfo] = useState(null);
 
     const { map, topRanks, cellSize, mazeWidth, mazeHeight, cellGap, allowedCellColor, disallowedCellColor, bubbleColor, replacedDate } = mazeConfig;
 
-    useEffect(() => {
-        generateMaze();
-    }, []);
-
-    const generateMaze = useCallback(() => {
-        const mazeContainer = document.getElementById('maze');
-        if (!mazeContainer) return;
-
-        mazeContainer.innerHTML = '';
-        map.forEach((row, rowIndex) => {
-            row.forEach((cell, colIndex) => {
-                const div = document.createElement('div');
-                div.style.width = `${cellSize}px`;
-                div.style.height = `${cellSize}px`;
-                div.classList.add('cell', 'flex', 'items-center', 'justify-center', 'transition-all', 'duration-300');
-                div.dataset.x = colIndex;
-                div.dataset.y = rowIndex;
-                div.dataset.owner = `Owner ${rowIndex},${colIndex}`;
-                div.dataset.level = `Level ${rowIndex + colIndex}`;
-                div.dataset.replaced = replacedDate;
-                div.dataset.replacer = `User ${rowIndex + colIndex}`;
-                if (cell === 'A') {
-                    div.classList.add(allowedCellColor, 'allowed', 'hover:bg-green-600');
-                } else {
-                    div.classList.add(disallowedCellColor, 'disallowed', 'hover:bg-red-600');
-                }
-                div.addEventListener('mouseenter', () => handleCellHover(div));
-                div.addEventListener('mouseleave', () => setHoverInfo(null));
-                mazeContainer.appendChild(div);
-            });
-        });
-    }, [map, cellSize, allowedCellColor, disallowedCellColor, replacedDate]);
-
-    const handleCellHover = (cell) => {
-        setHoverInfo({
-            position: `x: ${cell.dataset.x}, y: ${cell.dataset.y}`,
-            owner: cell.dataset.owner,
-            level: cell.dataset.level,
-            replaced: cell.dataset.replaced,
-            replacer: cell.dataset.replacer
-        });
+    const handleCellHover = (info) => {
+        setHoverInfo(info);
     };
 
     const moveProfileBubble = useCallback(() => {
@@ -79,7 +69,31 @@ const Maze = () => {
             <div className="flex flex-col items-center">
                 <div style={{width: `${mazeWidth}px`, height: `${mazeHeight}px`}} className="flex flex-col justify-center items-center bg-gray-800 border-2 border-green-500 rounded-md overflow-hidden p-[1px]">
                     <div style={{gap: `${cellGap}px`}} className="grid grid-cols-10 grid-rows-9" id="maze">
-                        {/* Maze cells will be generated here by JavaScript */}
+                        {map.map((row, rowIndex) => 
+                            row.map((cell, colIndex) => (
+                                <div
+                                    key={`${rowIndex}-${colIndex}`}
+                                    style={{width: `${cellSize}px`, height: `${cellSize}px`}}
+                                    className={`cell flex items-center justify-center transition-all duration-300 ${
+                                        cell === 'A' ? `${allowedCellColor} allowed hover:bg-green-600` : `${disallowedCellColor} disallowed hover:bg-red-600`
+                                    }`}
+                                    data-x={colIndex}
+                                    data-y={rowIndex}
+                                    data-owner={`Owner ${rowIndex},${colIndex}`}
+                                    data-level={`Level ${rowIndex + colIndex}`}
+                                    data-replaced={replacedDate}
+                                    data-replacer={`User ${rowIndex + colIndex}`}
+                                    onMouseEnter={() => handleCellHover({
+                                        position: `x: ${colIndex}, y: ${rowIndex}`,
+                                        owner: `Owner ${rowIndex},${colIndex}`,
+                                        level: `Level ${rowIndex + colIndex}`,
+                                        replaced: replacedDate,
+                                        replacer: `User ${rowIndex + colIndex}`
+                                    })}
+                                    onMouseLeave={() => setHoverInfo(null)}
+                                />
+                            ))
+                        )}
                     </div>
                 </div>
                 <button 
