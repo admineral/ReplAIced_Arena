@@ -75,6 +75,7 @@ const AISecurityMap = () => {
   const [tooltip, setTooltip] = useState('');
   const nodeRefs = useRef({});
   const [connections, setConnections] = useState([]);
+  const [isAttackModeAvailable, setIsAttackModeAvailable] = useState(false);
 
   const addBox = useCallback(() => {
     const newBox = {
@@ -94,7 +95,13 @@ const AISecurityMap = () => {
       to: index < boxes.length - 1 ? boxes[index + 1].id : null
     })).filter(conn => conn.to !== null);
     setConnections(newConnections);
-  }, [boxes]);
+    setIsAttackModeAvailable(boxes.length >= 2);
+    
+    if (mode === 'attack' && boxes.length < 2) {
+      setMode('create');
+      setTooltip('You need at least 2 boxes to enable attack mode. Add another box.');
+    }
+  }, [boxes, mode]);
 
   const handleBoxClick = useCallback((box) => {
     if (mode === 'preview') {
@@ -153,12 +160,16 @@ const AISecurityMap = () => {
   }, [selectedBox, targetBox]);
 
   const switchMode = useCallback((newMode) => {
+    if (newMode === 'attack' && !isAttackModeAvailable) {
+      setTooltip('You need at least 2 boxes to enable attack mode. Add another box.');
+      return;
+    }
     setMode(newMode);
     setSelectedBox(null);
     setTargetBox(null);
     setIsAttacking(false);
     setTooltip(newMode === 'attack' ? 'Select a node to start the attack' : '');
-  }, []);
+  }, [isAttackModeAvailable]);
 
   return (
     <div className="w-screen h-screen relative bg-gray-900">
@@ -220,12 +231,13 @@ const AISecurityMap = () => {
           onClick={() => switchMode('attack')}
           className={`px-6 py-3 rounded-t-lg font-bold text-white transition-colors duration-300 ${
             mode === 'attack' ? 'bg-red-500' : 'bg-gray-600 hover:bg-red-400'
-          }`}
+          } ${!isAttackModeAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={!isAttackModeAvailable}
         >
           Attack
         </button>
       </div>
-      {mode === 'create' && (
+      {(mode === 'create' || (mode === 'attack' && boxes.length < 2)) && (
         <button
           onClick={addBox}
           className="absolute top-20 left-4 bg-green-500 text-white rounded-full px-4 py-2 shadow-lg hover:bg-green-600 transition-colors duration-300"
