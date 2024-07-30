@@ -9,7 +9,7 @@ import BoxConfigForm from './BoxConfigForm';
 import { Nodes, Node } from './NodeSystem';
 import AttackLine from './AttackLine';
 
-const MAP_SIZE = 20;
+const MAP_SIZE = 10;
 
 const WebGLErrorHandler = () => {
   const { gl } = useThree();
@@ -80,12 +80,13 @@ const AISecurityMap = () => {
   const addBox = useCallback(() => {
     const newBox = {
       id: uuidv4(),
-      x: Math.random() * MAP_SIZE - MAP_SIZE / 2,
-      y: Math.random() * MAP_SIZE - MAP_SIZE / 2,
+      x: (Math.random() * MAP_SIZE - MAP_SIZE / 2) * 0.9,
+      y: (Math.random() * MAP_SIZE - MAP_SIZE / 2) * 0.9,
       type: 'openai',
       challenge: 'New AI Challenge',
       difficulty: 'medium',
     };
+    console.log('Adding new box:', newBox);
     setBoxes(prevBoxes => [...prevBoxes, newBox]);
   }, []);
 
@@ -101,9 +102,13 @@ const AISecurityMap = () => {
       setMode('create');
       setTooltip('You need at least 2 boxes to enable attack mode. Add another box.');
     }
+    console.log('Boxes updated:', boxes);
+    console.log('Connections updated:', newConnections);
+    console.log('Attack mode available:', boxes.length >= 2);
   }, [boxes, mode]);
 
   const handleBoxClick = useCallback((box) => {
+    console.log('Box clicked:', box);
     if (mode === 'preview') {
       setSelectedBox(box);
       setIsChallengeOpen(true);
@@ -121,6 +126,7 @@ const AISecurityMap = () => {
   }, [mode, selectedBox]);
 
   const handleBoxDoubleClick = useCallback((box) => {
+    console.log('Box double-clicked:', box);
     if (mode === 'create') {
       setSelectedBox(box);
       setIsConfigOpen(true);
@@ -128,6 +134,7 @@ const AISecurityMap = () => {
   }, [mode]);
 
   const updateBoxConfig = useCallback((updatedBox) => {
+    console.log('Updating box config:', updatedBox);
     setBoxes(prevBoxes => prevBoxes.map(box => 
       box.id === updatedBox.id ? updatedBox : box
     ));
@@ -136,13 +143,20 @@ const AISecurityMap = () => {
   }, []);
 
   const updateBoxPosition = useCallback((id, x, y) => {
-    setBoxes(prevBoxes => prevBoxes.map(box => 
-      box.id === id ? { ...box, x, y } : box
-    ));
+    setBoxes(prevBoxes => prevBoxes.map(box => {
+      if (box.id === id) {
+        const constrainedX = Math.max(Math.min(x, MAP_SIZE / 2), -MAP_SIZE / 2);
+        const constrainedY = Math.max(Math.min(y, MAP_SIZE / 2), -MAP_SIZE / 2);
+        console.log(`Box ${id} position updated:`, { x: constrainedX, y: constrainedY });
+        return { ...box, x: constrainedX, y: constrainedY };
+      }
+      return box;
+    }));
   }, []);
 
   const handleAttack = useCallback(() => {
     if (selectedBox && targetBox) {
+      console.log('Initiating attack:', { from: selectedBox, to: targetBox });
       setIsAttackModalOpen(true);
     }
   }, [selectedBox, targetBox]);
@@ -156,10 +170,11 @@ const AISecurityMap = () => {
       setSelectedBox(null);
       setTargetBox(null);
       setTooltip('Select a node to start a new attack');
-    }, 2000);
+    }, 5000); 
   }, [selectedBox, targetBox]);
 
   const switchMode = useCallback((newMode) => {
+    console.log('Switching mode to:', newMode);
     if (newMode === 'attack' && !isAttackModeAvailable) {
       setTooltip('You need at least 2 boxes to enable attack mode. Add another box.');
       return;
@@ -203,6 +218,7 @@ const AISecurityMap = () => {
             <AttackLine
               start={new THREE.Vector3(selectedBox.x, selectedBox.y, 0)}
               end={new THREE.Vector3(targetBox.x, targetBox.y, 0)}
+              duration={12}
             />
           )}
         </Nodes>

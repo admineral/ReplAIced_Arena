@@ -1,9 +1,9 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { QuadraticBezierLine } from '@react-three/drei';
 import * as THREE from 'three';
 
-const AttackLine = ({ start, end }) => {
+const AttackLine = ({ start, end, duration = 5 }) => {
   const ref = useRef();
   const mid = useMemo(() => new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5), [start, end]);
   const control = useMemo(() => new THREE.Vector3(mid.x, mid.y + 2, mid.z), [mid]);
@@ -14,6 +14,16 @@ const AttackLine = ({ start, end }) => {
     }
   });
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (ref.current) {
+        ref.current.parent.remove(ref.current);
+      }
+    }, duration * 1000);
+
+    return () => clearTimeout(timer);
+  }, [duration]);
+
   return (
     <group>
       <QuadraticBezierLine
@@ -22,10 +32,10 @@ const AttackLine = ({ start, end }) => {
         end={end}
         mid={control}
         color="red"
-        lineWidth={2}
+        lineWidth={5}
         dashed
-        dashScale={50}
-        gapSize={20}
+        dashScale={110}
+        gapSize={50}
       />
       <QuadraticBezierLine
         start={start}
