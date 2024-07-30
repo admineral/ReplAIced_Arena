@@ -7,6 +7,7 @@ import MiniMap from './MiniMap';
 import ChallengeModal from './ChallengeModal';
 import BoxConfigForm from './BoxConfigForm';
 import { Nodes, Node } from './NodeSystem';
+import AttackLine from './AttackLine';
 
 const MAP_SIZE = 20;
 
@@ -65,9 +66,13 @@ const WebGLErrorHandler = () => {
 const AISecurityMap = () => {
   const [boxes, setBoxes] = useState([]);
   const [selectedBox, setSelectedBox] = useState(null);
+  const [targetBox, setTargetBox] = useState(null);
   const [mode, setMode] = useState('create');
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
+  const [isAttacking, setIsAttacking] = useState(false);
+  const [isAttackModalOpen, setIsAttackModalOpen] = useState(false);
+  const [tooltip, setTooltip] = useState('');
   const nodeRefs = useRef({});
   const [connections, setConnections] = useState([]);
 
@@ -95,7 +100,15 @@ const AISecurityMap = () => {
     if (mode === 'preview') {
       setSelectedBox(box);
       setIsChallengeOpen(true);
-    } else {
+    } else if (mode === 'attack') {
+      if (!selectedBox) {
+        setSelectedBox(box);
+        setTooltip('Now select a target node to attack');
+      } else if (selectedBox.id !== box.id) {
+        setTargetBox(box);
+        setTooltip('Click the Attack button to initiate');
+      }
+    } else if (mode === 'create') {
       setSelectedBox(box.id === selectedBox?.id ? null : box);
     }
   }, [mode, selectedBox]);
@@ -121,6 +134,32 @@ const AISecurityMap = () => {
     ));
   }, []);
 
+  const handleAttack = useCallback(() => {
+    if (selectedBox && targetBox) {
+      setIsAttackModalOpen(true);
+    }
+  }, [selectedBox, targetBox]);
+
+  const confirmAttack = useCallback(() => {
+    setIsAttacking(true);
+    setIsAttackModalOpen(false);
+    console.log(`Attacking from ${selectedBox.type} to ${targetBox.type}`);
+    setTimeout(() => {
+      setIsAttacking(false);
+      setSelectedBox(null);
+      setTargetBox(null);
+      setTooltip('Select a node to start a new attack');
+    }, 2000);
+  }, [selectedBox, targetBox]);
+
+  const switchMode = useCallback((newMode) => {
+    setMode(newMode);
+    setSelectedBox(null);
+    setTargetBox(null);
+    setIsAttacking(false);
+    setTooltip(newMode === 'attack' ? 'Select a node to start the attack' : '');
+  }, []);
+
   return (
     <div className="w-screen h-screen relative bg-gray-900">
       <Canvas orthographic camera={{ zoom: 50, position: [0, 0, 100] }}>
@@ -132,7 +171,12 @@ const AISecurityMap = () => {
               key={box.id}
               ref={el => nodeRefs.current[box.id] = el}
               name={box.type}
-              color={box.type === 'openai' ? 'green' : box.type === 'claude' ? 'blue' : 'red'}
+              color={
+                box.id === selectedBox?.id ? 'yellow' :
+                box.id === targetBox?.id ? 'red' :
+                box.type === 'openai' ? 'green' :
+                box.type === 'claude' ? 'blue' : 'gray'
+              }
               position={[box.x, box.y, 0]}
               connectedTo={connections
                 .filter(conn => conn.from === box.id)
@@ -144,25 +188,64 @@ const AISecurityMap = () => {
               mode={mode}
             />
           ))}
+          {isAttacking && selectedBox && targetBox && (
+            <AttackLine
+              start={new THREE.Vector3(selectedBox.x, selectedBox.y, 0)}
+              end={new THREE.Vector3(targetBox.x, targetBox.y, 0)}
+            />
+          )}
         </Nodes>
       </Canvas>
       <div className="absolute bottom-4 right-4">
         <MiniMap boxes={boxes} mapSize={MAP_SIZE} />
       </div>
-      <div className="absolute top-4 right-4 flex flex-col space-y-2">
+      <div className="absolute top-0 left-0 right-0 flex justify-center space-x-4 p-4 bg-gray-800 bg-opacity-50">
+        <button
+          onClick={() => switchMode('create')}
+          className={`px-6 py-3 rounded-t-lg font-bold text-white transition-colors duration-300 ${
+            mode === 'create' ? 'bg-green-500' : 'bg-gray-600 hover:bg-green-400'
+          }`}
+        >
+          Create
+        </button>
+        <button
+          onClick={() => switchMode('preview')}
+          className={`px-6 py-3 rounded-t-lg font-bold text-white transition-colors duration-300 ${
+            mode === 'preview' ? 'bg-blue-500' : 'bg-gray-600 hover:bg-blue-400'
+          }`}
+        >
+          Preview
+        </button>
+        <button
+          onClick={() => switchMode('attack')}
+          className={`px-6 py-3 rounded-t-lg font-bold text-white transition-colors duration-300 ${
+            mode === 'attack' ? 'bg-red-500' : 'bg-gray-600 hover:bg-red-400'
+          }`}
+        >
+          Attack
+        </button>
+      </div>
+      {mode === 'create' && (
         <button
           onClick={addBox}
-          className="bg-green-500 text-white rounded-full px-4 py-2 shadow-lg hover:bg-green-600 transition-colors duration-300"
+          className="absolute top-20 left-4 bg-green-500 text-white rounded-full px-4 py-2 shadow-lg hover:bg-green-600 transition-colors duration-300"
         >
           Add Box
         </button>
+      )}
+      {mode === 'attack' && selectedBox && targetBox && (
         <button
-          onClick={() => setMode(mode === 'create' ? 'preview' : 'create')}
-          className="bg-blue-500 text-white rounded-full px-4 py-2 shadow-lg hover:bg-blue-600 transition-colors duration-300"
+          onClick={handleAttack}
+          className="absolute top-20 left-4 bg-red-500 text-white rounded-full px-4 py-2 shadow-lg hover:bg-red-600 transition-colors duration-300"
         >
-          {mode === 'create' ? 'Switch to Preview' : 'Switch to Create'}
+          Attack
         </button>
-      </div>
+      )}
+      {tooltip && (
+        <div className="absolute bottom-4 left-4 bg-gray-800 text-white p-2 rounded-lg">
+          {tooltip}
+        </div>
+      )}
       {isConfigOpen && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
           <BoxConfigForm
@@ -183,6 +266,28 @@ const AISecurityMap = () => {
         }}
         challenge={selectedBox}
       />
+      {isAttackModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg">
+            <h2 className="text-xl font-bold mb-4">Confirm Attack</h2>
+            <p>Are you sure you want to attack from {selectedBox.type} to {targetBox.type}?</p>
+            <div className="mt-4 flex justify-end space-x-2">
+              <button
+                onClick={() => setIsAttackModalOpen(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmAttack}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Confirm Attack
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
