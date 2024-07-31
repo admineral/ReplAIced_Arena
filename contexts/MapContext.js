@@ -1,3 +1,35 @@
+/****************************************************************************
+ * contexts/MapContext.js
+ * 
+ * Map Context Provider
+ * 
+ * This file defines the central context for the AI Security Map application.
+ * It combines various custom hooks and manages the overall state and logic
+ * for the map, boxes, attacks, and user interactions.
+ * 
+ * Context:
+ * - Core component of the AI Security Map application
+ * - Integrates useBoxManager, useAttackManager, and useMapControls hooks
+ * 
+ * Global State:
+ * - mode: Current application mode (create, preview, attack)
+ * - boxes: Array of box objects representing nodes on the map
+ * - connections: Array of connection objects between boxes
+ * - selectedBox: Currently selected box for attack or configuration
+ * - targetBox: Target box for attack
+ * - mapControls: Position and zoom state for map navigation
+ * 
+ * Key Functionalities:
+ * 1. Managing application mode and UI states
+ * 2. Handling box interactions (click, double-click, drag)
+ * 3. Coordinating attack initiation and confirmation
+ * 4. Providing context values for child components
+ * 5. Responsive map size calculation based on screen size
+ ****************************************************************************/
+
+
+
+
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import useBoxManager from '../hooks/useBox';
 import useAttackManager from '../hooks/useAttack';
@@ -40,7 +72,7 @@ export const MapProvider = ({ children }) => {
   const [tooltip, setTooltip] = useState('');
 
   const boxManager = useBoxManager(MAP_SIZE);
-  const { boxes, connections, addBox, updateBox, updateBoxPosition } = boxManager;
+  const { boxes, connections, addBox, updateBox, updateBoxPosition, handleBoxDrag } = boxManager;
 
   const attackManager = useAttackManager(boxes, mode, setMode, setTooltip);
   const { 
@@ -89,11 +121,6 @@ export const MapProvider = ({ children }) => {
       }
     }
   }, [mode, boxes, initiateAttack, setIsConfigOpen]);
-
-  const handleDrag = useCallback((id, x, y) => {
-    console.log('handleDrag called:', id, x, y);
-    updateBoxPosition(id, x, y);
-  }, [updateBoxPosition]);
 
   const switchMode = useCallback((newMode) => {
     console.log('Switching mode to:', newMode);
@@ -144,7 +171,7 @@ export const MapProvider = ({ children }) => {
     updateBox,
     handleBoxClick,
     handleBoxDoubleClick,
-    handleDrag,
+    handleBoxDrag,
     switchMode,
     handleAttack,
     handleConfirmAttack,

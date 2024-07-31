@@ -1,3 +1,36 @@
+/****************************************************************************
+ * components/Error/WebGLErrorHandler.js
+ * 
+ * WebGL Error Handler Component for AI Security Map
+ * 
+ * This component monitors the WebGL context and displays an error message
+ * if the context is lost. It's crucial for providing a graceful degradation
+ * experience in case of WebGL-related issues.
+ * 
+ * Context:
+ * - Part of the AI Security Map application's error handling system
+ * - Used within the MapCanvas component
+ * 
+ * Key Features:
+ * 1. Listens for WebGL context lost and restored events
+ * 2. Displays a full-screen error message when WebGL context is lost
+ * 3. Automatically clears the error message if the context is restored
+ * 4. Cleans up event listeners on component unmount
+ * 
+ * Dependencies:
+ * - react-three-fiber: Used to access the WebGL context
+ * - @react-three/drei: Used for the Html component (ensure it's imported)
+ * 
+ * State:
+ * - hasWebGLError: Boolean indicating whether a WebGL error has occurred
+ * 
+ * Note: This component should be placed within a React Three Fiber Canvas
+ * component to have access to the WebGL context via useThree hook.
+ ****************************************************************************/
+
+
+
+
 import React, { useState, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 

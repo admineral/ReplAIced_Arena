@@ -1,3 +1,31 @@
+/****************************************************************************
+ * utils/mapUtils.js
+ * 
+ * Map Utility Functions for AI Security Map
+ * 
+ * This file contains utility functions for various map-related operations
+ * in the AI Security Map application. These functions handle position
+ * calculations, constraints, and validations.
+ * 
+ * Key Functions:
+ * 1. constrainPosition: Ensures a position is within the map boundaries
+ * 2. generateRandomPosition: Creates a random position within the map
+ * 3. calculateDistance: Computes the distance between two points
+ * 4. normalizePosition: Converts map coordinates to normalized [0,1] range
+ * 5. denormalizePosition: Converts normalized coordinates back to map coordinates
+ * 6. isPositionValid: Checks if a position is valid (within bounds and not too close to others)
+ * 
+ * Usage:
+ * These functions are used throughout the application for managing box positions,
+ * ensuring map boundaries are respected, and handling various map-related calculations.
+ * 
+ * Note: All functions assume a centered coordinate system where (0,0) is the center of the map,
+ * and mapSize represents the total width/height of the map.
+ ****************************************************************************/
+
+
+
+
 export const constrainPosition = (x, y, mapSize) => {
     const halfSize = mapSize / 2;
     const constrainedX = Math.max(Math.min(x, halfSize), -halfSize);

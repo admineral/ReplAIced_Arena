@@ -1,6 +1,6 @@
 
 import React from 'react';
-import AISecurityMap from '../components/AISecurityMap';
+import AISecurityMap from '../components/Map/AISecurityMap';
 
 function App() {
   return (

@@ -1,3 +1,37 @@
+/****************************************************************************
+ * components/Modals/BoxConfigFormModal.js
+ * 
+ * Box Configuration Form Modal for AI Security Map
+ * 
+ * This component renders a modal dialog with a form for configuring the 
+ * properties of a box (node) in the AI Security Map application. It allows
+ * users to modify the model type, challenge description, and difficulty level.
+ * 
+ * Context:
+ * - Part of the AI Security Map application's UI
+ * - Used within the ModalManager component
+ * 
+ * Props:
+ * - box: Object containing current box configuration
+ * - onUpdate: Function to be called with updated box configuration
+ * - onClose: Function to be called when the modal is closed
+ * 
+ * Key Features:
+ * 1. Form for editing box properties (type, challenge, difficulty)
+ * 2. Initializes form with current box configuration
+ * 3. Handles form submission and updates box configuration
+ * 4. Responsive design with a centered layout
+ * 5. Cancel and Save buttons for user actions
+ * 
+ * State:
+ * - config: Object holding the current form state (type, challenge, difficulty)
+ * 
+ * Note: This component uses Tailwind CSS for styling. Ensure that Tailwind CSS
+ * is properly configured in your project for the styles to take effect.
+ ****************************************************************************/
+
+
+
 import React, { useState, useEffect } from 'react';
 
 const BoxConfigForm = ({ box, onUpdate, onClose }) => {

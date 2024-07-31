@@ -1,3 +1,28 @@
+/****************************************************************************
+ * config/mapConfig.js
+ * 
+ * Map Configuration
+ * 
+ * This file defines the configuration parameters for the AI Security Map.
+ * It includes settings for map size, zoom levels, drag behavior, and more.
+ * 
+ * Context:
+ * - Used throughout the AI Security Map application
+ * - Imported by various components and hooks to maintain consistent behavior
+ * 
+ * Key Configuration Areas:
+ * 1. Map Dimensions: Defines the size of the map and the entire world
+ * 2. Zoom Settings: Controls initial, minimum, and maximum zoom levels
+ * 3. Drag Behavior: Sets drag speed and direction inversion
+ * 4. Camera Limits: Determines how far the camera can move from the center
+ * 
+ * Note: Ensure that these values are adjusted carefully as they affect
+ * the overall user experience and performance of the application.
+ ****************************************************************************/
+
+
+
+
 const mapConfig = {
 
 

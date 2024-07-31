@@ -1,13 +1,41 @@
+/****************************************************************************
+ * hooks/useBox.js
+ * 
+ * Box Management Hook
+ * 
+ * This custom hook manages the state and operations for boxes (nodes) in the 
+ * AI Security Map. It handles box creation, updating, positioning, and connections.
+ * 
+ * Context:
+ * - Part of the AI Security Map application
+ * - Used in conjunction with MapContext and other custom hooks
+ * 
+ * Global State:
+ * - boxes: Array of box objects representing nodes on the map
+ * - connections: Array of connection objects between boxes
+ * 
+ * Key Functionalities:
+ * 1. Adding new boxes with random positions
+ * 2. Updating box properties and positions
+ * 3. Managing connections between boxes
+ * 4. Handling box dragging within map boundaries
+ * 5. Removing boxes and clearing all boxes
+ ****************************************************************************/
+
+
+
+
 import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { constrainPosition, generateRandomPosition } from '../utils/mapUtils';
+import mapConfig from '../config/mapConfig';
 
-const useBoxManager = (mapSize) => {
+const useBoxManager = (MAP_SIZE) => {
   const [boxes, setBoxes] = useState([]);
   const [connections, setConnections] = useState([]);
 
   const addBox = useCallback((type) => {
-    const [x, y] = generateRandomPosition(mapSize);
+    const [x, y] = generateRandomPosition(MAP_SIZE);
     const newBox = {
       id: uuidv4(),
       x,
@@ -21,7 +49,7 @@ const useBoxManager = (mapSize) => {
       updateConnections(updatedBoxes);
       return updatedBoxes;
     });
-  }, [mapSize]);
+  }, [MAP_SIZE]);
 
   const updateConnections = useCallback((updatedBoxes) => {
     const newConnections = updatedBoxes.map((box, index) => ({
@@ -41,13 +69,13 @@ const useBoxManager = (mapSize) => {
     console.log('updateBoxPosition called:', id, x, y);
     setBoxes(prevBoxes => prevBoxes.map(box => {
       if (box.id === id) {
-        const [constrainedX, constrainedY] = constrainPosition(x, y, mapSize);
+        const [constrainedX, constrainedY] = constrainPosition(x, y, MAP_SIZE);
         console.log('Constrained position:', constrainedX, constrainedY);
         return { ...box, x: constrainedX, y: constrainedY };
       }
       return box;
     }));
-  }, [mapSize]);
+  }, [MAP_SIZE]);
 
   const removeBox = useCallback((id) => {
     setBoxes(prevBoxes => prevBoxes.filter(box => box.id !== id));
@@ -61,12 +89,20 @@ const useBoxManager = (mapSize) => {
     setConnections([]);
   }, []);
 
+  const handleBoxDrag = useCallback((id, x, y) => {
+    const halfWorldSize = (MAP_SIZE * mapConfig.worldSize) / 2;
+    const constrainedX = Math.max(Math.min(x, halfWorldSize), -halfWorldSize);
+    const constrainedY = Math.max(Math.min(y, halfWorldSize), -halfWorldSize);
+    updateBoxPosition(id, constrainedX, constrainedY);
+  }, [MAP_SIZE, updateBoxPosition]);
+
   return { 
     boxes, 
     connections, 
     addBox, 
     updateBox, 
-    updateBoxPosition, 
+    updateBoxPosition,
+    handleBoxDrag,
     removeBox, 
     clearAllBoxes 
   };
