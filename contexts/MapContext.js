@@ -28,8 +28,6 @@
  ****************************************************************************/
 
 
-
-
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import useBoxManager from '../hooks/useBox';
 import useAttackManager from '../hooks/useAttack';

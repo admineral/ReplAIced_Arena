@@ -29,18 +29,16 @@
  * Consider using a CSS-in-JS solution or external stylesheet for more complex styling needs.
  ****************************************************************************/
 
-
-
 import React from 'react';
+import mapConfig from '../../config/mapConfig';
 
-const MiniMap = ({ boxes, mapSize }) => {
+const MiniMap = ({ boxes, mapSize, currentPosition, currentZoom }) => {
     const miniMapSize = 150;
     const boxSize = 3;
     const padding = 5;
 
     const scalePosition = (value) => {
-        // Map [-mapSize/2, mapSize/2] to [padding, miniMapSize - padding]
-        return ((value + mapSize / 2) / mapSize) * (miniMapSize - 2 * padding) + padding;
+        return ((value + mapSize * mapConfig.worldSize / 2) / (mapSize * mapConfig.worldSize)) * (miniMapSize - 2 * padding) + padding;
     };
 
     const getBoxColor = (type) => {
@@ -58,6 +56,13 @@ const MiniMap = ({ boxes, mapSize }) => {
         }
     };
 
+    // Calculate the visible area rectangle
+    const visibleAreaSize = mapSize / currentZoom;
+    const visibleAreaWidth = (visibleAreaSize / (mapSize * mapConfig.worldSize)) * (miniMapSize - 2 * padding);
+    const visibleAreaHeight = visibleAreaWidth;
+    const visibleAreaX = scalePosition(currentPosition.x) - visibleAreaWidth / 2;
+    const visibleAreaY = scalePosition(-currentPosition.y) - visibleAreaHeight / 2;
+
     return (
         <div style={{ 
             width: miniMapSize, 
@@ -72,14 +77,23 @@ const MiniMap = ({ boxes, mapSize }) => {
                     style={{
                         position: 'absolute',
                         left: `${scalePosition(box.x)}px`,
-                        top: `${scalePosition(-box.y)}px`, // Invert Y-axis
+                        top: `${scalePosition(-box.y)}px`,
                         width: boxSize,
                         height: boxSize,
                         backgroundColor: getBoxColor(box.type),
-                        transform: 'translate(-50%, -50%)', // Center the dot on its position
+                        transform: 'translate(-50%, -50%)',
                     }}
                 />
             ))}
+            <div style={{
+                position: 'absolute',
+                left: `${visibleAreaX}px`,
+                top: `${visibleAreaY}px`,
+                width: `${visibleAreaWidth}px`,
+                height: `${visibleAreaHeight}px`,
+                border: '2px solid yellow',
+                pointerEvents: 'none',
+            }} />
         </div>
     );
 };

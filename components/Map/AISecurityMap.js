@@ -31,7 +31,6 @@
 
 
 
-
 "use client"
 
 import React, { useState } from 'react';
@@ -65,7 +64,8 @@ const AISecurityMapContent = () => {
     switchMode,
     handleAttack,
     handleConfirmAttack,
-    MAP_SIZE
+    MAP_SIZE,
+    mapControls
   } = useMapContext();
 
   const [selectedModel, setSelectedModel] = useState('default');
@@ -91,7 +91,12 @@ const AISecurityMapContent = () => {
           />
         </div>
         <div className="absolute bottom-4 right-4 z-10 pointer-events-auto">
-          <MiniMap boxes={boxes} mapSize={MAP_SIZE} />
+          <MiniMap 
+            boxes={boxes} 
+            mapSize={MAP_SIZE} 
+            currentPosition={mapControls.position}
+            currentZoom={mapControls.zoom}
+          />
         </div>
         {mode === 'attack' && selectedBox && targetBox && (
           <button
