@@ -20,9 +20,8 @@
  * 2. Handling canvas dragging for map navigation
  * 3. Controlling zoom levels with min and max limits
  * 4. Providing smooth zoom functionality
+ * 5. Exposing setPosition and setZoom for direct state updates
  ****************************************************************************/
-
-
 
 import { useState, useCallback } from 'react';
 import mapConfig from '../config/mapConfig';
@@ -47,5 +46,23 @@ export const useMapControls = () => {
     });
   }, []);
 
-  return { position, zoom, handleCanvasDrag, handleZoom };
+  const setMapPosition = useCallback((newPosition) => {
+    const worldLimit = mapConfig.mapSize * mapConfig.worldSize / 2;
+    const newX = Math.max(-worldLimit, Math.min(worldLimit, newPosition.x));
+    const newY = Math.max(-worldLimit, Math.min(worldLimit, newPosition.y));
+    setPosition({ x: newX, y: newY });
+  }, []);
+
+  const setMapZoom = useCallback((newZoom) => {
+    setZoom(Math.max(mapConfig.minZoom, Math.min(mapConfig.maxZoom, newZoom)));
+  }, []);
+
+  return { 
+    position, 
+    zoom, 
+    handleCanvasDrag, 
+    handleZoom, 
+    setPosition: setMapPosition, 
+    setZoom: setMapZoom 
+  };
 };

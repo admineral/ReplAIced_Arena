@@ -1,5 +1,5 @@
 /****************************************************************************
- * components/AISecurityMap.js
+ * components/Map/AISecurityMap.js
  * 
  * AI Security Map Main Component
  * 
@@ -15,7 +15,7 @@
  * Key Components:
  * 1. MapCanvas: Main 3D rendering area for nodes and connections
  * 2. ControlPanel: UI for mode switching and box addition
- * 3. MiniMap: Small overview map of all nodes
+ * 3. MiniMap: Small overview map of all nodes with interactive features
  * 4. ModalManager: Handles various modal dialogs (config, challenge, attack)
  * 
  * Key Functionalities:
@@ -24,12 +24,11 @@
  * 3. Handling box additions and interactions
  * 4. Displaying tooltips and attack buttons
  * 5. Coordinating modal dialogs for various actions
+ * 6. Managing MiniMap interactions and main map updates
  * 
  * Note: This component heavily relies on the MapContext for state management.
  * Ensure that all required context values are properly provided by the MapProvider.
  ****************************************************************************/
-
-
 
 "use client"
 
@@ -65,13 +64,23 @@ const AISecurityMapContent = () => {
     handleAttack,
     handleConfirmAttack,
     MAP_SIZE,
-    mapControls
+    mapControls,
+    setMapPosition,
+    setMapZoom
   } = useMapContext();
 
   const [selectedModel, setSelectedModel] = useState('default');
 
   const handleAddBox = () => {
     addBox(selectedModel);
+  };
+
+  const handleMiniMapPositionChange = (newPosition) => {
+    setMapPosition(newPosition);
+  };
+
+  const handleMiniMapZoomChange = (newZoom) => {
+    setMapZoom(newZoom);
   };
 
   return (
@@ -96,6 +105,15 @@ const AISecurityMapContent = () => {
             mapSize={MAP_SIZE} 
             currentPosition={mapControls.position}
             currentZoom={mapControls.zoom}
+            onPositionChange={handleMiniMapPositionChange}
+            onZoomChange={handleMiniMapZoomChange}
+            miniMapSize={200}
+            miniMapZoom={1.5}
+            boxSize={4}
+            padding={8}
+            backgroundColor="rgba(0, 0, 0, 0.7)"
+            borderColor="#4a5568"
+            viewRectColor="#ffd700"
           />
         </div>
         {mode === 'attack' && selectedBox && targetBox && (

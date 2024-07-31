@@ -27,7 +27,6 @@
  * 5. Responsive map size calculation based on screen size
  ****************************************************************************/
 
-
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import useBoxManager from '../hooks/useBox';
 import useAttackManager from '../hooks/useAttack';
@@ -148,6 +147,14 @@ export const MapProvider = ({ children }) => {
     }, 5000); // Adjust this timeout to match your animation duration
   }, [confirmAttack, setIsAttackModalOpen, setTooltip, startAttackAnimation]);
 
+  const setMapPosition = useCallback((newPosition) => {
+    mapControls.setPosition(newPosition);
+  }, [mapControls]);
+
+  const setMapZoom = useCallback((newZoom) => {
+    mapControls.setZoom(newZoom);
+  }, [mapControls]);
+
   const contextValue = {
     MAP_SIZE,
     mode,
@@ -175,7 +182,9 @@ export const MapProvider = ({ children }) => {
     handleConfirmAttack,
     isAttackModeAvailable,
     startAttackAnimation,
-    mapControls
+    mapControls,
+    setMapPosition,
+    setMapZoom
   };
 
   return (

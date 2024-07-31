@@ -28,18 +28,40 @@
  * Note: This component uses inline styles for positioning and appearance.
  * Consider using a CSS-in-JS solution or external stylesheet for more complex styling needs.
  ****************************************************************************/
-
-import React from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import mapConfig from '../../config/mapConfig';
 
-const MiniMap = ({ boxes, mapSize, currentPosition, currentZoom }) => {
-    const miniMapSize = 150;
-    const boxSize = 3;
-    const padding = 5;
+const MiniMap = ({ 
+    boxes, 
+    mapSize, 
+    currentPosition, 
+    currentZoom,
+    onPositionChange,
+    onZoomChange,
+    miniMapSize = 150,
+    miniMapZoom = 1,
+    boxSize = 3,
+    padding = 5,
+    backgroundColor = 'rgba(0, 0, 0, 0.5)',
+    borderColor = 'white',
+    viewRectColor = 'yellow'
+}) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    const miniMapRef = useRef(null);
+    const worldSize = mapSize * mapConfig.worldSize;
+    const expandedSize = miniMapSize * 1.5; // 50% larger when expanded
+    const effectiveMiniMapSize = isHovered ? expandedSize : miniMapSize;
 
-    const scalePosition = (value) => {
-        return ((value + mapSize * mapConfig.worldSize / 2) / (mapSize * mapConfig.worldSize)) * (miniMapSize - 2 * padding) + padding;
-    };
+    const deadZoneSize = 30; // Size of the dead zone in the top-right corner
+
+    const scalePosition = useCallback((value) => {
+        return ((value + worldSize / 2) / worldSize) * (effectiveMiniMapSize - 2 * padding) + padding;
+    }, [worldSize, effectiveMiniMapSize, padding]);
+
+    const inverseScalePosition = useCallback((value) => {
+        return ((value - padding) / (effectiveMiniMapSize - 2 * padding) * worldSize) - worldSize / 2;
+    }, [worldSize, effectiveMiniMapSize, padding]);
 
     const getBoxColor = (type) => {
         switch (type) {
@@ -58,19 +80,93 @@ const MiniMap = ({ boxes, mapSize, currentPosition, currentZoom }) => {
 
     // Calculate the visible area rectangle
     const visibleAreaSize = mapSize / currentZoom;
-    const visibleAreaWidth = (visibleAreaSize / (mapSize * mapConfig.worldSize)) * (miniMapSize - 2 * padding);
+    const visibleAreaWidth = (visibleAreaSize / worldSize) * (effectiveMiniMapSize - 2 * padding);
     const visibleAreaHeight = visibleAreaWidth;
     const visibleAreaX = scalePosition(currentPosition.x) - visibleAreaWidth / 2;
     const visibleAreaY = scalePosition(-currentPosition.y) - visibleAreaHeight / 2;
 
+    const isInDeadZone = (e) => {
+        const rect = miniMapRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        return x > rect.width - deadZoneSize && y < deadZoneSize;
+    };
+
+    const handleMouseEnter = (e) => {
+        if (!isInDeadZone(e)) {
+            setIsHovered(true);
+        }
+    };
+
+    const handleMouseMove = (e) => {
+        if (isDragging) {
+            updatePosition(e);
+        } else if (isInDeadZone(e)) {
+            setIsHovered(false);
+        } else {
+            setIsHovered(true);
+        }
+    };
+
+    const handleMouseLeave = () => {
+        setIsHovered(false);
+        setIsDragging(false);
+    };
+
+    const handleMouseDown = (e) => {
+        if (!isInDeadZone(e)) {
+            setIsDragging(true);
+            updatePosition(e);
+        }
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    const updatePosition = useCallback((e) => {
+        if (!miniMapRef.current) return;
+        const rect = miniMapRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left - padding;
+        const y = e.clientY - rect.top - padding;
+        const newX = inverseScalePosition(x);
+        const newY = -inverseScalePosition(y);
+        onPositionChange({ x: newX, y: newY });
+    }, [inverseScalePosition, onPositionChange, padding]);
+
+    const handleDoubleClick = (e) => {
+        if (!isInDeadZone(e)) {
+            updatePosition(e);
+            onZoomChange(currentZoom * 1.5);
+        }
+    };
+
+    const handleReset = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        onPositionChange({ x: 0, y: 0 });
+        onZoomChange(1);
+    };
+
     return (
-        <div style={{ 
-            width: miniMapSize, 
-            height: miniMapSize, 
-            backgroundColor: 'rgba(0, 0, 0, 0.5)', 
-            border: '1px solid white', 
-            position: 'relative',
-        }}>
+        <div 
+            ref={miniMapRef}
+            style={{ 
+                width: effectiveMiniMapSize, 
+                height: effectiveMiniMapSize, 
+                backgroundColor: backgroundColor, 
+                border: `1px solid ${borderColor}`, 
+                position: 'relative',
+                transition: 'all 0.3s ease',
+                cursor: isDragging ? 'grabbing' : 'grab'
+            }}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onDoubleClick={handleDoubleClick}
+        >
             {boxes.map((box) => (
                 <div
                     key={box.id}
@@ -78,10 +174,11 @@ const MiniMap = ({ boxes, mapSize, currentPosition, currentZoom }) => {
                         position: 'absolute',
                         left: `${scalePosition(box.x)}px`,
                         top: `${scalePosition(-box.y)}px`,
-                        width: boxSize,
-                        height: boxSize,
+                        width: isHovered ? boxSize * 1.5 : boxSize,
+                        height: isHovered ? boxSize * 1.5 : boxSize,
                         backgroundColor: getBoxColor(box.type),
                         transform: 'translate(-50%, -50%)',
+                        transition: 'all 0.3s ease',
                     }}
                 />
             ))}
@@ -91,9 +188,32 @@ const MiniMap = ({ boxes, mapSize, currentPosition, currentZoom }) => {
                 top: `${visibleAreaY}px`,
                 width: `${visibleAreaWidth}px`,
                 height: `${visibleAreaHeight}px`,
-                border: '2px solid yellow',
+                border: `2px solid ${viewRectColor}`,
                 pointerEvents: 'none',
+                transition: 'all 0.3s ease',
             }} />
+            <button
+                style={{
+                    position: 'absolute',
+                    top: '5px',
+                    right: '5px',
+                    background: 'rgba(255, 255, 255, 0.7)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    opacity: isHovered ? 1 : 0.6,
+                }}
+                onClick={handleReset}
+            >
+                ↻
+            </button>
         </div>
     );
 };
