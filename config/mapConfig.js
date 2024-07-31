@@ -25,7 +25,7 @@ const mapConfig = {
     zoomStep: 0.05,
   
     // The size of the map (this should match your MAP_SIZE calculation)
-    mapSize: 30,
+    mapSize: 20,
   
     // How far the camera can move from the center in any direction
     // (as a multiple of mapSize)

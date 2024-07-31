@@ -3,6 +3,7 @@ import React, { createContext, useMemo, useRef, useState, useContext, useLayoutE
 import { useThree } from '@react-three/fiber'
 import { QuadraticBezierLine, Text } from '@react-three/drei'
 import { useDrag } from '@use-gesture/react'
+import mapConfig from '../config/mapConfig'
 
 const context = createContext()
 
@@ -81,25 +82,20 @@ export const Node = forwardRef(({ id, position, color, name, connectedTo = [], o
   const [hovered, setHovered] = useState(false)
   useEffect(() => void (document.body.style.cursor = hovered ? 'grab' : 'auto'), [hovered])
 
-const bind = useDrag(({ active, xy: [x, y], first, last, event }) => {
-  if (mode === 'create') {
-    document.body.style.cursor = active ? 'grabbing' : 'grab'
-    if (active) {
-      event.stopPropagation()
+  const bind = useDrag(({ active, xy: [x, y] }) => {
+    if (mode === 'create') {
+      document.body.style.cursor = active ? 'grabbing' : 'grab'
       const vec = new THREE.Vector3(
         (x / size.width) * 2 - 1,
         -(y / size.height) * 2 + 1,
         0
       )
       vec.unproject(camera)
-      const dir = vec.sub(camera.position).normalize()
-      const distance = -camera.position.z / dir.z
-      const newPos = camera.position.clone().add(dir.multiplyScalar(distance))
+      const newPos = new THREE.Vector3(vec.x, vec.y, 0)
       setPos(newPos)
       onDrag(id, newPos.x, newPos.y)
     }
-  }
-}, { filterTaps: true })
+  }, { filterTaps: true })
 
   const texture = useMemo(() => {
     const loader = new THREE.TextureLoader()

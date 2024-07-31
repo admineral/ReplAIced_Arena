@@ -6,6 +6,7 @@ import WebGLErrorHandler from './Error/WebGLErrorHandler';
 import { useMapContext } from '../contexts/MapContext';
 import * as THREE from 'three';
 import mapConfig from '../config/mapConfig';
+import { useDrag } from '@use-gesture/react';
 
 const CameraController = () => {
   const { camera } = useThree();
@@ -36,9 +37,18 @@ const MapCanvas = () => {
   } = useMapContext();
 
   const canvasRef = useRef();
-  const [isDraggingMap, setIsDraggingMap] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isOverNode, setIsOverNode] = useState(false);
+
+  const bind = useDrag(({ delta: [dx, dy], event }) => {
+    if (!isOverNode) {
+      event.stopPropagation();
+      const dragSpeedFactor = mapConfig.dragSpeed / mapControls.zoom;
+      const moveX = mapConfig.invertDragX ? -dx : dx;
+      const moveY = mapConfig.invertDragY ? -dy : dy;
+      mapControls.handleDrag(moveX * dragSpeedFactor, moveY * dragSpeedFactor);
+      console.log(`Dragging map: Movement (${dx}, ${dy})`);
+    }
+  }, { filterTaps: true });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -49,43 +59,12 @@ const MapCanvas = () => {
       mapControls.handleZoom(e.deltaY > 0 ? -1 : 1);
     };
 
-    const handleMouseDown = (e) => {
-      if (!isOverNode) {
-        setIsDraggingMap(true);
-        setDragStart({ x: e.clientX, y: e.clientY });
-        canvas.style.cursor = 'grabbing';
-      }
-    };
-
-    const handleMouseMove = (e) => {
-      if (isDraggingMap && !isOverNode) {
-        const dx = e.clientX - dragStart.x;
-        const dy = e.clientY - dragStart.y;
-        const dragSpeedFactor = mapConfig.dragSpeed / mapControls.zoom;
-        const moveX = mapConfig.invertDragX ? -dx : dx;
-        const moveY = mapConfig.invertDragY ? -dy : dy;
-        mapControls.handleDrag(moveX * dragSpeedFactor, moveY * dragSpeedFactor);
-        setDragStart({ x: e.clientX, y: e.clientY });
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsDraggingMap(false);
-      canvas.style.cursor = 'auto';
-    };
-
     canvas.addEventListener('wheel', handleWheel);
-    canvas.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
 
     return () => {
       canvas.removeEventListener('wheel', handleWheel);
-      canvas.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [mapControls, isDraggingMap, dragStart, isOverNode]);
+  }, [mapControls]);
 
   return (
     <Canvas
@@ -95,6 +74,7 @@ const MapCanvas = () => {
         zoom: mapConfig.initialZoom * 50,
         position: [mapConfig.initialPosition.x, mapConfig.initialPosition.y, 100]
       }}
+      {...bind()}
     >
       <WebGLErrorHandler />
       <CameraController />

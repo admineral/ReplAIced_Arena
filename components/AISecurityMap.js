@@ -1,11 +1,12 @@
 "use client"
 
-import React from 'react';
+import React, { useState } from 'react';
 import MiniMap from './MiniMap/MiniMap_Component';
 import ModalManager from './Modals/ModalManager';
 import MapCanvas from './MapCanvas';
 import ControlPanel from './ControlPanel';
 import { MapProvider, useMapContext } from '../contexts/MapContext';
+import mapConfig from '../config/mapConfig';
 
 const AISecurityMapContent = () => {
   const {
@@ -27,23 +28,42 @@ const AISecurityMapContent = () => {
     updateBox,
     handleBoxClick,
     handleBoxDoubleClick,
-    handleDrag,
+    updateBoxPosition,
     switchMode,
     handleAttack,
     handleConfirmAttack,
     MAP_SIZE
   } = useMapContext();
 
-  const [selectedModel, setSelectedModel] = React.useState('default');
+  const [selectedModel, setSelectedModel] = useState('default');
+  const [isOverNode, setIsOverNode] = useState(false);
 
   const handleAddBox = () => {
     addBox(selectedModel);
   };
 
+  const handleDrag = (id, x, y) => {
+    const halfWorldSize = (MAP_SIZE * mapConfig.worldSize) / 2;
+    const constrainedX = Math.max(Math.min(x, halfWorldSize), -halfWorldSize);
+    const constrainedY = Math.max(Math.min(y, halfWorldSize), -halfWorldSize);
+    updateBoxPosition(id, constrainedX, constrainedY);
+  };
+
   return (
     <div className="w-screen h-screen relative bg-gray-900">
       <div className="absolute inset-0">
-        <MapCanvas />
+        <MapCanvas
+          boxes={boxes}
+          connections={connections}
+          selectedBox={selectedBox}
+          targetBox={targetBox}
+          isAttacking={isAttacking}
+          mode={mode}
+          handleBoxClick={handleBoxClick}
+          handleBoxDoubleClick={handleBoxDoubleClick}
+          handleDrag={handleDrag}
+          setIsOverNode={setIsOverNode}
+        />
       </div>
       <div className="absolute inset-0 pointer-events-none">
         <div className="pointer-events-auto">
