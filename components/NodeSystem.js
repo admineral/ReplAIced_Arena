@@ -131,4 +131,4 @@ export const Node = forwardRef(({ id, position, color, name, connectedTo = [], o
       </mesh>
     </group>
   )
-})
+}) 

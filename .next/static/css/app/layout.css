@@ -599,8 +599,8 @@ video {
 .top-20 {
   top: 5rem;
 }
-.top-24 {
-  top: 6rem;
+.z-10 {
+  z-index: 10;
 }
 .z-50 {
   z-index: 50;
@@ -638,9 +638,6 @@ video {
 .cursor-not-allowed {
   cursor: not-allowed;
 }
-.flex-col {
-  flex-direction: column;
-}
 .items-center {
   align-items: center;
 }
@@ -671,10 +668,6 @@ video {
 }
 .rounded-lg {
   border-radius: 0.5rem;
-}
-.rounded-t-lg {
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
 }
 .border {
   border-width: 1px;
