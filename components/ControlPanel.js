@@ -2,7 +2,7 @@ import React from 'react';
 
 const ControlPanel = ({ mode, switchMode, addBox, isAttackModeAvailable, selectedModel, setSelectedModel }) => {
   return (
-    <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 bg-gray-800 bg-opacity-50">
+    <div className="flex justify-between items-center p-4 bg-gray-800 bg-opacity-50">
       <div className="flex space-x-4">
         <button
           onClick={() => switchMode('create')}

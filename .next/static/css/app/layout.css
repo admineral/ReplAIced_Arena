@@ -566,6 +566,12 @@ video {
   --tw-contain-paint:  ;
   --tw-contain-style:  ;
 }
+.pointer-events-none {
+  pointer-events: none;
+}
+.pointer-events-auto {
+  pointer-events: auto;
+}
 .fixed {
   position: fixed;
 }
@@ -581,20 +587,11 @@ video {
 .bottom-4 {
   bottom: 1rem;
 }
-.left-0 {
-  left: 0px;
-}
 .left-4 {
   left: 1rem;
 }
-.right-0 {
-  right: 0px;
-}
 .right-4 {
   right: 1rem;
-}
-.top-0 {
-  top: 0px;
 }
 .top-20 {
   top: 5rem;

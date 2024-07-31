@@ -1,17 +1,45 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import useBoxManager from '../hooks/useBox';
 import useAttackManager from '../hooks/useAttack';
+import { useMapControls } from '../hooks/useMapControls';
+import mapConfig from '../config/mapConfig';
 
 const MapContext = createContext();
 
+const useScreenSize = () => {
+  const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return screenSize;
+};
+
 export const MapProvider = ({ children }) => {
+  const screenSize = useScreenSize();
+
+  const MAP_SIZE = useMemo(() => {
+    const aspectRatio = screenSize.width / screenSize.height;
+    return aspectRatio > 1 ? mapConfig.mapSize * aspectRatio : mapConfig.mapSize;
+  }, [screenSize.width, screenSize.height]);
+
   const [mode, setMode] = useState('create');
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
   const [isAttackModalOpen, setIsAttackModalOpen] = useState(false);
   const [tooltip, setTooltip] = useState('');
 
-  const boxManager = useBoxManager();
+  const boxManager = useBoxManager(MAP_SIZE);
   const { boxes, connections, addBox, updateBox, updateBoxPosition } = boxManager;
 
   const attackManager = useAttackManager(boxes, mode, setMode, setTooltip);
@@ -24,6 +52,8 @@ export const MapProvider = ({ children }) => {
     startAttackAnimation,
     confirmAttack 
   } = attackManager;
+
+  const mapControls = useMapControls();
 
   const handleBoxClick = useCallback((boxId) => {
     console.log('handleBoxClick called:', boxId);
@@ -94,6 +124,7 @@ export const MapProvider = ({ children }) => {
   }, [confirmAttack, setIsAttackModalOpen, setTooltip, startAttackAnimation]);
 
   const contextValue = {
+    MAP_SIZE,
     mode,
     setMode,
     isConfigOpen,
@@ -118,7 +149,8 @@ export const MapProvider = ({ children }) => {
     handleAttack,
     handleConfirmAttack,
     isAttackModeAvailable,
-    startAttackAnimation
+    startAttackAnimation,
+    mapControls
   };
 
   return (

@@ -14,7 +14,7 @@ const Circle = forwardRef(({ children, opacity = 1, radius = 0.05, segments = 32
   </mesh>
 ))
 
-export function Nodes({ children }) {
+export function Nodes({ children, setIsOverNode }) {
   const group = useRef()
   const [nodes, set] = useState([])
   const [lines, setLines] = useState([])
@@ -43,7 +43,7 @@ export function Nodes({ children }) {
   }, [nodes])
 
   return (
-    <context.Provider value={set}>
+    <context.Provider value={{ set, setIsOverNode }}>
       <group ref={group}>
         {lines.map((line, index) => (
           <group key={index}>
@@ -63,8 +63,8 @@ export function Nodes({ children }) {
   )
 }
 
-export const Node = forwardRef(({ id, position, color, name, connectedTo = [], onClick, onDoubleClick, onDrag, mode, modelType, ...props }, ref) => {
-  const set = useContext(context)
+export const Node = forwardRef(({ id, position, color, name, connectedTo = [], onClick, onDoubleClick, onDrag, mode, modelType, setIsOverNode, ...props }, ref) => {
+  const { set } = useContext(context)
   const { size, camera } = useThree()
   const [pos, setPos] = useState(() => new THREE.Vector3(...position))
   const state = useMemo(() => ({ position: pos, connectedTo }), [pos, connectedTo])
@@ -81,20 +81,25 @@ export const Node = forwardRef(({ id, position, color, name, connectedTo = [], o
   const [hovered, setHovered] = useState(false)
   useEffect(() => void (document.body.style.cursor = hovered ? 'grab' : 'auto'), [hovered])
 
-  const bind = useDrag(({ active, xy: [x, y] }) => {
-    if (mode === 'create') {
-      document.body.style.cursor = active ? 'grabbing' : 'grab'
+const bind = useDrag(({ active, xy: [x, y], first, last, event }) => {
+  if (mode === 'create') {
+    document.body.style.cursor = active ? 'grabbing' : 'grab'
+    if (active) {
+      event.stopPropagation()
       const vec = new THREE.Vector3(
         (x / size.width) * 2 - 1,
         -(y / size.height) * 2 + 1,
         0
       )
       vec.unproject(camera)
-      const newPos = new THREE.Vector3(vec.x, vec.y, 0)
+      const dir = vec.sub(camera.position).normalize()
+      const distance = -camera.position.z / dir.z
+      const newPos = camera.position.clone().add(dir.multiplyScalar(distance))
       setPos(newPos)
       onDrag(id, newPos.x, newPos.y)
     }
-  }, { filterTaps: true })
+  }
+}, { filterTaps: true })
 
   const texture = useMemo(() => {
     const loader = new THREE.TextureLoader()
@@ -119,8 +124,8 @@ export const Node = forwardRef(({ id, position, color, name, connectedTo = [], o
         {...bind()}
         onClick={(e) => { e.stopPropagation(); onClick(id); }}
         onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick(id); }}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
+        onPointerOver={() => { setHovered(true); setIsOverNode(true); }}
+        onPointerOut={() => { setHovered(false); setIsOverNode(false); }}
       >
         <circleGeometry args={[0.5, 32]} />
         <meshBasicMaterial color={color} opacity={0.2} transparent />
@@ -131,4 +136,4 @@ export const Node = forwardRef(({ id, position, color, name, connectedTo = [], o
       </mesh>
     </group>
   )
-}) 
+})
