@@ -34,8 +34,8 @@ export const useMapControls = () => {
   const handleCanvasDrag = useCallback((dx, dy) => {
     setPosition(prev => {
       const worldLimit = mapConfig.mapSize * mapConfig.worldSize / 2;
-      const newX = Math.max(-worldLimit, Math.min(worldLimit, prev.x - dx));
-      const newY = Math.max(-worldLimit, Math.min(worldLimit, prev.y - dy));
+      const newX = Math.max(-worldLimit, Math.min(worldLimit, prev.x + dx));
+      const newY = Math.max(-worldLimit, Math.min(worldLimit, prev.y + dy));
       return { x: newX, y: newY };
     });
   }, []);
