@@ -10,6 +10,21 @@ const MiniMap = ({ boxes, mapSize }) => {
         return ((value + mapSize / 2) / mapSize) * (miniMapSize - 2 * padding) + padding;
     };
 
+    const getBoxColor = (type) => {
+        switch (type) {
+            case 'openai':
+                return 'green';
+            case 'claude':
+                return 'blue';
+            case 'gemini':
+                return 'purple';
+            case 'meta':
+                return 'orange';
+            default:
+                return 'gray';
+        }
+    };
+
     return (
         <div style={{ 
             width: miniMapSize, 
@@ -27,7 +42,7 @@ const MiniMap = ({ boxes, mapSize }) => {
                         top: `${scalePosition(-box.y)}px`, // Invert Y-axis
                         width: boxSize,
                         height: boxSize,
-                        backgroundColor: box.type === 'openai' ? 'green' : box.type === 'claude' ? 'blue' : 'red',
+                        backgroundColor: getBoxColor(box.type),
                         transform: 'translate(-50%, -50%)', // Center the dot on its position
                     }}
                 />

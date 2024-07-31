@@ -32,10 +32,10 @@ const AttackLine = ({ start, end, duration = 5 }) => {
         end={end}
         mid={control}
         color="red"
-        lineWidth={5}
+        lineWidth={2}
         dashed
-        dashScale={110}
-        gapSize={50}
+        dashScale={50}
+        gapSize={20}
       />
       <QuadraticBezierLine
         start={start}

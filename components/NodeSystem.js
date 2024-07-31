@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import React, { createContext, useMemo, useRef, useState, useContext, useLayoutEffect, forwardRef, useEffect } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
 import { QuadraticBezierLine, Text } from '@react-three/drei'
 import { useDrag } from '@use-gesture/react'
 
@@ -42,16 +42,6 @@ export function Nodes({ children }) {
     setLines(newLines)
   }, [nodes])
 
-  useFrame((_, delta) => {
-    if (group.current) {
-      group.current.children.forEach((group) => {
-        if (group.children[0] && group.children[0].material && group.children[0].material.uniforms) {
-          group.children[0].material.uniforms.dashOffset.value -= delta * 10
-        }
-      })
-    }
-  })
-
   return (
     <context.Provider value={set}>
       <group ref={group}>
@@ -61,52 +51,84 @@ export function Nodes({ children }) {
             <QuadraticBezierLine {...line} color="white" lineWidth={0.5} transparent opacity={0.1} />
           </group>
         ))}
+        {children}
+        {lines.map(({ start, end }, index) => (
+          <group key={index} position-z={1}>
+            <Circle position={start} />
+            <Circle position={end} />
+          </group>
+        ))}
       </group>
-      {children}
-      {lines.map(({ start, end }, index) => (
-        <group key={index} position-z={1}>
-          <Circle position={start} />
-          <Circle position={end} />
-        </group>
-      ))}
     </context.Provider>
   )
 }
 
-export const Node = forwardRef(({ color = 'black', name, connectedTo = [], position = [0, 0, 0], onClick, onDoubleClick, onDrag, mode, ...props }, ref) => {
+export const Node = forwardRef(({ id, position, color, name, connectedTo = [], onClick, onDoubleClick, onDrag, mode, modelType, ...props }, ref) => {
   const set = useContext(context)
   const { size, camera } = useThree()
   const [pos, setPos] = useState(() => new THREE.Vector3(...position))
   const state = useMemo(() => ({ position: pos, connectedTo }), [pos, connectedTo])
+  
   useLayoutEffect(() => {
     set((nodes) => [...nodes, state])
     return () => void set((nodes) => nodes.filter((n) => n !== state))
-  }, [state, pos, set])
+  }, [state, set])
+
+  useEffect(() => {
+    setPos(new THREE.Vector3(...position))
+  }, [position])
+
   const [hovered, setHovered] = useState(false)
   useEffect(() => void (document.body.style.cursor = hovered ? 'grab' : 'auto'), [hovered])
-  const bind = useDrag(({ down, xy: [x, y] }) => {
+
+  const bind = useDrag(({ active, xy: [x, y] }) => {
     if (mode === 'create') {
-      document.body.style.cursor = down ? 'grabbing' : 'grab'
-      const newPos = new THREE.Vector3((x / size.width) * 2 - 1, -(y / size.height) * 2 + 1, 0)
-        .unproject(camera)
-        .multiply({ x: 1, y: 1, z: 0 })
-        .clone()
+      document.body.style.cursor = active ? 'grabbing' : 'grab'
+      const vec = new THREE.Vector3(
+        (x / size.width) * 2 - 1,
+        -(y / size.height) * 2 + 1,
+        0
+      )
+      vec.unproject(camera)
+      const newPos = new THREE.Vector3(vec.x, vec.y, 0)
       setPos(newPos)
-      onDrag(newPos.x, newPos.y)  // Call onDrag with new position
+      onDrag(id, newPos.x, newPos.y)
     }
-  })
+  }, { filterTaps: true })
+
+  const texture = useMemo(() => {
+    const loader = new THREE.TextureLoader()
+    switch (modelType) {
+      case 'openai':
+        return loader.load('/openai-logo.png')
+      case 'gemini':
+        return loader.load('/gemini-logo.png')
+      case 'claude':
+        return loader.load('/claude-logo.png')
+      case 'meta':
+        return loader.load('/meta-logo.png')
+      default:
+        return loader.load('/default-logo.png')
+    }
+  }, [modelType])
+
   return (
-    <Circle ref={ref} {...bind()} opacity={0.2} radius={0.5} color={color} position={pos} {...props} onClick={onClick} onDoubleClick={onDoubleClick}>
-      <Circle
-        radius={0.25}
-        position={[0, 0, 0.1]}
+    <group position={pos}>
+      <mesh 
+        ref={ref} 
+        {...bind()}
+        onClick={(e) => { e.stopPropagation(); onClick(id); }}
+        onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick(id); }}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
-        color={hovered ? '#ff1050' : color}>
-        <Text position={[0, 0, 1]} fontSize={0.25}>
-          {name}
-        </Text>
-      </Circle>
-    </Circle>
+      >
+        <circleGeometry args={[0.5, 32]} />
+        <meshBasicMaterial color={color} opacity={0.2} transparent />
+      </mesh>
+      <mesh position={[0, 0, 0.1]}>
+        <circleGeometry args={[0.25, 32]} />
+        <meshBasicMaterial map={texture} transparent />
+      </mesh>
+    </group>
   )
 })
