@@ -20,50 +20,51 @@
  * the overall user experience and performance of the application.
  ****************************************************************************/
 
-
-
-
 const mapConfig = {
+  // The size of the entire world (as a multiple of mapSize)
+  // Increased from 5 to 10 to expand the explorable area
+  // This means the total world is now 10 times the size of the visible map
+  // Allows for more space to place nodes and creates a larger explorable area
+  worldSize: 5,
 
+  // Minimum distance between boxes
+  minBoxDistance: 2, 
 
-    dragSpeed: 0.5,
-    invertDragX: false,
-    invertDragY: false,
+  // Initial map position (center of the world)
+  initialPosition: { x: 0, y: 0 },
 
+  // Initial zoom level (1 is default, <1 is zoomed out, >1 is zoomed in)
+  // Slightly decreased to show more of the expanded world initially
+  initialZoom: 0.7,
 
-    // The size of the entire world (as a multiple of mapSize)
-    worldSize: 5,
-  
-    // Initial map position
-    initialPosition: { x: 0, y: 0 },
-  
-    // Initial zoom level (1 is default, <1 is zoomed out, >1 is zoomed in)
-    initialZoom: 0.8,
-  
-    // Minimum zoom level (maximum zoom out)
-    minZoom: 0.5,
-  
-    // Maximum zoom level (maximum zoom in)
-    maxZoom: 1.5,
-  
-    // How much the zoom changes per scroll
-    zoomStep: 0.05,
-  
-    // The size of the map (this should match your MAP_SIZE calculation)
-    mapSize: 20,
-  
-    // How far the camera can move from the center in any direction
-    // (as a multiple of mapSize)
-    panLimit: 1.5,
-  
-    // Drag speed (lower values make dragging slower)
-    dragSpeed: 0.02,
-  
-    // Whether to invert the horizontal drag direction
-    invertDragX: true,
-  
-    // Whether to invert the vertical drag direction
-    invertDragY: false,
-  };
-  
-  export default mapConfig;
+  // Minimum zoom level (maximum zoom out)
+  // Decreased to allow viewing more of the expanded world at once
+  minZoom: 0.3,
+
+  // Maximum zoom level (maximum zoom in)
+  maxZoom: 1.5,
+
+  // How much the zoom changes per scroll
+  zoomStep: 0.05,
+
+  // The size of the map (this should match your MAP_SIZE calculation)
+  // This represents the size of the visible area
+  mapSize: 20,
+
+  // How far the camera can move from the center in any direction
+  // (as a multiple of mapSize)
+  // Increased to allow exploration of the larger world
+  panLimit: 3,
+
+  // Drag speed (lower values make dragging slower)
+  // Slightly increased to make navigation of the larger world easier
+  dragSpeed: 0.02,
+
+  // Whether to invert the horizontal drag direction
+  invertDragX: true,
+
+  // Whether to invert the vertical drag direction
+  invertDragY: false,
+};
+
+export default mapConfig;
