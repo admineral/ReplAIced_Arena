@@ -1,38 +1,60 @@
 'use client';
 
-import React from 'react';
-import { useSession, signIn } from 'next-auth/react';
+import React, { useState, useEffect } from 'react';
+import { signInWithPopup, GithubAuthProvider, User } from 'firebase/auth';
+import { auth } from '../../firebase-config';
 import { useRouter } from 'next/navigation';
 
 const LoginPage = () => {
-  const { data: session, status } = useSession();
+  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
 
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const handleGitHubSignIn = async () => {
+    const provider = new GithubAuthProvider();
     try {
-      await signIn('github', { callbackUrl: '/' });
+      await signInWithPopup(auth, provider);
+      router.push('/');
     } catch (error) {
       console.error('GitHub sign in error:', error);
     }
   };
 
-  if (status === 'loading') {
-    return <div>Loading...</div>;
-  }
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut();
+      router.push('/login');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          {session ? `Welcome, ${session.user?.name || 'User'}!` : 'Not logged in'}
+          {user ? `Welcome, ${user.displayName || 'User'}!` : 'Not logged in'}
         </h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {session ? (
+          {user ? (
             <div className="space-y-6">
               <p className="text-center">You are logged in with GitHub.</p>
+              <button
+                onClick={handleSignOut}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Sign Out
+              </button>
             </div>
           ) : (
             <div className="space-y-6">
