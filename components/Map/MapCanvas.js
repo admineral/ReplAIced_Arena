@@ -27,9 +27,7 @@
  * for its functionality. Ensure all required context values are provided.
  ****************************************************************************/
 
-
-
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Nodes, Node } from '../Nodes/NodeSystem';
 import AttackLine from '../Attack/AttackLine';
@@ -69,6 +67,21 @@ const MapCanvas = () => {
 
   const canvasRef = useRef();
   const [isOverNode, setIsOverNode] = useState(false);
+  const dragStartPosition = useRef(null);
+
+  const handleDragStart = useCallback((id, x, y) => {
+    dragStartPosition.current = { id, x, y };
+    console.log(`Drag start: Box ${id} at (${x}, ${y})`);
+  }, []);
+
+  const handleDragEnd = useCallback((id, x, y) => {
+    if (dragStartPosition.current && dragStartPosition.current.id === id) {
+      const { x: startX, y: startY } = dragStartPosition.current;
+      console.log(`Drag end: Box ${id} moved from (${startX}, ${startY}) to (${x}, ${y})`);
+      handleBoxDrag(id, x, y);
+    }
+    dragStartPosition.current = null;
+  }, [handleBoxDrag]);
 
   const bind = useDrag(({ delta: [dx, dy], event }) => {
     if (!isOverNode) {
@@ -77,7 +90,6 @@ const MapCanvas = () => {
       const moveX = mapConfig.invertDragX ? -dx : dx;
       const moveY = mapConfig.invertDragY ? -dy : dy;
       mapControls.handleCanvasDrag(moveX * dragSpeedFactor, moveY * dragSpeedFactor);
-      console.log(`Dragging map: Movement (${dx}, ${dy})`);
     }
   }, { filterTaps: true });
 
@@ -98,53 +110,66 @@ const MapCanvas = () => {
   }, [mapControls]);
 
   return (
-    <Canvas
-      ref={canvasRef}
-      orthographic
-      camera={{
-        zoom: mapConfig.initialZoom * 50,
-        position: [mapConfig.initialPosition.x, mapConfig.initialPosition.y, 100]
+    <div 
+      style={{ 
+        width: '100%', 
+        height: '100%', 
+        touchAction: 'none',
+        position: 'relative',
+        overflow: 'hidden',
+        pointerEvents: 'auto'
       }}
-      {...bind()}
     >
-      <WebGLErrorHandler />
-      <CameraController />
-      <ambientLight />
-      <Nodes setIsOverNode={setIsOverNode}>
-        {boxes.map((box) => (
-          <Node
-            key={box.id}
-            id={box.id}
-            position={[box.x, box.y, 0]}
-            modelType={box.type}
-            connectedTo={connections
-              .filter(conn => conn.from === box.id)
-              .map(conn => boxes.find(b => b.id === conn.to))
-              .filter(Boolean)}
-            mode={mode}
-            onClick={() => handleBoxClick(box.id)}
-            onDoubleClick={() => handleBoxDoubleClick(box.id)}
-            onDrag={handleBoxDrag}
-            color={
-              box.id === selectedBox?.id ? 'yellow' :
-              box.id === targetBox?.id ? 'red' :
-              box.type === 'openai' ? 'green' :
-              box.type === 'gemini' ? 'purple' :
-              box.type === 'claude' ? 'blue' :
-              box.type === 'meta' ? 'orange' :
-              'gray'
-            }
-            setIsOverNode={setIsOverNode}
+      <Canvas
+        ref={canvasRef}
+        orthographic
+        camera={{
+          zoom: mapConfig.initialZoom * 50,
+          position: [mapConfig.initialPosition.x, mapConfig.initialPosition.y, 100]
+        }}
+        style={{ width: '100%', height: '100%' }}
+        {...bind()}
+      >
+        <WebGLErrorHandler />
+        <CameraController />
+        <ambientLight />
+        <Nodes setIsOverNode={setIsOverNode}>
+          {boxes.map((box) => (
+            <Node
+              key={box.id}
+              id={box.id}
+              position={[box.x, box.y, 0]}
+              modelType={box.type}
+              connectedTo={connections
+                .filter(conn => conn.from === box.id)
+                .map(conn => boxes.find(b => b.id === conn.to))
+                .filter(Boolean)}
+              mode={mode}
+              onClick={() => handleBoxClick(box.id)}
+              onDoubleClick={() => handleBoxDoubleClick(box.id)}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              color={
+                box.id === selectedBox?.id ? 'yellow' :
+                box.id === targetBox?.id ? 'red' :
+                box.type === 'openai' ? 'green' :
+                box.type === 'gemini' ? 'purple' :
+                box.type === 'claude' ? 'blue' :
+                box.type === 'meta' ? 'orange' :
+                'gray'
+              }
+              setIsOverNode={setIsOverNode}
+            />
+          ))}
+        </Nodes>
+        {isAttacking && selectedBox && targetBox && (
+          <AttackLine
+            start={new THREE.Vector3(selectedBox.x, selectedBox.y, 0)}
+            end={new THREE.Vector3(targetBox.x, targetBox.y, 0)}
           />
-        ))}
-      </Nodes>
-      {isAttacking && selectedBox && targetBox && (
-        <AttackLine
-          start={new THREE.Vector3(selectedBox.x, selectedBox.y, 0)}
-          end={new THREE.Vector3(targetBox.x, targetBox.y, 0)}
-        />
-      )}
-    </Canvas>
+        )}
+      </Canvas>
+    </div>
   );
 };
 

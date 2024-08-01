@@ -26,7 +26,6 @@
  * 4. Providing context values for child components
  * 5. Responsive map size calculation based on screen size
  ****************************************************************************/
-
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import useBoxManager from '../hooks/useBox';
 import useAttackManager from '../hooks/useAttack';
@@ -69,7 +68,16 @@ export const MapProvider = ({ children }) => {
   const [tooltip, setTooltip] = useState('');
 
   const boxManager = useBoxManager(MAP_SIZE);
-  const { boxes, connections, addBox, updateBox, updateBoxPosition, handleBoxDrag } = boxManager;
+  const { 
+    boxes, 
+    connections, 
+    addBox, 
+    updateBox, 
+    updateBoxPosition, 
+    handleBoxDrag, 
+    loadBoxesFromFirebase,
+    clearAllBoxes  // Add this line
+  } = boxManager;
 
   const attackManager = useAttackManager(boxes, mode, setMode, setTooltip);
   const { 
@@ -184,7 +192,9 @@ export const MapProvider = ({ children }) => {
     startAttackAnimation,
     mapControls,
     setMapPosition,
-    setMapZoom
+    setMapZoom,
+    loadBoxesFromFirebase,
+    clearAllBoxes  // Add this line
   };
 
   return (

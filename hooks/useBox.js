@@ -20,18 +20,22 @@
  * 3. Managing connections between boxes
  * 4. Handling box dragging within map boundaries
  * 5. Removing boxes and clearing all boxes
+ * 6. Loading boxes from Firebase
+ * 7. Updating box positions in Firebase after drag
  ****************************************************************************/
 
 import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { constrainPosition, generateRandomPosition, isPositionValid } from '../utils/mapUtils';
 import mapConfig from '../config/mapConfig';
+import { db } from '../firebase-config';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 
 const useBoxManager = (MAP_SIZE) => {
   const [boxes, setBoxes] = useState([]);
   const [connections, setConnections] = useState([]);
 
-  const addBox = useCallback((type) => {
+  const addBox = useCallback(async (type) => {
     let attempts = 0;
     let position;
     do {
@@ -47,13 +51,24 @@ const useBoxManager = (MAP_SIZE) => {
         type,
         challenge: 'New AI Challenge',
         difficulty: 'medium',
+        createdAt: new Date().toISOString(),
+        createdBy: 'User123', // Mock user ID, replace with actual user authentication later
       };
-      setBoxes(prevBoxes => {
-        const updatedBoxes = [...prevBoxes, newBox];
-        updateConnections(updatedBoxes);
-        return updatedBoxes;
-      });
-      return true; // Successfully added a box
+
+      try {
+        const docRef = await addDoc(collection(db, 'boxes'), newBox);
+        console.log('Box added with ID: ', docRef.id);
+        
+        setBoxes(prevBoxes => {
+          const updatedBoxes = [...prevBoxes, { ...newBox, id: docRef.id }];
+          updateConnections(updatedBoxes);
+          return updatedBoxes;
+        });
+        return true; // Successfully added a box
+      } catch (error) {
+        console.error('Error adding box to Firestore: ', error);
+        return false;
+      }
     } else {
       console.error('Failed to find a valid position for new box');
       return false; // Failed to add a box
@@ -68,34 +83,64 @@ const useBoxManager = (MAP_SIZE) => {
     setConnections(newConnections);
   }, []);
 
-  const updateBox = useCallback((updatedBox) => {
-    setBoxes(prevBoxes => prevBoxes.map(box => 
-      box.id === updatedBox.id ? { ...box, ...updatedBox } : box
-    ));
+  const updateBox = useCallback(async (updatedBox) => {
+    try {
+      const boxRef = doc(db, 'boxes', updatedBox.id);
+      await updateDoc(boxRef, updatedBox);
+      setBoxes(prevBoxes => prevBoxes.map(box => 
+        box.id === updatedBox.id ? { ...box, ...updatedBox } : box
+      ));
+      console.log('Box updated in Firestore:', updatedBox.id);
+    } catch (error) {
+      console.error('Error updating box in Firestore:', error);
+    }
   }, []);
 
-  const updateBoxPosition = useCallback((id, x, y) => {
+  const updateBoxPosition = useCallback(async (id, x, y) => {
     console.log('updateBoxPosition called:', id, x, y);
-    setBoxes(prevBoxes => prevBoxes.map(box => {
-      if (box.id === id) {
-        const [constrainedX, constrainedY] = constrainPosition(x, y, MAP_SIZE);
-        console.log('Constrained position:', constrainedX, constrainedY);
-        return { ...box, x: constrainedX, y: constrainedY };
-      }
-      return box;
-    }));
+    const [constrainedX, constrainedY] = constrainPosition(x, y, MAP_SIZE);
+    console.log('Constrained position:', constrainedX, constrainedY);
+    
+    try {
+      const boxRef = doc(db, 'boxes', id);
+      await updateDoc(boxRef, { x: constrainedX, y: constrainedY });
+      setBoxes(prevBoxes => prevBoxes.map(box => 
+        box.id === id ? { ...box, x: constrainedX, y: constrainedY } : box
+      ));
+      console.log('Box position updated in Firestore:', id);
+    } catch (error) {
+      console.error('Error updating box position in Firestore:', error);
+    }
   }, [MAP_SIZE]);
 
-  const removeBox = useCallback((id) => {
-    setBoxes(prevBoxes => prevBoxes.filter(box => box.id !== id));
-    setConnections(prevConnections => 
-      prevConnections.filter(conn => conn.from !== id && conn.to !== id)
-    );
+  const removeBox = useCallback(async (id) => {
+    try {
+      await deleteDoc(doc(db, 'boxes', id));
+      setBoxes(prevBoxes => prevBoxes.filter(box => box.id !== id));
+      setConnections(prevConnections => 
+        prevConnections.filter(conn => conn.from !== id && conn.to !== id)
+      );
+      console.log('Box removed from Firestore:', id);
+    } catch (error) {
+      console.error('Error removing box from Firestore:', error);
+    }
   }, []);
 
-  const clearAllBoxes = useCallback(() => {
-    setBoxes([]);
-    setConnections([]);
+  const clearAllBoxes = useCallback(async () => {
+    try {
+      const batch = writeBatch(db);
+      const querySnapshot = await getDocs(collection(db, 'boxes'));
+      querySnapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+      setBoxes([]);
+      setConnections([]);
+      console.log('All boxes cleared from Firestore');
+    } catch (error) {
+      console.error('Error clearing all boxes from Firestore:', error);
+      throw error;
+    }
   }, []);
 
   const handleBoxDrag = useCallback((id, x, y) => {
@@ -103,11 +148,27 @@ const useBoxManager = (MAP_SIZE) => {
     const constrainedX = Math.max(Math.min(x, halfWorldSize), -halfWorldSize);
     const constrainedY = Math.max(Math.min(y, halfWorldSize), -halfWorldSize);
     
-    // Check if the new position is valid (not too close to other boxes)
     if (isPositionValid(constrainedX, constrainedY, MAP_SIZE, boxes.filter(box => box.id !== id), mapConfig.minBoxDistance)) {
       updateBoxPosition(id, constrainedX, constrainedY);
     }
   }, [MAP_SIZE, updateBoxPosition, boxes]);
+
+  const loadBoxesFromFirebase = useCallback(async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'boxes'));
+      const loadedBoxes = querySnapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      }));
+      setBoxes(loadedBoxes);
+      updateConnections(loadedBoxes);
+      console.log('Boxes loaded from Firebase:', loadedBoxes);
+      return loadedBoxes;
+    } catch (error) {
+      console.error('Error loading boxes from Firestore:', error);
+      throw error;
+    }
+  }, [updateConnections]);
 
   return { 
     boxes, 
@@ -117,7 +178,8 @@ const useBoxManager = (MAP_SIZE) => {
     updateBoxPosition,
     handleBoxDrag,
     removeBox, 
-    clearAllBoxes 
+    clearAllBoxes,
+    loadBoxesFromFirebase
   };
 };
 

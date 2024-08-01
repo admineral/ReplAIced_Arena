@@ -26,9 +26,6 @@
  * for 3D rendering within React.
  ****************************************************************************/
 
-
-
-
 import * as THREE from 'three'
 import React, { createContext, useMemo, useRef, useState, useContext, useLayoutEffect, forwardRef, useEffect } from 'react'
 import { useThree } from '@react-three/fiber'
@@ -95,7 +92,7 @@ export function Nodes({ children, setIsOverNode }) {
   )
 }
 
-export const Node = forwardRef(({ id, position, color, name, connectedTo = [], onClick, onDoubleClick, onDrag, mode, modelType, setIsOverNode, ...props }, ref) => {
+export const Node = forwardRef(({ id, position, color, name, connectedTo = [], onClick, onDoubleClick, onDragStart, onDragEnd, mode, modelType, setIsOverNode, ...props }, ref) => {
   const { set } = useContext(context)
   const { size, camera } = useThree()
   const [pos, setPos] = useState(() => new THREE.Vector3(...position))
@@ -113,7 +110,7 @@ export const Node = forwardRef(({ id, position, color, name, connectedTo = [], o
   const [hovered, setHovered] = useState(false)
   useEffect(() => void (document.body.style.cursor = hovered ? 'grab' : 'auto'), [hovered])
 
-  const bind = useDrag(({ active, xy: [x, y] }) => {
+  const bind = useDrag(({ active, xy: [x, y], first, last }) => {
     if (mode === 'create') {
       document.body.style.cursor = active ? 'grabbing' : 'grab'
       const vec = new THREE.Vector3(
@@ -124,7 +121,13 @@ export const Node = forwardRef(({ id, position, color, name, connectedTo = [], o
       vec.unproject(camera)
       const newPos = new THREE.Vector3(vec.x, vec.y, 0)
       setPos(newPos)
-      onDrag(id, newPos.x, newPos.y)
+      
+      if (first) {
+        onDragStart(id, newPos.x, newPos.y)
+      }
+      if (last) {
+        onDragEnd(id, newPos.x, newPos.y)
+      }
     }
   }, { filterTaps: true })
 

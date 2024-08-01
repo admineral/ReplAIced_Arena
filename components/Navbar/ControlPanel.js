@@ -5,7 +5,8 @@
  * 
  * This component renders the control panel for the AI Security Map application.
  * It provides buttons for switching between different modes (create, preview, 
- * attack) and controls for adding new boxes in create mode.
+ * attack) and controls for adding new boxes in create mode or loading boxes
+ * in preview mode.
  * 
  * Context:
  * - Part of the AI Security Map application's user interface
@@ -15,24 +16,33 @@
  * - mode: Current application mode (create, preview, attack)
  * - switchMode: Function to change the current mode
  * - addBox: Function to add a new box to the map
+ * - loadBoxes: Function to load boxes from Firebase
  * - isAttackModeAvailable: Boolean indicating if attack mode can be enabled
  * - selectedModel: Currently selected AI model for new boxes
  * - setSelectedModel: Function to update the selected model
+ * - isLoading: Boolean indicating if boxes are being loaded
  * 
  * Key Functionalities:
  * 1. Mode switching buttons (Create, Preview, Attack)
  * 2. Model selection dropdown (in Create mode)
  * 3. Add Box button (in Create mode)
- * 4. Visual feedback for current mode and button states
+ * 4. Load Boxes button (in Preview mode)
+ * 5. Visual feedback for current mode and button states
  * 
  ****************************************************************************/
 
-
-
-
 import React from 'react';
 
-const ControlPanel = ({ mode, switchMode, addBox, isAttackModeAvailable, selectedModel, setSelectedModel }) => {
+const ControlPanel = ({ 
+  mode, 
+  switchMode, 
+  addBox, 
+  loadBoxes, 
+  isAttackModeAvailable, 
+  selectedModel, 
+  setSelectedModel,
+  isLoading
+}) => {
   return (
     <div className="flex justify-between items-center p-4 bg-gray-800 bg-opacity-50">
       <div className="flex space-x-4">
@@ -82,6 +92,17 @@ const ControlPanel = ({ mode, switchMode, addBox, isAttackModeAvailable, selecte
             Add Box
           </button>
         </div>
+      )}
+      {mode === 'preview' && (
+        <button
+          onClick={loadBoxes}
+          disabled={isLoading}
+          className={`bg-blue-500 text-white rounded-full px-4 py-2 shadow-lg hover:bg-blue-600 transition-colors duration-300 ${
+            isLoading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          {isLoading ? 'Loading...' : 'Load Boxes'}
+        </button>
       )}
     </div>
   );
