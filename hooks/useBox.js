@@ -101,15 +101,22 @@ const useBoxManager = (MAP_SIZE) => {
     const [constrainedX, constrainedY] = constrainPosition(x, y, MAP_SIZE);
     console.log('Constrained position:', constrainedX, constrainedY);
     
+    // Update local state immediately
+    setBoxes(prevBoxes => prevBoxes.map(box => 
+      box.id === id ? { ...box, x: constrainedX, y: constrainedY } : box
+    ));
+
+    // Update Firestore in the background
     try {
       const boxRef = doc(db, 'boxes', id);
       await updateDoc(boxRef, { x: constrainedX, y: constrainedY });
-      setBoxes(prevBoxes => prevBoxes.map(box => 
-        box.id === id ? { ...box, x: constrainedX, y: constrainedY } : box
-      ));
       console.log('Box position updated in Firestore:', id);
     } catch (error) {
       console.error('Error updating box position in Firestore:', error);
+      // Optionally, revert the local state change if the Firestore update fails
+      // setBoxes(prevBoxes => prevBoxes.map(box => 
+      //   box.id === id ? { ...box, x: box.x, y: box.y } : box
+      // ));
     }
   }, [MAP_SIZE]);
 
@@ -149,6 +156,12 @@ const useBoxManager = (MAP_SIZE) => {
     const constrainedY = Math.max(Math.min(y, halfWorldSize), -halfWorldSize);
     
     if (isPositionValid(constrainedX, constrainedY, MAP_SIZE, boxes.filter(box => box.id !== id), mapConfig.minBoxDistance)) {
+      // Update local state immediately
+      setBoxes(prevBoxes => prevBoxes.map(box => 
+        box.id === id ? { ...box, x: constrainedX, y: constrainedY } : box
+      ));
+
+      // Update Firestore in the background
       updateBoxPosition(id, constrainedX, constrainedY);
     }
   }, [MAP_SIZE, updateBoxPosition, boxes]);
