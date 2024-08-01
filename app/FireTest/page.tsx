@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { app, db } from '@/lib/firebase';
+import { db } from '../../lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 
 interface Todo {
