@@ -21,7 +21,9 @@ const LoginPage = () => {
     const provider = new GithubAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      router.push('/');
+      const redirectPath = localStorage.getItem('loginRedirect') || '/Login';
+      localStorage.removeItem('loginRedirect'); // Clean up
+      router.push(redirectPath);
     } catch (error) {
       console.error('GitHub sign in error:', error);
     }
@@ -30,7 +32,7 @@ const LoginPage = () => {
   const handleSignOut = async () => {
     try {
       await auth.signOut();
-      router.push('/login');
+      router.refresh();
     } catch (error) {
       console.error('Sign out error:', error);
     }
