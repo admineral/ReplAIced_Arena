@@ -1,16 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { db } from '../../firebase';
-import {
-  collection,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  query,
-} from "firebase/firestore";
+import { app, db } from '../../firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 interface Todo {
   id: string;
