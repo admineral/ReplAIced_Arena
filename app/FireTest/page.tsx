@@ -4,7 +4,7 @@
 // pages/addData.tsx
 
 import { useState, FormEvent } from 'react';
-import { db } from '@/lib/firebaseConfig';
+import { db } from '../../firebase-config';
 import { collection, addDoc } from 'firebase/firestore';
 
 
