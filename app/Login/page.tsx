@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useSession, signIn, signOut } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 const LoginPage = () => {
@@ -13,14 +13,6 @@ const LoginPage = () => {
       await signIn('github', { callbackUrl: '/' });
     } catch (error) {
       console.error('GitHub sign in error:', error);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut({ callbackUrl: '/login' });
-    } catch (error) {
-      console.error('Sign out error:', error);
     }
   };
 
@@ -41,12 +33,6 @@ const LoginPage = () => {
           {session ? (
             <div className="space-y-6">
               <p className="text-center">You are logged in with GitHub.</p>
-              <button
-                onClick={handleSignOut}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Sign Out
-              </button>
             </div>
           ) : (
             <div className="space-y-6">
