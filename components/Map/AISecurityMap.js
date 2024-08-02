@@ -54,6 +54,8 @@ const AISecurityMapContent = () => {
   const [lastUpdateTime, setLastUpdateTime] = useState(null);
   const [isCreateBoxModalOpen, setIsCreateBoxModalOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [loadingTimeout, setLoadingTimeout] = useState(null);
+  const [isTimedOut, setIsTimedOut] = useState(false);
 
   const { user } = useAuth();
 
@@ -121,6 +123,16 @@ const AISecurityMapContent = () => {
   const handleLoadBoxes = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setIsTimedOut(false);
+
+    const timeoutId = setTimeout(() => {
+      setIsTimedOut(true);
+      setIsLoading(false);
+      setError('Loading timed out. Please try again.');
+    }, 10000); // 10 seconds timeout
+
+    setLoadingTimeout(timeoutId);
+
     try {
       const loadedBoxes = await loadBoxesFromFirebase();
       const validBoxes = loadedBoxes.filter(validateBoxData);
@@ -129,13 +141,22 @@ const AISecurityMapContent = () => {
       }
       console.log(`Successfully loaded ${validBoxes.length} boxes.`);
       setLastUpdateTime(new Date());
+      clearTimeout(timeoutId);
     } catch (err) {
       setError('Failed to load boxes. Please try again.');
       console.error('Error loading boxes:', err);
     } finally {
       setIsLoading(false);
+      clearTimeout(timeoutId);
     }
   }, [loadBoxesFromFirebase]);
+
+  const handleRetry = useCallback(() => {
+    if (loadingTimeout) {
+      clearTimeout(loadingTimeout);
+    }
+    handleLoadBoxes();
+  }, [handleLoadBoxes, loadingTimeout]);
 
   const handleReloadBoxes = useCallback(async () => {
     await handleLoadBoxes();
@@ -261,9 +282,17 @@ const AISecurityMapContent = () => {
           <div className="text-white text-2xl">Loading...</div>
         </div>
       )}
-      {error && (
-        <div className="absolute bottom-4 left-4 bg-red-500 text-white p-2 rounded-lg pointer-events-auto">
-          {error}
+      {(error || isTimedOut) && (
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-gray-800 p-4 rounded-lg text-white">
+            <p className="mb-4">{error || 'Loading timed out. Please try again.'}</p>
+            <button
+              onClick={handleRetry}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       )}
       <div className="absolute bottom-4 left-4 flex space-x-4">
