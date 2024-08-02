@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { db } from '@/firebase-config';
+import { db, auth } from '@/firebase-config';
 import {
   collection,
   addDoc,
@@ -10,7 +10,10 @@ import {
   doc,
   onSnapshot,
   query,
+  orderBy,
+  Timestamp,
 } from "firebase/firestore";
+import { signInWithPopup, GithubAuthProvider, User } from 'firebase/auth';
 
 interface Todo {
   id: string;
@@ -18,25 +21,35 @@ interface Todo {
   description: string;
   status: 'todo' | 'started' | 'in-progress' | 'completed';
   importance: 'low' | 'medium' | 'high';
-  addedBy: 'Nikoll' | 'Daniel' | 'Elias';
+  addedBy: string;
+  createdAt: Timestamp;
 }
 
 const columns = ['todo', 'started', 'in-progress', 'completed'];
-const users = ['Nikoll', 'Daniel', 'Elias'];
 const importanceLevels = ['low', 'medium', 'high'];
 
 export default function TodoPage() {
+  const [user, setUser] = useState<User | null>(null);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<Todo['status']>('todo');
   const [importance, setImportance] = useState<Todo['importance']>('medium');
-  const [addedBy, setAddedBy] = useState<Todo['addedBy']>('Nikoll');
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [todoToDelete, setTodoToDelete] = useState<string | null>(null);
 
   useEffect(() => {
-    const q = query(collection(db, "todo"));
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const q = query(collection(db, "todo"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const todoList: Todo[] = querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -48,6 +61,20 @@ export default function TodoPage() {
     return () => unsubscribe();
   }, []);
 
+  const handleGitHubSignIn = async () => {
+    const provider = new GithubAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      setIsLoginModalOpen(false);
+      if (todoToDelete) {
+        await deleteTodo(todoToDelete);
+        setTodoToDelete(null);
+      }
+    } catch (error) {
+      console.error('GitHub sign in error:', error);
+    }
+  };
+
   const addOrUpdateTodo = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -57,7 +84,7 @@ export default function TodoPage() {
           description,
           status,
           importance,
-          addedBy,
+          updatedAt: Timestamp.now(),
         });
         setIsModalOpen(false);
       } else {
@@ -66,22 +93,22 @@ export default function TodoPage() {
           description,
           status,
           importance,
-          addedBy,
-          createdAt: new Date().getTime(),
+          addedBy: user?.displayName || user?.email || 'Anonymous',
+          createdAt: Timestamp.now(),
         });
       }
-      setTitle('');
-      setDescription('');
-      setStatus('todo');
-      setImportance('medium');
-      setAddedBy('Nikoll');
-      setEditingTodo(null);
+      resetForm();
     } catch (err) {
       console.error("Error adding/updating document: ", err);
     }
   };
 
   const deleteTodo = async (id: string) => {
+    if (!user) {
+      setTodoToDelete(id);
+      setIsLoginModalOpen(true);
+      return;
+    }
     try {
       await deleteDoc(doc(db, "todo", id));
     } catch (err) {
@@ -91,7 +118,10 @@ export default function TodoPage() {
 
   const updateTodoStatus = async (todo: Todo, newStatus: Todo['status']) => {
     try {
-      await updateDoc(doc(db, "todo", todo.id), { status: newStatus });
+      await updateDoc(doc(db, "todo", todo.id), { 
+        status: newStatus,
+        updatedAt: Timestamp.now(),
+      });
     } catch (err) {
       console.error("Error updating todo status: ", err);
     }
@@ -120,8 +150,15 @@ export default function TodoPage() {
     setDescription(todo.description);
     setStatus(todo.status);
     setImportance(todo.importance);
-    setAddedBy(todo.addedBy);
     setIsModalOpen(true);
+  };
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setStatus('todo');
+    setImportance('medium');
+    setEditingTodo(null);
   };
 
   return (
@@ -146,7 +183,7 @@ export default function TodoPage() {
               required
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white"
             />
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="relative">
                 <select
                   value={status}
@@ -179,28 +216,12 @@ export default function TodoPage() {
                   </svg>
                 </div>
               </div>
-              <div className="relative">
-                <select
-                  value={addedBy}
-                  onChange={(e) => setAddedBy(e.target.value as Todo['addedBy'])}
-                  className="appearance-none w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white pr-8"
-                >
-                  {users.map(user => (
-                    <option key={user} value={user}>{user}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                  </svg>
-                </div>
-              </div>
             </div>
             <button
               type="submit"
               className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
             >
-              Add Todo
+              {editingTodo ? 'Update Todo' : 'Add Todo'}
             </button>
           </div>
         </form>
@@ -276,7 +297,7 @@ export default function TodoPage() {
                 required
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white"
               />
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="relative">
                   <select
                     value={status}
@@ -309,22 +330,6 @@ export default function TodoPage() {
                     </svg>
                   </div>
                 </div>
-                <div className="relative">
-                  <select
-                    value={addedBy}
-                    onChange={(e) => setAddedBy(e.target.value as Todo['addedBy'])}
-                    className="appearance-none w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white pr-8"
-                  >
-                    {users.map(user => (
-                      <option key={user} value={user}>{user}</option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                    </svg>
-                  </div>
-                </div>
               </div>
               <div className="flex justify-end space-x-2">
                 <button
@@ -342,6 +347,30 @@ export default function TodoPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isLoginModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 p-6 rounded-xl shadow-lg max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4">Login Required</h2>
+            <p className="mb-4">You need to be logged in to delete a task.</p>
+            <button
+              onClick={handleGitHubSignIn}
+              className="w-full bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-200"
+            >
+              Sign in with GitHub
+            </button>
+            <button
+              onClick={() => {
+                setIsLoginModalOpen(false);
+                setTodoToDelete(null);
+              }}
+              className="w-full mt-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-200"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
