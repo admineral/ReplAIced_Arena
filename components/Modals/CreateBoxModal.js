@@ -62,28 +62,26 @@ const CreateBoxModal = ({ isOpen, onClose, onCreateBox, mapSize }) => {
     const textareaRef = useRef(null);
   
     const handleCreateBox = () => {
-      const combinedSystemPrompt = `${systemPrompt}\n\n${secretSentence} ${secretWord}`;
-      const newBox = {
-        id: uuidv4(),
-        type: modelOptions[selectedModelIndex].id,
-        model: modelOptions[selectedModelIndex].name,
-        systemPrompt: systemPrompt,
-        secretWord: secretWord,
-        secretSentence: secretSentence,
-        combinedSystemPrompt: combinedSystemPrompt,
-        difficulty: 'medium',
-        createdAt: new Date().toISOString(),
-        createdBy: {
-          uid: user ? user.uid : 'anonymous',
-          displayName: user ? (user.displayName || user.email || 'Anonymous') : 'Anonymous'
-        },
-        x: Math.random() * mapSize,
-        y: Math.random() * mapSize,
+        const combinedSystemPrompt = `${systemPrompt}\n\n${secretSentence} ${secretWord}`;
+        const newBox = {
+          id: uuidv4(),
+          type: modelOptions[selectedModelIndex].id,
+          model: modelOptions[selectedModelIndex].name,
+          systemPrompt: systemPrompt,
+          secretWord: secretWord,
+          secretSentence: secretSentence,
+          combinedSystemPrompt: combinedSystemPrompt,
+          difficulty: 'medium',
+          createdAt: new Date().toISOString(),
+          createdBy: {
+            uid: user ? user.uid : 'anonymous',
+            displayName: user ? (user.displayName || user.email || 'Anonymous') : 'Anonymous'
+          }
+        };
+      
+        onCreateBox(newBox);
+        onClose();
       };
-  
-      onCreateBox(newBox);
-      onClose();
-    };
   
     const handleModelSelect = (index) => {
       setSelectedModelIndex(index);

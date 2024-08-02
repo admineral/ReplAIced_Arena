@@ -103,9 +103,25 @@ const AISecurityMapContent = () => {
   }, []);
 
   const handleCreateBox = useCallback((newBoxData) => {
-    addBox(newBoxData);
+    const centerX = MAP_SIZE / 2;
+    const centerY = MAP_SIZE / 2;
+    const radius = MAP_SIZE / 4; // This will place boxes within a quarter of the map size from the center
+  
+    const angle = Math.random() * 2 * Math.PI;
+    const distance = Math.random() * radius;
+  
+    const x = centerX + distance * Math.cos(angle);
+    const y = centerY + distance * Math.sin(angle);
+  
+    const boxWithPosition = {
+      ...newBoxData,
+      x: x,
+      y: y
+    };
+  
+    addBox(boxWithPosition);
     setIsCreateBoxModalOpen(false);
-  }, [addBox]);
+  }, [addBox, MAP_SIZE]);
 
   const handleMiniMapPositionChange = useCallback((newPosition) => {
     setMapPosition(newPosition);
