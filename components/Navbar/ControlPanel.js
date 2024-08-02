@@ -80,15 +80,17 @@ const ControlPanel = ({
         >
           Preview
         </button>
-        <button
-          onClick={() => switchMode('attack')}
-          className={`px-6 py-3 rounded-lg font-bold text-white transition-colors duration-300 ${
-            mode === 'attack' ? 'bg-red-500' : 'bg-gray-600 hover:bg-red-400'
-          } ${!isAttackModeAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
-          disabled={!isAttackModeAvailable}
-        >
-          Attack
-        </button>
+        {user && (
+          <button
+            onClick={() => switchMode('attack')}
+            className={`px-6 py-3 rounded-lg font-bold text-white transition-colors duration-300 ${
+              mode === 'attack' ? 'bg-red-500' : 'bg-gray-600 hover:bg-red-400'
+            } ${!isAttackModeAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={!isAttackModeAvailable}
+          >
+            Attack
+          </button>
+        )}
       </div>
       <div className="flex items-center space-x-4">
         {mode === 'create' && user && (
