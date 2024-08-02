@@ -43,6 +43,11 @@ import ControlPanel from '../Navbar/ControlPanel';
 import { MapProvider, useMapContext } from '../../contexts/MapContext';
 
 const AISecurityMapContent = () => {
+  const [initialMode, setInitialMode] = useState('preview');
+  const [selectedModel, setSelectedModel] = useState('default');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const {
     mode,
     boxes,
@@ -74,9 +79,9 @@ const AISecurityMapContent = () => {
     clearAllBoxes
   } = useMapContext();
 
-  const [selectedModel, setSelectedModel] = useState('default');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  useEffect(() => {
+    switchMode(initialMode);
+  }, [initialMode, switchMode]);
 
   const handleAddBox = useCallback(() => {
     addBox(selectedModel);
@@ -96,24 +101,26 @@ const AISecurityMapContent = () => {
   };
 
   const handleLoadBoxes = useCallback(async () => {
-    if (mode === 'preview') {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const loadedBoxes = await loadBoxesFromFirebase();
-        const validBoxes = loadedBoxes.filter(validateBoxData);
-        if (validBoxes.length !== loadedBoxes.length) {
-          console.warn(`${loadedBoxes.length - validBoxes.length} boxes were invalid and filtered out.`);
-        }
-        console.log(`Successfully loaded ${validBoxes.length} boxes.`);
-      } catch (err) {
-        setError('Failed to load boxes. Please try again.');
-        console.error('Error loading boxes:', err);
-      } finally {
-        setIsLoading(false);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const loadedBoxes = await loadBoxesFromFirebase();
+      const validBoxes = loadedBoxes.filter(validateBoxData);
+      if (validBoxes.length !== loadedBoxes.length) {
+        console.warn(`${loadedBoxes.length - validBoxes.length} boxes were invalid and filtered out.`);
       }
+      console.log(`Successfully loaded ${validBoxes.length} boxes.`);
+    } catch (err) {
+      setError('Failed to load boxes. Please try again.');
+      console.error('Error loading boxes:', err);
+    } finally {
+      setIsLoading(false);
     }
-  }, [mode, loadBoxesFromFirebase]);
+  }, [loadBoxesFromFirebase]);
+
+  const handleReloadBoxes = useCallback(async () => {
+    await handleLoadBoxes();
+  }, [handleLoadBoxes]);
 
   const handleClearBoxes = useCallback(async () => {
     setIsLoading(true);
@@ -146,11 +153,11 @@ const AISecurityMapContent = () => {
             mode={mode}
             switchMode={switchMode}
             addBox={handleAddBox}
+            reloadBoxes={handleReloadBoxes}
+            clearAllBoxes={handleClearBoxes}
             isAttackModeAvailable={isAttackModeAvailable}
             selectedModel={selectedModel}
             setSelectedModel={setSelectedModel}
-            onLoadBoxes={handleLoadBoxes}
-            clearAllBoxes={handleClearBoxes}
             isLoading={isLoading}
           />
         </div>
