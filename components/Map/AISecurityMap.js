@@ -17,6 +17,7 @@
  * 2. ControlPanel: UI for mode switching and box addition
  * 3. MiniMap: Small overview map of all nodes with interactive features
  * 4. ModalManager: Handles various modal dialogs (config, challenge, attack)
+ * 5. CreateBoxModal: New modal for creating boxes with advanced options
  * 
  * Key Functionalities:
  * 1. Rendering the main application layout
@@ -29,6 +30,7 @@
  * 8. Clearing all boxes
  * 9. Displaying the number of loaded boxes
  * 10. Tracking and displaying the last update time
+ * 11. Opening and managing the CreateBoxModal for new box creation
  * 
  * Note: This component heavily relies on the MapContext for state management.
  * Ensure that all required context values are properly provided by the MapProvider.
@@ -39,16 +41,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import MiniMap from '../MiniMap/MiniMap_Component';
 import ModalManager from '../Modals/ModalManager';
+import CreateBoxModal from '../Modals/CreateBoxModal';
 import MapCanvas from './MapCanvas';
 import ControlPanel from '../Navbar/ControlPanel';
 import { MapProvider, useMapContext } from '../../contexts/MapContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const AISecurityMapContent = () => {
   const [initialMode, setInitialMode] = useState('preview');
-  const [selectedModel, setSelectedModel] = useState('default');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdateTime, setLastUpdateTime] = useState(null);
+  const [isCreateBoxModalOpen, setIsCreateBoxModalOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  const { user } = useAuth();
 
   const {
     mode,
@@ -85,9 +92,18 @@ const AISecurityMapContent = () => {
     switchMode(initialMode);
   }, [initialMode, switchMode]);
 
-  const handleAddBox = useCallback(() => {
-    addBox(selectedModel);
-  }, [addBox, selectedModel]);
+  const handleOpenCreateBoxModal = useCallback(() => {
+    setIsCreateBoxModalOpen(true);
+  }, []);
+
+  const handleCloseCreateBoxModal = useCallback(() => {
+    setIsCreateBoxModalOpen(false);
+  }, []);
+
+  const handleCreateBox = useCallback((newBoxData) => {
+    addBox(newBoxData);
+    setIsCreateBoxModalOpen(false);
+  }, [addBox]);
 
   const handleMiniMapPositionChange = useCallback((newPosition) => {
     setMapPosition(newPosition);
@@ -98,7 +114,7 @@ const AISecurityMapContent = () => {
   }, [setMapZoom]);
 
   const validateBoxData = (boxData) => {
-    const requiredFields = ['x', 'y', 'type', 'id', 'challenge', 'difficulty', 'createdAt', 'createdBy'];
+    const requiredFields = ['x', 'y', 'type', 'id', 'challenge', 'difficulty', 'createdAt', 'createdBy', 'model', 'systemPrompt', 'secretWord'];
     return requiredFields.every(field => field in boxData);
   };
 
@@ -148,8 +164,30 @@ const AISecurityMapContent = () => {
 
   const formatLastUpdateTime = () => {
     if (!lastUpdateTime) return 'Never';
-    return lastUpdateTime.toLocaleString();
+    const diffInSeconds = Math.floor((currentTime - lastUpdateTime) / 1000);
+    if (diffInSeconds < 0) return 'Just now';
+    if (diffInSeconds < 60) {
+      return (
+        <span>
+          <span className="tabular-nums inline-block w-8 text-right">{diffInSeconds}</span> seconds ago
+        </span>
+      );
+    }
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    return (
+      <span>
+        <span className="tabular-nums inline-block w-8 text-right">{diffInMinutes}</span> minute{diffInMinutes !== 1 ? 's' : ''} ago
+      </span>
+    );
   };
+
+  useEffect(() => {
+    let interval;
+    if (lastUpdateTime) {
+      interval = setInterval(() => setCurrentTime(new Date()), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [lastUpdateTime]);
 
   return (
     <div className="w-screen h-screen relative bg-gray-900">
@@ -161,12 +199,10 @@ const AISecurityMapContent = () => {
           <ControlPanel
             mode={mode}
             switchMode={switchMode}
-            addBox={handleAddBox}
+            openCreateBoxModal={handleOpenCreateBoxModal}
             reloadBoxes={handleReloadBoxes}
             clearAllBoxes={handleClearBoxes}
             isAttackModeAvailable={isAttackModeAvailable}
-            selectedModel={selectedModel}
-            setSelectedModel={setSelectedModel}
             isLoading={isLoading}
             setLastUpdateTime={setLastUpdateTime}
           />
@@ -214,6 +250,12 @@ const AISecurityMapContent = () => {
         setIsChallengeOpen={setIsChallengeOpen}
         setIsAttackModalOpen={setIsAttackModalOpen}
       />
+      <CreateBoxModal
+        isOpen={isCreateBoxModalOpen}
+        onClose={handleCloseCreateBoxModal}
+        onCreateBox={handleCreateBox}
+        mapSize={MAP_SIZE}
+      />
       {isLoading && (
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="text-white text-2xl">Loading...</div>
@@ -224,11 +266,13 @@ const AISecurityMapContent = () => {
           {error}
         </div>
       )}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white p-2 rounded-lg">
-        Loaded Boxes: {boxes.length}
-      </div>
-      <div className="absolute bottom-4 left-4 bg-gray-800 text-white p-2 rounded-lg">
-        Last Updated: {formatLastUpdateTime()}
+      <div className="absolute bottom-4 left-4 flex space-x-4">
+        <div className="bg-gray-800 text-white p-2 rounded-lg">
+          Loaded Boxes: {boxes.length}
+        </div>
+        <div className="bg-gray-800 text-white p-2 rounded-lg whitespace-nowrap">
+          Last Updated: {formatLastUpdateTime()}
+        </div>
       </div>
     </div>
   );

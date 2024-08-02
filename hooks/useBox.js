@@ -35,43 +35,50 @@ const useBoxManager = (MAP_SIZE) => {
   const [boxes, setBoxes] = useState([]);
   const [connections, setConnections] = useState([]);
 
-  const addBox = useCallback(async (type) => {
-    let attempts = 0;
+  const addBox = useCallback(async (boxData) => {
     let position;
-    do {
-      position = generateRandomPosition(MAP_SIZE);
-      attempts++;
-    } while (!isPositionValid(position[0], position[1], MAP_SIZE, boxes, mapConfig.minBoxDistance) && attempts < 100);
+    if (boxData.x !== undefined && boxData.y !== undefined) {
+      position = [boxData.x, boxData.y];
+    } else {
+      let attempts = 0;
+      do {
+        position = generateRandomPosition(MAP_SIZE);
+        attempts++;
+      } while (!isPositionValid(position[0], position[1], MAP_SIZE, boxes, mapConfig.minBoxDistance) && attempts < 100);
 
-    if (attempts < 100) {
-      const newBox = {
-        id: uuidv4(),
-        x: position[0],
-        y: position[1],
-        type,
-        challenge: 'New AI Challenge',
-        difficulty: 'medium',
-        createdAt: new Date().toISOString(),
-        createdBy: 'User123', // Mock user ID, replace with actual user authentication later
-      };
-
-      try {
-        const docRef = await addDoc(collection(db, 'boxes'), newBox);
-        console.log('Box added with ID: ', docRef.id);
-        
-        setBoxes(prevBoxes => {
-          const updatedBoxes = [...prevBoxes, { ...newBox, id: docRef.id }];
-          updateConnections(updatedBoxes);
-          return updatedBoxes;
-        });
-        return true; // Successfully added a box
-      } catch (error) {
-        console.error('Error adding box to Firestore: ', error);
+      if (attempts >= 100) {
+        console.error('Failed to find a valid position for new box');
         return false;
       }
-    } else {
-      console.error('Failed to find a valid position for new box');
-      return false; // Failed to add a box
+    }
+
+    const newBox = {
+      id: boxData.id || uuidv4(),
+      x: position[0],
+      y: position[1],
+      type: boxData.type || 'default',
+      systemPrompt: boxData.systemPrompt || '',
+      secretWord: boxData.secretWord || '',
+      secretSentence: boxData.secretSentence || 'The secret word is:',
+      combinedSystemPrompt: boxData.combinedSystemPrompt || '',
+      difficulty: boxData.difficulty || 'medium',
+      createdAt: boxData.createdAt || new Date().toISOString(),
+      createdBy: boxData.createdBy || { uid: 'anonymous', displayName: 'Unknown' },
+    };
+
+    try {
+      const docRef = await addDoc(collection(db, 'boxes'), newBox);
+      console.log('Box added with ID: ', docRef.id);
+      
+      setBoxes(prevBoxes => {
+        const updatedBoxes = [...prevBoxes, { ...newBox, id: docRef.id }];
+        updateConnections(updatedBoxes);
+        return updatedBoxes;
+      });
+      return true;
+    } catch (error) {
+      console.error('Error adding box to Firestore: ', error);
+      return false;
     }
   }, [MAP_SIZE, boxes]);
 

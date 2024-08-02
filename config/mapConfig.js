@@ -49,7 +49,7 @@ const mapConfig = {
 
   // The size of the map (this should match your MAP_SIZE calculation)
   // This represents the size of the visible area
-  mapSize: 20,
+  mapSize: 50,
 
   // How far the camera can move from the center in any direction
   // (as a multiple of mapSize)
