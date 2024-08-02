@@ -150,6 +150,7 @@ const AISecurityMapContent = () => {
             selectedModel={selectedModel}
             setSelectedModel={setSelectedModel}
             onLoadBoxes={handleLoadBoxes}
+            clearAllBoxes={handleClearBoxes}
             isLoading={isLoading}
           />
         </div>
@@ -196,14 +197,6 @@ const AISecurityMapContent = () => {
         setIsChallengeOpen={setIsChallengeOpen}
         setIsAttackModalOpen={setIsAttackModalOpen}
       />
-      <div className="absolute top-20 right-4 z-10 pointer-events-auto">
-        <button
-          onClick={handleClearBoxes}
-          className="bg-red-500 text-white rounded-full px-4 py-2 shadow-lg hover:bg-red-600 transition-colors duration-300"
-        >
-          Clear All Boxes
-        </button>
-      </div>
       {isLoading && (
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="text-white text-2xl">Loading...</div>

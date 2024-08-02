@@ -5,7 +5,7 @@
  * 
  * This file defines the central context for the AI Security Map application.
  * It combines various custom hooks and manages the overall state and logic
- * for the map, boxes, attacks, and user interactions.
+ * for the map, boxes, attacks, user interactions, and authentication.
  * 
  * Context:
  * - Core component of the AI Security Map application
@@ -18,6 +18,7 @@
  * - selectedBox: Currently selected box for attack or configuration
  * - targetBox: Target box for attack
  * - mapControls: Position and zoom state for map navigation
+ * - user: Current authenticated user (null if not logged in)
  * 
  * Key Functionalities:
  * 1. Managing application mode and UI states
@@ -25,12 +26,15 @@
  * 3. Coordinating attack initiation and confirmation
  * 4. Providing context values for child components
  * 5. Responsive map size calculation based on screen size
+ * 6. User authentication state management
  ****************************************************************************/
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import useBoxManager from '../hooks/useBox';
 import useAttackManager from '../hooks/useAttack';
 import { useMapControls } from '../hooks/useMapControls';
 import mapConfig from '../config/mapConfig';
+import { auth } from '../firebase-config';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const MapContext = createContext();
 
@@ -55,6 +59,7 @@ const useScreenSize = () => {
 
 export const MapProvider = ({ children }) => {
   const screenSize = useScreenSize();
+  const [user, setUser] = useState(null);
 
   const MAP_SIZE = useMemo(() => {
     const aspectRatio = screenSize.width / screenSize.height;
@@ -67,6 +72,23 @@ export const MapProvider = ({ children }) => {
   const [isAttackModalOpen, setIsAttackModalOpen] = useState(false);
   const [tooltip, setTooltip] = useState('');
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogin = useCallback(() => {
+    // This function is called after successful login
+    console.log('User logged in');
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    // This function is called after successful logout
+    console.log('User logged out');
+  }, []);
+
   const boxManager = useBoxManager(MAP_SIZE);
   const { 
     boxes, 
@@ -76,7 +98,7 @@ export const MapProvider = ({ children }) => {
     updateBoxPosition, 
     handleBoxDrag, 
     loadBoxesFromFirebase,
-    clearAllBoxes  // Add this line
+    clearAllBoxes
   } = boxManager;
 
   const attackManager = useAttackManager(boxes, mode, setMode, setTooltip);
@@ -194,7 +216,10 @@ export const MapProvider = ({ children }) => {
     setMapPosition,
     setMapZoom,
     loadBoxesFromFirebase,
-    clearAllBoxes  // Add this line
+    clearAllBoxes,
+    user,
+    handleLogin,
+    handleLogout
   };
 
   return (
