@@ -42,10 +42,10 @@ const mapConfig = {
   minZoom: 0.3,
 
   // Maximum zoom level (maximum zoom in)
-  maxZoom: 1.5,
+  maxZoom: 1.6,
 
   // How much the zoom changes per scroll
-  zoomStep: 0.02,
+  zoomStep: 0.05,
 
   // The size of the map (this should match your MAP_SIZE calculation)
   // This represents the size of the visible area

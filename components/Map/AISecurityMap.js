@@ -120,8 +120,16 @@ const AISecurityMapContent = () => {
     };
   
     addBox(boxWithPosition);
+  
+    // Center the view on the new box
+    setMapPosition({ x: x, y: y });
+  
+    // Set a specific zoom level (adjust as needed)
+    const newZoomLevel = 2; // This will zoom in closer to the new box
+    setMapZoom(newZoomLevel);
+  
     setIsCreateBoxModalOpen(false);
-  }, [addBox, MAP_SIZE]);
+  }, [addBox, MAP_SIZE, setMapPosition, setMapZoom]);
 
   const handleMiniMapPositionChange = useCallback((newPosition) => {
     setMapPosition(newPosition);
