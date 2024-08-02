@@ -22,6 +22,7 @@
  * - selectedModel: Currently selected AI model for new boxes
  * - setSelectedModel: Function to update the selected model
  * - isLoading: Boolean indicating if boxes are being loaded
+ * - setLastUpdateTime: Function to update the last reload time
  * 
  * Key Functionalities:
  * 1. Mode switching buttons (Create, Preview, Attack)
@@ -35,7 +36,7 @@
  ****************************************************************************/
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Login from '../Auth/Login';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -48,24 +49,14 @@ const ControlPanel = ({
   isAttackModeAvailable, 
   selectedModel, 
   setSelectedModel,
-  isLoading
+  isLoading,
+  setLastUpdateTime
 }) => {
   const { user } = useAuth();
-  const [lastUpdateTime, setLastUpdateTime] = useState(null);
 
   const handleReload = () => {
     reloadBoxes();
     setLastUpdateTime(new Date());
-  };
-
-  useEffect(() => {
-    // Set initial last update time when component mounts
-    setLastUpdateTime(new Date());
-  }, []);
-
-  const formatLastUpdateTime = () => {
-    if (!lastUpdateTime) return '';
-    return lastUpdateTime.toLocaleString();
   };
 
   return (
@@ -127,7 +118,7 @@ const ControlPanel = ({
           className={`bg-blue-500 text-white rounded-full p-2 shadow-lg hover:bg-blue-600 transition-colors duration-300 ${
             isLoading ? 'opacity-50 cursor-not-allowed' : ''
           }`}
-          title={`Last updated: ${formatLastUpdateTime()}`}
+          title="Reload boxes"
         >
           {isLoading ? (
             <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

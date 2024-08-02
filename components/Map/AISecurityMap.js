@@ -28,6 +28,7 @@
  * 7. Loading boxes from Firebase in preview mode
  * 8. Clearing all boxes
  * 9. Displaying the number of loaded boxes
+ * 10. Tracking and displaying the last update time
  * 
  * Note: This component heavily relies on the MapContext for state management.
  * Ensure that all required context values are properly provided by the MapProvider.
@@ -47,6 +48,7 @@ const AISecurityMapContent = () => {
   const [selectedModel, setSelectedModel] = useState('default');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [lastUpdateTime, setLastUpdateTime] = useState(null);
 
   const {
     mode,
@@ -110,6 +112,7 @@ const AISecurityMapContent = () => {
         console.warn(`${loadedBoxes.length - validBoxes.length} boxes were invalid and filtered out.`);
       }
       console.log(`Successfully loaded ${validBoxes.length} boxes.`);
+      setLastUpdateTime(new Date());
     } catch (err) {
       setError('Failed to load boxes. Please try again.');
       console.error('Error loading boxes:', err);
@@ -128,6 +131,7 @@ const AISecurityMapContent = () => {
     try {
       await clearAllBoxes();
       console.log('All boxes cleared.');
+      setLastUpdateTime(new Date());
     } catch (err) {
       setError('Failed to clear boxes. Please try again.');
       console.error('Error clearing boxes:', err);
@@ -141,6 +145,11 @@ const AISecurityMapContent = () => {
       handleLoadBoxes();
     }
   }, [mode, handleLoadBoxes]);
+
+  const formatLastUpdateTime = () => {
+    if (!lastUpdateTime) return 'Never';
+    return lastUpdateTime.toLocaleString();
+  };
 
   return (
     <div className="w-screen h-screen relative bg-gray-900">
@@ -159,6 +168,7 @@ const AISecurityMapContent = () => {
             selectedModel={selectedModel}
             setSelectedModel={setSelectedModel}
             isLoading={isLoading}
+            setLastUpdateTime={setLastUpdateTime}
           />
         </div>
         <div className="absolute bottom-4 right-4 z-10 pointer-events-auto">
@@ -216,6 +226,9 @@ const AISecurityMapContent = () => {
       )}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white p-2 rounded-lg">
         Loaded Boxes: {boxes.length}
+      </div>
+      <div className="absolute bottom-4 left-4 bg-gray-800 text-white p-2 rounded-lg">
+        Last Updated: {formatLastUpdateTime()}
       </div>
     </div>
   );
