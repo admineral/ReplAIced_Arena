@@ -35,7 +35,7 @@ const mapConfig = {
 
   // Initial zoom level (1 is default, <1 is zoomed out, >1 is zoomed in)
   // Slightly decreased to show more of the expanded world initially
-  initialZoom: 0.7,
+  initialZoom: 1.3,
 
   // Minimum zoom level (maximum zoom out)
   // Decreased to allow viewing more of the expanded world at once
@@ -45,7 +45,7 @@ const mapConfig = {
   maxZoom: 1.5,
 
   // How much the zoom changes per scroll
-  zoomStep: 0.05,
+  zoomStep: 0.02,
 
   // The size of the map (this should match your MAP_SIZE calculation)
   // This represents the size of the visible area
