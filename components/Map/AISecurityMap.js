@@ -24,9 +24,9 @@ import ControlPanel from '../Navbar/ControlPanel';
 import LoadingOverlay from './LoadingOverlay';
 import ErrorOverlay from './ErrorOverlay';
 import BoxesInfoDisplay from './BoxesInfoDisplay';
+import AttackGuidedTour from './AttackGuidedTour';
 
 const AISecurityMapContent = () => {
-  const [initialMode, setInitialMode] = useState('preview');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdateTime, setLastUpdateTime] = useState(null);
@@ -44,7 +44,7 @@ const AISecurityMapContent = () => {
     selectedBox,
     targetBox,
     isAttackModeAvailable,
-    tooltip,
+    isAttacking,
     isConfigOpen,
     isChallengeOpen,
     isAttackModalOpen,
@@ -52,7 +52,6 @@ const AISecurityMapContent = () => {
     setIsChallengeOpen,
     setIsAttackModalOpen,
     updateBox,
-    handleAttack,
     handleConfirmAttack,
     MAP_SIZE,
     mapControls,
@@ -82,8 +81,8 @@ const AISecurityMapContent = () => {
   const retryLoading = useCallback(() => eventHandlers.handleRetry(loadingTimeout, loadBoxes)(), [loadingTimeout, loadBoxes]);
 
   useEffect(() => {
-    switchMode(initialMode);
-  }, [initialMode, switchMode]);
+    switchMode('preview');
+  }, [switchMode]);
 
   useEffect(() => {
     if (mode === 'preview') {
@@ -126,18 +125,13 @@ const AISecurityMapContent = () => {
             viewRectColor="#ffd700"
           />
         </div>
-        {mode === 'attack' && selectedBox && targetBox && (
-          <button
-            onClick={handleAttack}
-            className="absolute top-20 left-4 bg-red-500 text-white rounded-full px-4 py-2 shadow-lg hover:bg-red-600 transition-colors duration-300 pointer-events-auto"
-          >
-            Attack
-          </button>
-        )}
-        {tooltip && (
-          <div className="absolute bottom-4 left-4 bg-gray-800 text-white p-2 rounded-lg pointer-events-auto">
-            {tooltip}
-          </div>
+        {mode === 'attack' && (
+          <AttackGuidedTour
+            step={selectedBox && targetBox ? 2 : selectedBox ? 1 : 0}
+            selectedBox={selectedBox}
+            targetBox={targetBox}
+            isAttacking={isAttacking}
+          />
         )}
       </div>
       <ModalManager

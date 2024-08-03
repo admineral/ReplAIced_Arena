@@ -70,7 +70,6 @@ export const MapProvider = ({ children }) => {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
   const [isAttackModalOpen, setIsAttackModalOpen] = useState(false);
-  const [tooltip, setTooltip] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -101,7 +100,7 @@ export const MapProvider = ({ children }) => {
     clearAllBoxes
   } = boxManager;
 
-  const attackManager = useAttackManager(boxes, mode, setMode, setTooltip);
+  const attackManager = useAttackManager(boxes, mode, setMode);
   const { 
     selectedBox, 
     targetBox, 
@@ -124,19 +123,17 @@ export const MapProvider = ({ children }) => {
       } else if (mode === 'attack') {
         if (!selectedBox) {
           initiateAttack(box);
-          setTooltip('Now select a target node to attack');
         } else if (selectedBox.id !== box.id) {
           initiateAttack(selectedBox, box);
-          setTooltip('Click the Attack button to initiate');
+          setIsAttackModalOpen(true);
         } else {
           initiateAttack(null);
-          setTooltip('Select a node to start the attack');
         }
       } else if (mode === 'create') {
         initiateAttack(box.id === selectedBox?.id ? null : box);
       }
     }
-  }, [mode, selectedBox, boxes, initiateAttack, setTooltip, setIsChallengeOpen]);
+  }, [mode, selectedBox, boxes, initiateAttack, setIsChallengeOpen, setIsAttackModalOpen]);
 
   const handleBoxDoubleClick = useCallback((boxId) => {
     console.log('handleBoxDoubleClick called:', boxId);
@@ -152,20 +149,11 @@ export const MapProvider = ({ children }) => {
   const switchMode = useCallback((newMode) => {
     console.log('Switching mode to:', newMode);
     if (newMode === 'attack' && !isAttackModeAvailable) {
-      setTooltip('You need at least 2 boxes to enable attack mode. Add another box.');
       return;
     }
     setMode(newMode);
     initiateAttack(null);
-    setTooltip(newMode === 'attack' ? 'Select a node to start the attack' : '');
-  }, [isAttackModeAvailable, initiateAttack, setMode, setTooltip]);
-
-  const handleAttack = useCallback(() => {
-    console.log('handleAttack called');
-    if (selectedBox && targetBox) {
-      setIsAttackModalOpen(true);
-    }
-  }, [selectedBox, targetBox, setIsAttackModalOpen]);
+  }, [isAttackModeAvailable, initiateAttack, setMode]);
 
   const handleConfirmAttack = useCallback(() => {
     console.log('handleConfirmAttack called');
@@ -173,9 +161,8 @@ export const MapProvider = ({ children }) => {
     startAttackAnimation();
     setTimeout(() => {
       confirmAttack();
-      setTooltip('Select a node to start a new attack');
     }, 5000); // Adjust this timeout to match your animation duration
-  }, [confirmAttack, setIsAttackModalOpen, setTooltip, startAttackAnimation]);
+  }, [confirmAttack, setIsAttackModalOpen, startAttackAnimation]);
 
   const setMapPosition = useCallback((newPosition) => {
     mapControls.setPosition(newPosition);
@@ -195,8 +182,6 @@ export const MapProvider = ({ children }) => {
     setIsChallengeOpen,
     isAttackModalOpen,
     setIsAttackModalOpen,
-    tooltip,
-    setTooltip,
     isAttacking,
     boxes,
     connections,
@@ -208,7 +193,6 @@ export const MapProvider = ({ children }) => {
     handleBoxDoubleClick,
     handleBoxDrag,
     switchMode,
-    handleAttack,
     handleConfirmAttack,
     isAttackModeAvailable,
     startAttackAnimation,

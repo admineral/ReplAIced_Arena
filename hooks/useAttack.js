@@ -21,15 +21,12 @@
  * 1. Monitors the number of boxes to determine attack mode availability
  * 2. Manages the selection of attacker and target nodes
  * 3. Provides functions to initiate, start, and confirm attacks
- * 4. Updates tooltips and mode based on the current attack state
+ * 4. Updates mode based on the current attack state
  ****************************************************************************/
-
-
-
 
 import { useState, useCallback, useEffect } from 'react';
 
-const useAttackManager = (boxes, mode, setMode, setTooltip) => {
+const useAttackManager = (boxes, mode, setMode) => {
   const [selectedBox, setSelectedBox] = useState(null);
   const [targetBox, setTargetBox] = useState(null);
   const [isAttacking, setIsAttacking] = useState(false);
@@ -40,9 +37,8 @@ const useAttackManager = (boxes, mode, setMode, setTooltip) => {
     
     if (mode === 'attack' && boxes.length < 2) {
       setMode('create');
-      setTooltip('You need at least 2 boxes to enable attack mode. Add another box.');
     }
-  }, [boxes, mode, setMode, setTooltip]);
+  }, [boxes, mode, setMode]);
 
   const initiateAttack = useCallback((attacker, target) => {
     setSelectedBox(attacker);

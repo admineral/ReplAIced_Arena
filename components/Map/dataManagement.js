@@ -8,11 +8,19 @@
  * interactions with Firebase and local state management.
  ****************************************************************************/
 
-// Function to validate box data
 export const validateBoxData = (boxData) => {
-    const requiredFields = ['x', 'y', 'type', 'id', 'challenge', 'difficulty', 'createdAt', 'createdBy', 'model', 'systemPrompt', 'secretWord'];
-    return requiredFields.every(field => field in boxData);
-  };
+    const requiredFields = ['x', 'y', 'type', 'id', 'difficulty', 'createdAt', 'createdBy', 'secretWord'];
+    const hasRequiredFields = requiredFields.every(field => field in boxData);
+    
+    const hasSystemPrompt = 'systemPrompt' in boxData || 'combinedSystemPrompt' in boxData;
+    
+    if (!hasRequiredFields || !hasSystemPrompt) {
+        console.warn('Invalid box data:', boxData);
+        return false;
+    }
+    
+    return true;
+};
   
   // Handler for loading boxes from Firebase
   export const handleLoadBoxes = (loadBoxesFromFirebase, setIsLoading, setError, setIsTimedOut, setLastUpdateTime, setLoadingTimeout) => {
