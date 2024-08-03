@@ -43,6 +43,7 @@ const CameraController = () => {
   const { position, zoom } = mapControls;
 
   useEffect(() => {
+    console.log('CameraController: Updating camera position:', position);
     camera.position.set(position.x, position.y, 100);
     camera.zoom = zoom * 50;
     camera.updateProjectionMatrix();

@@ -10,6 +10,7 @@ const useAttackReplay = (date) => {
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [lastDoc, setLastDoc] = useState(null);
   const [maxTime, setMaxTime] = useState(0);
+  const [selectedAttack, setSelectedAttack] = useState(null);
 
   const updateMaxTime = useCallback((attacksArray) => {
     if (attacksArray.length > 0) {
@@ -112,6 +113,17 @@ const useAttackReplay = (date) => {
     return markers;
   }, [attacks]);
 
+  const handleAttackMarkerClick = useCallback((marker) => {
+    const clickedAttack = attacks.find(attack => attack.id === marker.id);
+    if (clickedAttack) {
+      setSelectedAttack(clickedAttack);
+      const attackTime = Math.floor((clickedAttack.timestamp - new Date(date).getTime()) / 1000);
+      setCurrentTime(attackTime);
+      setIsPlaying(false);
+      console.log('Attack marker clicked:', clickedAttack);
+    }
+  }, [attacks, date]);
+
   useEffect(() => {
     let intervalId;
     if (isPlaying) {
@@ -139,9 +151,10 @@ const useAttackReplay = (date) => {
       isPlaying,
       playbackSpeed,
       maxTime,
-      attackMarkersCount: attackMarkers.length
+      attackMarkersCount: attackMarkers.length,
+      selectedAttack: selectedAttack ? selectedAttack.id : null
     });
-  }, [attacks, currentTime, isPlaying, playbackSpeed, maxTime, attackMarkers]);
+  }, [attacks, currentTime, isPlaying, playbackSpeed, maxTime, attackMarkers, selectedAttack]);
 
   return { 
     attacks, 
@@ -150,13 +163,15 @@ const useAttackReplay = (date) => {
     playbackSpeed,
     maxTime,
     attackMarkers,
+    selectedAttack,
     play,
     pause,
     stop,
     resetToStart,
     setTime,
     cycleSpeed,
-    loadMoreAttacks
+    loadMoreAttacks,
+    handleAttackMarkerClick
   };
 };
 

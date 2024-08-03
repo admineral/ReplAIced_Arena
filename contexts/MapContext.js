@@ -181,12 +181,22 @@ export const MapProvider = ({ children }) => {
   }, [confirmAttack, setIsAttackModalOpen, startAttackAnimation, selectedBox, targetBox]);
 
   const setMapPosition = useCallback((newPosition) => {
+    console.log('MapContext: Setting map position to:', newPosition);
     mapControls.setPosition(newPosition);
-  }, [mapControls]);
+    // Force a re-render of components that depend on map position
+    setMode(prevMode => {
+      console.log('MapContext: Forcing re-render, current mode:', prevMode);
+      return prevMode;
+    });
+  }, [mapControls, setMode]);
 
   const setMapZoom = useCallback((newZoom) => {
     mapControls.setZoom(newZoom);
   }, [mapControls]);
+
+  useEffect(() => {
+    console.log('MapContext: Map position changed:', mapControls.position);
+  }, [mapControls.position]);
 
   const contextValue = {
     MAP_SIZE,

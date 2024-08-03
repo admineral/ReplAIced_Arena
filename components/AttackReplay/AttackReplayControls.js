@@ -12,7 +12,7 @@ const TimeDisplay = React.memo(({ time }) => {
   return <span className="text-white font-mono text-lg">{formatTime(time)}</span>;
 });
 
-const AttackMarker = ({ marker, maxTime }) => {
+const AttackMarker = ({ marker, maxTime, onMarkerClick }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -21,6 +21,7 @@ const AttackMarker = ({ marker, maxTime }) => {
       style={{ left: `${(marker.time / maxTime) * 100}%`, transform: 'translate(-50%, -50%)' }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={() => onMarkerClick(marker)}
     >
       <div className="h-full w-full bg-red-500 rounded-full transition-all duration-200 ease-in-out group-hover:scale-150" />
       {isHovered && (
@@ -33,7 +34,7 @@ const AttackMarker = ({ marker, maxTime }) => {
 };
 
 const AttackReplayControls = () => {
-  const { attackReplay } = useMapContext();
+  const { attackReplay, setMode, setMapPosition, setMapZoom, boxes } = useMapContext();
   const { 
     currentTime, 
     isPlaying, 
@@ -45,7 +46,10 @@ const AttackReplayControls = () => {
     maxTime,
     attackMarkers,
     playbackSpeed,
-    cycleSpeed
+    cycleSpeed,
+    handleAttackMarkerClick,
+    selectedAttack,
+    attacks
   } = attackReplay;
 
   const [sliderMax, setSliderMax] = useState(maxTime);
@@ -53,6 +57,10 @@ const AttackReplayControls = () => {
   useEffect(() => {
     setSliderMax(prevMax => Math.max(prevMax, maxTime));
   }, [maxTime]);
+
+  useEffect(() => {
+    console.log('Boxes array:', boxes);
+  }, [boxes]);
 
   const handlePlayPause = useCallback(() => {
     if (isPlaying) {
@@ -67,6 +75,43 @@ const AttackReplayControls = () => {
     setTime(newTime);
   }, [setTime]);
 
+  const handleMarkerClick = useCallback((marker) => {
+    console.log('Marker clicked:', marker);
+    handleAttackMarkerClick(marker);
+    setMode('attack');
+    
+    const clickedAttack = attacks.find(attack => attack.id === marker.id);
+    console.log('Clicked attack:', clickedAttack);
+    
+    if (clickedAttack && clickedAttack.attackerId && clickedAttack.targetId) {
+      const attacker = boxes.find(box => box.id === clickedAttack.attackerId);
+      const target = boxes.find(box => box.id === clickedAttack.targetId);
+      
+      console.log('Attacker box:', attacker);
+      console.log('Target box:', target);
+      
+      if (attacker && target) {
+        const centerX = (attacker.x + target.x) / 2;
+        const centerY = (attacker.y + target.y) / 2;
+        console.log('Calculated center position:', { x: centerX, y: centerY });
+        
+        // Set the map position directly to the center point
+        setMapPosition({ x: centerX, y: centerY });
+        
+        // Set a specific zoom level (adjust as needed)
+        const newZoomLevel = 2; // This will zoom in closer to the attack
+        setMapZoom(newZoomLevel);
+        
+        console.log('Setting map position to:', { x: centerX, y: centerY });
+        console.log('Setting zoom level to:', newZoomLevel);
+      } else {
+        console.warn('Attacker or target box not found:', { attackerId: clickedAttack.attackerId, targetId: clickedAttack.targetId });
+      }
+    } else {
+      console.warn('Attack data incomplete:', clickedAttack);
+    }
+  }, [handleAttackMarkerClick, setMode, setMapPosition, setMapZoom, attacks, boxes]);
+
   return (
     <div className="w-full max-w-3xl bg-gray-800 bg-opacity-95 p-4 rounded-lg shadow-lg relative">
       {/* Timeline slider */}
@@ -78,7 +123,12 @@ const AttackReplayControls = () => {
         ></div>
         {/* Attack markers */}
         {attackMarkers.map(marker => (
-          <AttackMarker key={marker.id} marker={marker} maxTime={sliderMax} />
+          <AttackMarker 
+            key={marker.id} 
+            marker={marker} 
+            maxTime={sliderMax} 
+            onMarkerClick={handleMarkerClick}
+          />
         ))}
         {/* Slider input */}
         <input 
@@ -126,6 +176,14 @@ const AttackReplayControls = () => {
         {/* Time display */}
         <TimeDisplay time={currentTime} />
       </div>
+      {/* Selected attack info */}
+      {selectedAttack && (
+        <div className="mt-4 p-2 bg-gray-700 rounded-md">
+          <h3 className="text-white font-semibold">Selected Attack:</h3>
+          <p className="text-white text-sm">ID: {selectedAttack.id}</p>
+          <p className="text-white text-sm">Time: {new Date(selectedAttack.timestamp).toLocaleString()}</p>
+        </div>
+      )}
     </div>
   );
 };
