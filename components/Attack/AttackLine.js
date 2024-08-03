@@ -28,16 +28,41 @@
  ****************************************************************************/
 
 
+// components/Attack/AttackLine.js
 
 import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { QuadraticBezierLine } from '@react-three/drei';
 import * as THREE from 'three';
+import { useMapContext } from '../../contexts/MapContext';
 
-const AttackLine = ({ start, end, duration = 5 }) => {
+const AttackLine = ({ attackerId, targetId, duration = 5 }) => {
   const ref = useRef();
-  const mid = useMemo(() => new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5), [start, end]);
-  const control = useMemo(() => new THREE.Vector3(mid.x, mid.y + 2, mid.z), [mid]);
+  const { boxes } = useMapContext();
+  
+  const start = useMemo(() => {
+    const attacker = boxes.find(box => box.id === attackerId);
+    return attacker ? new THREE.Vector3(attacker.x, attacker.y, attacker.z) : null;
+  }, [boxes, attackerId]);
+
+  const end = useMemo(() => {
+    const target = boxes.find(box => box.id === targetId);
+    return target ? new THREE.Vector3(target.x, target.y, target.z) : null;
+  }, [boxes, targetId]);
+
+  const mid = useMemo(() => {
+    if (start && end) {
+      return new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+    }
+    return null;
+  }, [start, end]);
+
+  const control = useMemo(() => {
+    if (mid) {
+      return new THREE.Vector3(mid.x, mid.y + 2, mid.z);
+    }
+    return null;
+  }, [mid]);
 
   useFrame((state, delta) => {
     if (ref.current) {
@@ -54,6 +79,10 @@ const AttackLine = ({ start, end, duration = 5 }) => {
 
     return () => clearTimeout(timer);
   }, [duration]);
+
+  if (!start || !end || !mid || !control) {
+    return null;
+  }
 
   return (
     <group>

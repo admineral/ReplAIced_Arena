@@ -1,3 +1,5 @@
+// components/Map/AttackGuidedTour.js
+
 import React from 'react';
 
 const AttackGuidedTour = ({ step, selectedBox, targetBox, isAttacking }) => {
@@ -12,15 +14,13 @@ const AttackGuidedTour = ({ step, selectedBox, targetBox, isAttacking }) => {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-8 flex justify-center items-center z-50 pointer-events-none">
-      <div className="bg-gray-800 text-white p-4 rounded-lg shadow-lg max-w-md text-center">
-        <p className="text-xl font-bold mb-2">{steps[step]}</p>
-        {step === 2 && (
-          <p className="text-sm">
-            Attacking from {selectedBox?.type} to {targetBox?.type}
-          </p>
-        )}
-      </div>
+    <div className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg text-center whitespace-nowrap">
+      <p className="text-sm font-semibold">{steps[step]}</p>
+      {step === 2 && (
+        <p className="text-xs mt-1">
+          Attacking from {selectedBox?.type} to {targetBox?.type}
+        </p>
+      )}
     </div>
   );
 };

@@ -35,6 +35,8 @@ import { useMapControls } from '../hooks/useMapControls';
 import mapConfig from '../config/mapConfig';
 import { auth } from '../firebase-config';
 import { onAuthStateChanged } from 'firebase/auth';
+import useAttackReplay from '../hooks/useAttackReplay';
+import { saveAttack } from '../services/firestore';
 
 const MapContext = createContext();
 
@@ -70,6 +72,8 @@ export const MapProvider = ({ children }) => {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
   const [isAttackModalOpen, setIsAttackModalOpen] = useState(false);
+  const [replayDate, setReplayDate] = useState(new Date());
+  const attackReplay = useAttackReplay(replayDate);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -79,12 +83,10 @@ export const MapProvider = ({ children }) => {
   }, []);
 
   const handleLogin = useCallback(() => {
-    // This function is called after successful login
     console.log('User logged in');
   }, []);
 
   const handleLogout = useCallback(() => {
-    // This function is called after successful logout
     console.log('User logged out');
   }, []);
 
@@ -155,14 +157,28 @@ export const MapProvider = ({ children }) => {
     initiateAttack(null);
   }, [isAttackModeAvailable, initiateAttack, setMode]);
 
-  const handleConfirmAttack = useCallback(() => {
+  const handleConfirmAttack = useCallback(async () => {
     console.log('handleConfirmAttack called');
     setIsAttackModalOpen(false);
     startAttackAnimation();
+    
+    const attackData = {
+      attackerId: selectedBox.id,
+      targetId: targetBox.id,
+      timestamp: Date.now(),
+    };
+    
+    try {
+      await saveAttack(attackData);
+      console.log('Attack saved to Firestore');
+    } catch (error) {
+      console.error('Error saving attack to Firestore:', error);
+    }
+
     setTimeout(() => {
       confirmAttack();
     }, 5000); // Adjust this timeout to match your animation duration
-  }, [confirmAttack, setIsAttackModalOpen, startAttackAnimation]);
+  }, [confirmAttack, setIsAttackModalOpen, startAttackAnimation, selectedBox, targetBox]);
 
   const setMapPosition = useCallback((newPosition) => {
     mapControls.setPosition(newPosition);
@@ -203,7 +219,9 @@ export const MapProvider = ({ children }) => {
     clearAllBoxes,
     user,
     handleLogin,
-    handleLogout
+    handleLogout,
+    attackReplay,
+    setReplayDate
   };
 
   return (

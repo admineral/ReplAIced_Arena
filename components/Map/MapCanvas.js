@@ -16,7 +16,7 @@
  * 1. Rendering nodes (boxes) and their connections
  * 2. Handling canvas dragging for map navigation
  * 3. Managing zoom levels with mouse wheel
- * 4. Displaying attack lines during attack mode
+ * 4. Displaying attack lines during attack mode and replay
  * 5. Coordinating node interactions (click, double-click, drag)
  * 
  * Sub-components:
@@ -27,7 +27,7 @@
  * for its functionality. Ensure all required context values are provided.
  ****************************************************************************/
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Nodes, Node } from '../Nodes/NodeSystem';
 import AttackLine from '../Attack/AttackLine';
@@ -62,12 +62,20 @@ const MapCanvas = () => {
     handleBoxClick,
     handleBoxDoubleClick,
     handleBoxDrag,
-    mapControls
+    mapControls,
+    attackReplay
   } = useMapContext();
+
+  const { attackMarkers, currentTime } = attackReplay;
 
   const canvasRef = useRef();
   const [isOverNode, setIsOverNode] = useState(false);
   const dragStartPosition = useRef(null);
+
+  // Filter current attacks based on the replay time
+  const currentAttacks = useMemo(() => {
+    return attackMarkers.filter(attack => attack.time <= currentTime);
+  }, [attackMarkers, currentTime]);
 
   const handleDragStart = useCallback((id, x, y) => {
     dragStartPosition.current = { id, x, y };
@@ -83,6 +91,7 @@ const MapCanvas = () => {
     dragStartPosition.current = null;
   }, [handleBoxDrag]);
 
+  // Handle canvas dragging
   const bind = useDrag(({ delta: [dx, dy], event }) => {
     if (!isOverNode) {
       event.stopPropagation();
@@ -93,6 +102,7 @@ const MapCanvas = () => {
     }
   }, { filterTaps: true });
 
+  // Handle zoom with mouse wheel
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -162,12 +172,24 @@ const MapCanvas = () => {
             />
           ))}
         </Nodes>
+        {/* Render active attack line */}
         {isAttacking && selectedBox && targetBox && (
           <AttackLine
-            start={new THREE.Vector3(selectedBox.x, selectedBox.y, 0)}
-            end={new THREE.Vector3(targetBox.x, targetBox.y, 0)}
+            attackerId={selectedBox.id}
+            targetId={targetBox.id}
           />
         )}
+        {/* Render attack lines for replay */}
+        {currentAttacks.map((attack) => (
+          <AttackLine
+            key={attack.id}
+            attackerId={attack.attackerId}
+            targetId={attack.targetId}
+            color="red"
+            dashSize={2}
+            gapSize={1}
+          />
+        ))}
       </Canvas>
     </div>
   );
