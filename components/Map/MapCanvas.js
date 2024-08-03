@@ -1,34 +1,5 @@
-/****************************************************************************
- * components/MapCanvas.js
- * 
- * Map Canvas Component for AI Security Map
- * 
- * This component renders the main 3D canvas for the AI Security Map application.
- * It manages the rendering of nodes, connections, and attack lines, as well as
- * handling user interactions like dragging and zooming.
- * 
- * Context:
- * - Central visual component of the AI Security Map application
- * - Uses react-three-fiber for 3D rendering
- * - Integrates with MapContext for state management
- * 
- * Key Functionalities:
- * 1. Rendering nodes (boxes) and their connections
- * 2. Handling canvas dragging for map navigation
- * 3. Managing zoom levels with mouse wheel
- * 4. Displaying attack lines during attack mode and replay
- * 5. Coordinating node interactions (click, double-click, drag)
- * 
- * Sub-components:
- * - CameraController: Manages camera position and zoom
- * - WebGLErrorHandler: Handles WebGL rendering errors
- * 
- * Note: This component is highly dependent on the MapContext and custom hooks
- * for its functionality. Ensure all required context values are provided.
- ****************************************************************************/
-
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { Nodes, Node } from '../Nodes/NodeSystem';
 import AttackLine from '../Attack/AttackLine';
 import WebGLErrorHandler from '../Error/WebGLErrorHandler';
@@ -52,6 +23,32 @@ const CameraController = () => {
   return null;
 };
 
+const AttackManager = ({ activeAttacks, setActiveAttacks }) => {
+  useFrame(() => {
+    const currentTime = Date.now();
+    setActiveAttacks(prevAttacks => 
+      prevAttacks.filter(attack => currentTime - attack.startTime < attack.duration)
+    );
+  });
+
+  return (
+    <>
+      {activeAttacks.map((attack) => (
+        <AttackLine
+          key={attack.id}
+          attackerId={attack.attackerId}
+          targetId={attack.targetId}
+          duration={attack.duration}
+          startTime={attack.startTime}
+          color="red"
+          dashSize={2}
+          gapSize={1}
+        />
+      ))}
+    </>
+  );
+};
+
 const MapCanvas = () => {
   const {
     boxes,
@@ -67,11 +64,12 @@ const MapCanvas = () => {
     attackReplay
   } = useMapContext();
 
-  const { attackMarkers, currentTime } = attackReplay;
+  const { attackMarkers, currentTime, triggerAttackVisualizationRef } = attackReplay;
 
   const canvasRef = useRef();
   const [isOverNode, setIsOverNode] = useState(false);
   const dragStartPosition = useRef(null);
+  const [activeAttacks, setActiveAttacks] = useState([]);
 
   // Filter current attacks based on the replay time
   const currentAttacks = useMemo(() => {
@@ -119,6 +117,16 @@ const MapCanvas = () => {
       canvas.removeEventListener('wheel', handleWheel);
     };
   }, [mapControls]);
+
+  // Set up attack visualization trigger
+  useEffect(() => {
+    triggerAttackVisualizationRef.current = (attack) => {
+      setActiveAttacks(prevAttacks => [
+        ...prevAttacks,
+        { ...attack, startTime: Date.now(), duration: 5000 } // 5 seconds duration
+      ]);
+    };
+  }, [triggerAttackVisualizationRef]);
 
   return (
     <div 
@@ -191,6 +199,8 @@ const MapCanvas = () => {
             gapSize={1}
           />
         ))}
+        {/* Render active attacks */}
+        <AttackManager activeAttacks={activeAttacks} setActiveAttacks={setActiveAttacks} />
       </Canvas>
     </div>
   );

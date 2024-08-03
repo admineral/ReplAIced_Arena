@@ -1,6 +1,6 @@
 // src/hooks/useAttackReplay.js
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { getAttacks, subscribeToAttacks } from '../services/firestore';
 
 const useAttackReplay = (date) => {
@@ -11,6 +11,8 @@ const useAttackReplay = (date) => {
   const [lastDoc, setLastDoc] = useState(null);
   const [maxTime, setMaxTime] = useState(0);
   const [selectedAttack, setSelectedAttack] = useState(null);
+
+  const triggerAttackVisualizationRef = useRef(null);
 
   const updateMaxTime = useCallback((attacksArray) => {
     if (attacksArray.length > 0) {
@@ -121,8 +123,15 @@ const useAttackReplay = (date) => {
       setCurrentTime(attackTime);
       setIsPlaying(false);
       console.log('Attack marker clicked:', clickedAttack);
+      return clickedAttack;
     }
   }, [attacks, date]);
+
+  const triggerAttackVisualization = useCallback((attack) => {
+    if (triggerAttackVisualizationRef.current) {
+      triggerAttackVisualizationRef.current(attack);
+    }
+  }, []);
 
   useEffect(() => {
     let intervalId;
@@ -171,7 +180,9 @@ const useAttackReplay = (date) => {
     setTime,
     cycleSpeed,
     loadMoreAttacks,
-    handleAttackMarkerClick
+    handleAttackMarkerClick,
+    triggerAttackVisualization,
+    triggerAttackVisualizationRef
   };
 };
 

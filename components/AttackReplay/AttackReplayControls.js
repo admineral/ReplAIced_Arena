@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import { useMapContext } from '../../contexts/MapContext';
 import { PlayIcon, PauseIcon, StopIcon, HomeIcon, ForwardIcon } from '@heroicons/react/24/solid';
 
@@ -48,19 +48,26 @@ const AttackReplayControls = () => {
     playbackSpeed,
     cycleSpeed,
     handleAttackMarkerClick,
-    selectedAttack,
+    triggerAttackVisualization,
     attacks
   } = attackReplay;
 
   const [sliderMax, setSliderMax] = useState(maxTime);
 
+  // Update sliderMax to accommodate all markers
   useEffect(() => {
-    setSliderMax(prevMax => Math.max(prevMax, maxTime));
-  }, [maxTime]);
+    const latestMarkerTime = Math.max(...attackMarkers.map(marker => marker.time), 0);
+    setSliderMax(prevMax => Math.max(prevMax, latestMarkerTime, maxTime));
+  }, [attackMarkers, maxTime]);
 
-  useEffect(() => {
-    console.log('Boxes array:', boxes);
-  }, [boxes]);
+  // Sort and filter attack markers
+  const sortedAttackMarkers = useMemo(() => {
+    return [...attackMarkers]
+      .sort((a, b) => a.time - b.time)
+      .filter((marker, index, self) => 
+        index === self.findIndex((t) => t.time === marker.time)
+      );
+  }, [attackMarkers]);
 
   const handlePlayPause = useCallback(() => {
     if (isPlaying) {
@@ -77,40 +84,27 @@ const AttackReplayControls = () => {
 
   const handleMarkerClick = useCallback((marker) => {
     console.log('Marker clicked:', marker);
-    handleAttackMarkerClick(marker);
+    const clickedAttack = handleAttackMarkerClick(marker);
     setMode('attack');
-    
-    const clickedAttack = attacks.find(attack => attack.id === marker.id);
-    console.log('Clicked attack:', clickedAttack);
     
     if (clickedAttack && clickedAttack.attackerId && clickedAttack.targetId) {
       const attacker = boxes.find(box => box.id === clickedAttack.attackerId);
       const target = boxes.find(box => box.id === clickedAttack.targetId);
       
-      console.log('Attacker box:', attacker);
-      console.log('Target box:', target);
-      
       if (attacker && target) {
         const centerX = (attacker.x + target.x) / 2;
         const centerY = (attacker.y + target.y) / 2;
-        console.log('Calculated center position:', { x: centerX, y: centerY });
         
-        // Set the map position directly to the center point
         setMapPosition({ x: centerX, y: centerY });
         
-        // Set a specific zoom level (adjust as needed)
-        const newZoomLevel = 2; // This will zoom in closer to the attack
+        const distance = Math.sqrt(Math.pow(target.x - attacker.x, 2) + Math.pow(target.y - attacker.y, 2));
+        const newZoomLevel = Math.max(1, 5 / distance);
         setMapZoom(newZoomLevel);
-        
-        console.log('Setting map position to:', { x: centerX, y: centerY });
-        console.log('Setting zoom level to:', newZoomLevel);
-      } else {
-        console.warn('Attacker or target box not found:', { attackerId: clickedAttack.attackerId, targetId: clickedAttack.targetId });
+
+        triggerAttackVisualization(clickedAttack);
       }
-    } else {
-      console.warn('Attack data incomplete:', clickedAttack);
     }
-  }, [handleAttackMarkerClick, setMode, setMapPosition, setMapZoom, attacks, boxes]);
+  }, [handleAttackMarkerClick, setMode, setMapPosition, setMapZoom, boxes, triggerAttackVisualization]);
 
   return (
     <div className="w-full max-w-3xl bg-gray-800 bg-opacity-95 p-4 rounded-lg shadow-lg relative">
@@ -122,7 +116,7 @@ const AttackReplayControls = () => {
           style={{ width: `${(currentTime / sliderMax) * 100}%` }}
         ></div>
         {/* Attack markers */}
-        {attackMarkers.map(marker => (
+        {sortedAttackMarkers.map(marker => (
           <AttackMarker 
             key={marker.id} 
             marker={marker} 
@@ -176,14 +170,6 @@ const AttackReplayControls = () => {
         {/* Time display */}
         <TimeDisplay time={currentTime} />
       </div>
-      {/* Selected attack info */}
-      {selectedAttack && (
-        <div className="mt-4 p-2 bg-gray-700 rounded-md">
-          <h3 className="text-white font-semibold">Selected Attack:</h3>
-          <p className="text-white text-sm">ID: {selectedAttack.id}</p>
-          <p className="text-white text-sm">Time: {new Date(selectedAttack.timestamp).toLocaleString()}</p>
-        </div>
-      )}
     </div>
   );
 };
