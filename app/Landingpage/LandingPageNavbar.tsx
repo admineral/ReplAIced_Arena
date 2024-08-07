@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
@@ -16,19 +16,6 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
   const router = useRouter();
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const handleProfileClick = () => {
     setShowDropdown(!showDropdown);
@@ -50,7 +37,7 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black to-transparent h-16">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black to-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -62,17 +49,17 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
               🏠
             </button>
             <div className="ml-10 flex items-baseline space-x-4">
-              {['about', 'features', 'join'].map((section) => (
-                <button
-                  key={section}
-                  onClick={() => scrollToSection(section)}
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    activeSection === section ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                  } transition-colors duration-300`}
-                >
-                  {section.charAt(0).toUpperCase() + section.slice(1)}
-                </button>
-              ))}
+            {['about', 'features', 'join'].map((section) => (
+            <button
+                key={section}
+                onClick={() => scrollToSection(section)}
+                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                activeSection === section ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                } transition-colors duration-300`}
+            >
+                {section.charAt(0).toUpperCase() + section.slice(1)}
+            </button>
+            ))}
             </div>
           </div>
           <div className="relative" ref={dropdownRef}>

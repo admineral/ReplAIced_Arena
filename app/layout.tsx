@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from '../contexts/AuthContext';
-
-const inter = Inter({ subsets: ["latin"] });
+import NavigationWrapper from '../components/ControlPanel/NavigationWrapper';
 
 export const metadata: Metadata = {
   title: "ReplAIced",
@@ -17,9 +15,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body>
         <AuthProvider>
-          {children}
+          <NavigationWrapper>
+            {children}
+          </NavigationWrapper>
         </AuthProvider>
       </body>
     </html>

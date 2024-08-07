@@ -1,6 +1,3 @@
 {
-  "/page": "app/page.js",
-  "/Profile/page": "app/Profile/page.js",
-  "/Login/page": "app/Login/page.js",
   "/Arena/page": "app/Arena/page.js"
 }

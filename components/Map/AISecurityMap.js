@@ -5,7 +5,7 @@
  * 
  * This is the main component for the AI Security Map application. It orchestrates
  * the overall layout and functionality of the application, including the map canvas,
- * attack replay controls, and various overlays and modals.
+ * control panel, attack replay controls, and various overlays and modals.
  ****************************************************************************/
 
 "use client"
@@ -21,6 +21,7 @@ import MiniMap from '../MiniMap/MiniMap_Component';
 import ModalManager from '../Modals/ModalManager';
 import CreateBoxModal from '../Modals/CreateBoxModal';
 import MapCanvas from './MapCanvas';
+import ControlPanel from '../ControlPanel/ControlPanel_Component';
 import LoadingOverlay from './LoadingOverlay';
 import ErrorOverlay from './ErrorOverlay';
 import BoxesInfoDisplay from './BoxesInfoDisplay';
@@ -97,6 +98,18 @@ const AISecurityMapContent = () => {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-gray-900">
+      <div className="flex-none">
+        <ControlPanel
+          mode={mode}
+          switchMode={switchMode}
+          openCreateBoxModal={openCreateBoxModal}
+          reloadBoxes={reloadBoxes}
+          clearAllBoxes={clearBoxes}
+          isAttackModeAvailable={isAttackModeAvailable}
+          isLoading={isLoading}
+          setLastUpdateTime={setLastUpdateTime}
+        />
+      </div>
       <div className="flex-grow relative">
         <MapCanvas />
         <div className="absolute inset-0 pointer-events-none">

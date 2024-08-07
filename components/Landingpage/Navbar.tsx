@@ -1,3 +1,22 @@
+
+/**
+ * Navbar Component
+ * 
+ * Context: Core navigation component used across the application.
+ * Global Purpose: Provides consistent top-level navigation and user authentication status display.
+ * Local Purpose: Renders navigation links and user authentication controls.
+ * Key Features:
+ * - Displays main navigation links (Home, Arena, About)
+ * - Shows user authentication status
+ * - Provides login/logout functionality
+ * - Displays user profile information when logged in
+ * - Implements a dropdown menu for authenticated users
+ * - Handles outside clicks to close the dropdown
+ * - Responsive design for various screen sizes
+ * - Integrates with Next.js routing for smooth navigation
+ * - Uses Firebase authentication via AuthContext
+ */
+
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -5,12 +24,20 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
+import { User } from 'firebase/auth'; 
 
-export default function Navbar() {
-  const { user, logout } = useAuth();
+interface NavbarProps {
+  user?: User | null; 
+}
+
+export default function Navbar({ user: propUser }: NavbarProps) {
+  const { user: contextUser, logout } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Use the prop user if provided, otherwise use the context user
+  const user = propUser ?? contextUser;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

@@ -1,3 +1,24 @@
+/**
+ * ControlPanel Component
+ * 
+ * Context: Main control interface for the Arena page in the application.
+ * Global Purpose: Provides user controls for interacting with the AI Security Map.
+ * Local Purpose: Manages mode switching, box creation, reloading, and user authentication actions.
+ * Key Features:
+ * - Implements mode switching between 'create', 'preview', and 'attack' modes
+ * - Provides controls for creating new boxes, reloading existing boxes, and clearing all boxes
+ * - Displays user authentication status and provides login/logout functionality
+ * - Offers navigation to homepage and user profile
+ * - Implements a dropdown menu for authenticated users
+ * - Handles confirmation for destructive actions (e.g., clearing all boxes)
+ * - Provides visual feedback for loading states
+ * - Implements responsive design for various screen sizes
+ * - Integrates with Next.js routing for navigation
+ * - Uses Firebase authentication via AuthContext
+ * - Conditionally renders controls based on user authentication and current mode
+ */
+
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';

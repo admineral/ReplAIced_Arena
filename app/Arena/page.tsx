@@ -1,13 +1,12 @@
 import React from 'react';
-import LayoutWithNavigation from '../layout-with-navigation';
-import AISecurityMap from '../../components/Map/AISecurityMap';
+import NavigationWrapper from '../../components/ControlPanel/NavigationWrapper';
 
 export default function ArenaPage() {
   return (
-    <LayoutWithNavigation>
+    <NavigationWrapper>
       <div className="h-screen w-screen">
-        <AISecurityMap />
+        {/* The content of the Arena page is now handled by NavigationWrapper */}
       </div>
-    </LayoutWithNavigation>
+    </NavigationWrapper>
   );
 }
