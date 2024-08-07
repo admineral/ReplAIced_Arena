@@ -11,6 +11,9 @@ const nextConfig = {
     config.resolve.alias['@lib'] = join(__dirname, 'lib');
     return config;
   },
+  images: {
+    domains: ['avatars.githubusercontent.com'],
+  },
 };
 
 export default nextConfig;
