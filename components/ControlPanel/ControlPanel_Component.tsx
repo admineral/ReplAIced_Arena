@@ -1,44 +1,23 @@
-/****************************************************************************
- * components/ControlPanel.js
- * 
- * Control Panel Component for AI Security Map
- * 
- * This component renders the control panel for the AI Security Map application.
- * It provides buttons for switching between different modes (create, preview, 
- * attack), a button to open the CreateBoxModal in create mode, a reload button,
- * and a login/logout button.
- * 
- * Context:
- * - Part of the AI Security Map application's user interface
- * - Typically rendered at the top of the main view
- * 
- * Props:
- * - mode: Current application mode (create, preview, attack)
- * - switchMode: Function to change the current mode
- * - openCreateBoxModal: Function to open the CreateBoxModal
- * - reloadBoxes: Function to reload boxes from Firebase
- * - clearAllBoxes: Function to clear all boxes from the map
- * - isAttackModeAvailable: Boolean indicating if attack mode can be enabled
- * - isLoading: Boolean indicating if boxes are being loaded
- * - setLastUpdateTime: Function to update the last reload time
- * 
- * Key Functionalities:
- * 1. Mode switching buttons (Create, Preview, Attack)
- * 2. Open CreateBoxModal button (in Create mode, when logged in)
- * 3. Reload button (always visible)
- * 4. Clear All Boxes button (in Create mode, when logged in)
- * 5. Login/Logout button (handled by Login component)
- * 6. Visual feedback for current mode and button states
- * 
- ****************************************************************************/
 'use client';
 
-import React, { useState } from 'react';
-import Login from '../Auth/Login';
+import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import DeleteConfirmationModal from '../Modals/DeleteConfirmationModal';
 
-const ControlPanel = ({ 
+interface ControlPanelProps {
+  mode: string;
+  switchMode: (mode: string) => void;
+  openCreateBoxModal: () => void;
+  reloadBoxes: () => void;
+  clearAllBoxes: () => void;
+  isAttackModeAvailable: boolean;
+  isLoading: boolean;
+  setLastUpdateTime: (date: Date) => void;
+}
+
+const ControlPanel: React.FC<ControlPanelProps> = ({ 
   mode, 
   switchMode, 
   openCreateBoxModal,
@@ -48,8 +27,24 @@ const ControlPanel = ({
   isLoading,
   setLastUpdateTime
 }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const router = useRouter();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleReload = () => {
     reloadBoxes();
@@ -65,10 +60,43 @@ const ControlPanel = ({
     setIsDeleteModalOpen(false);
   };
 
+  const handleGoToHomepage = () => {
+    router.push('/');
+  };
+
+  const handleProfileClick = () => {
+    setShowDropdown(!showDropdown);
+  };
+
+  const handleGoToProfile = () => {
+    router.push('/Profile');
+    setShowDropdown(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setShowDropdown(false);
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const handleLogin = () => {
+    router.push('/Login');
+  };
+
   return (
     <>
       <div className="flex justify-between items-center p-4 bg-gray-800 bg-opacity-50">
-        <div className="flex space-x-4">
+        <div className="flex space-x-4 items-center">
+          <button
+            onClick={handleGoToHomepage}
+            className="bg-gray-600 text-white rounded-full px-4 py-2 shadow-lg hover:bg-gray-700 transition-colors duration-300"
+          >
+            Go Back to Homepage
+          </button>
           {user && (
             <button
               onClick={() => switchMode('create')}
@@ -138,7 +166,45 @@ const ControlPanel = ({
               </svg>
             </button>
           )}
-          <Login />
+          <div className="relative" ref={dropdownRef}>
+            {user ? (
+              <button 
+                onClick={handleProfileClick}
+                className="focus:outline-none transition-transform duration-300 transform hover:scale-110"
+              >
+                <Image
+                  src={user.photoURL || '/default-avatar.png'}
+                  alt="Profile"
+                  width={40}
+                  height={40}
+                  className="rounded-full border-2 border-blue-500 shadow-lg"
+                />
+              </button>
+            ) : (
+              <button
+                onClick={handleLogin}
+                className="px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
+              >
+                Login
+              </button>
+            )}
+            {user && showDropdown && (
+              <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl py-2 backdrop-filter backdrop-blur-lg bg-opacity-90">
+                <button
+                  onClick={handleGoToProfile}
+                  className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors duration-200"
+                >
+                  Profile
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-red-600 transition-colors duration-200 rounded-b-lg"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <DeleteConfirmationModal

@@ -12,7 +12,13 @@ const nextConfig = {
     return config;
   },
   images: {
-    domains: ['avatars.githubusercontent.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+        pathname: '**',
+      },
+    ],
   },
 };
 

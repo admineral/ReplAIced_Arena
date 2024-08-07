@@ -1,35 +1,8 @@
-/****************************************************************************
- * components/Modals/ChallengeModal.js
- * 
- * Challenge Modal Component for AI Security Map
- * 
- * This component renders an interactive modal dialog for the challenge feature
- * in the AI Security Map application. It displays challenge information and
- * provides a chat-like interface for interaction.
- * 
- * Context:
- * - Part of the AI Security Map application's UI
- * - Used within the ModalManager component
- * 
- * Props:
- * - isOpen: Boolean to control the visibility of the modal
- * - onClose: Function to be called when the modal is closed
- * - challenge: Object containing challenge information (type, description, difficulty)
- * 
- * Key Features:
- * 1. Animated entrance and exit using Framer Motion
- * 2. Displays challenge type, description, and difficulty
- * 3. Interactive chat interface for challenge attempts
- * 4. Responsive design with a larger, more detailed layout
- * 5. Close button to dismiss the modal
- * 
- * Note: This component uses Tailwind CSS for styling. Ensure that Tailwind CSS
- * is properly configured in your project for the styles to take effect.
- ****************************************************************************/
-
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 const modelLogos = {
   default: '/default-logo.png',
@@ -46,27 +19,34 @@ const difficultyColors = {
 };
 
 const ChallengeModal = ({ isOpen, onClose, challenge }) => {
-    const [chatMessages, setChatMessages] = useState([]);
-    const [inputMessage, setInputMessage] = useState('');
+    const router = useRouter();
 
     if (!challenge) return null;
 
-    const handleSendMessage = () => {
-        if (inputMessage.trim()) {
-            setChatMessages([...chatMessages, { sender: 'User', text: inputMessage }]);
-            setInputMessage('');
-            // Simulated AI response - replace with actual AI interaction logic
-            setTimeout(() => {
-                setChatMessages(prev => [...prev, { sender: 'AI', text: 'This is a simulated AI response.' }]);
-            }, 1000);
+    const handleAttack = () => {
+        router.push('/Attack');
+    };
+
+    const handleCreatorClick = () => {
+        if (challenge.createdBy && challenge.createdBy.uid) {
+            router.push(`/Profile/${challenge.createdBy.uid}`);
         }
     };
 
     const renderCreatedBy = (createdBy) => {
-        if (typeof createdBy === 'string') {
-            return createdBy;
-        } else if (typeof createdBy === 'object' && createdBy !== null) {
-            return createdBy.displayName || createdBy.uid || 'Unknown';
+        if (typeof createdBy === 'object' && createdBy !== null) {
+            return (
+                <div className="flex items-center cursor-pointer" onClick={handleCreatorClick}>
+                    <Image
+                        src={createdBy.photoURL || '/default-avatar.png'}
+                        alt={createdBy.displayName || 'User'}
+                        width={40}
+                        height={40}
+                        className="rounded-full mr-2"
+                    />
+                    <span>{createdBy.displayName || createdBy.uid || 'Unknown'}</span>
+                </div>
+            );
         }
         return 'Anonymous';
     };
@@ -118,7 +98,7 @@ const ChallengeModal = ({ isOpen, onClose, challenge }) => {
                         <div className="grid grid-cols-2 gap-4 mb-4">
                             <div className="bg-gray-700 p-4 rounded-lg shadow-inner">
                                 <h4 className="font-semibold mb-1 text-blue-300">Created By</h4>
-                                <p>{renderCreatedBy(challenge.createdBy)}</p>
+                                {renderCreatedBy(challenge.createdBy)}
                             </div>
                             <div className="bg-gray-700 p-4 rounded-lg shadow-inner">
                                 <h4 className="font-semibold mb-1 text-blue-300">Created On</h4>
@@ -126,30 +106,12 @@ const ChallengeModal = ({ isOpen, onClose, challenge }) => {
                             </div>
                         </div>
 
-                        <div className="bg-gray-700 p-4 rounded-lg mb-4 h-64 overflow-y-auto shadow-inner">
-                            <h3 className="text-xl font-semibold mb-2">Interaction</h3>
-                            {chatMessages.map((message, index) => (
-                                <div key={index} className={`mb-2 ${message.sender === 'User' ? 'text-right' : 'text-left'}`}>
-                                    <span className={`inline-block p-2 rounded-lg ${message.sender === 'User' ? 'bg-blue-600' : 'bg-green-600'} text-white shadow-md`}>
-                                        {message.text}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="flex mb-4">
-                            <input
-                                type="text"
-                                value={inputMessage}
-                                onChange={(e) => setInputMessage(e.target.value)}
-                                className="flex-grow mr-2 p-2 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
-                                placeholder="Type your message..."
-                            />
+                        <div className="flex justify-center mt-6">
                             <button
-                                onClick={handleSendMessage}
-                                className="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700 transition duration-300 ease-in-out shadow-md"
+                                onClick={handleAttack}
+                                className="bg-red-600 text-white rounded-lg px-8 py-3 text-lg font-semibold hover:bg-red-700 transition duration-300 ease-in-out shadow-md"
                             >
-                                Send
+                                Attack
                             </button>
                         </div>
                     </motion.div>
