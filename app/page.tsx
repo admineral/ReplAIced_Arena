@@ -6,22 +6,14 @@ import AISecurityMap from '../components/Map/AISecurityMap';
 export default function App() {
   const [showMap, setShowMap] = useState(false);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-  const [isHighQualityLoaded, setIsHighQualityLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVideoLoaded(true), 1000);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const handleCanPlayThrough = () => {
-      if (video.src.includes('gen3.mp4')) {
-        setIsHighQualityLoaded(true);
-      }
+      setIsVideoLoaded(true);
     };
 
     video.addEventListener('canplaythrough', handleCanPlayThrough);
@@ -30,17 +22,6 @@ export default function App() {
       video.removeEventListener('canplaythrough', handleCanPlayThrough);
     };
   }, []);
-
-  useEffect(() => {
-    if (isVideoLoaded && !isHighQualityLoaded) {
-      const highQualityVideo = new Audio('/gen3.mp4');
-      highQualityVideo.addEventListener('canplaythrough', () => {
-        if (videoRef.current) {
-          videoRef.current.src = '/gen3.mp4';
-        }
-      });
-    }
-  }, [isVideoLoaded, isHighQualityLoaded]);
 
   const handleGetStarted = () => {
     setShowMap(true);
@@ -63,10 +44,9 @@ export default function App() {
         loop 
         muted 
         playsInline
-        onLoadedData={() => setIsVideoLoaded(true)}
         className="absolute z-0 w-auto min-w-full min-h-full max-w-none object-cover"
       >
-        <source src="/gen3-2.mp4" type="video/mp4" />
+        <source src="/gen3.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
