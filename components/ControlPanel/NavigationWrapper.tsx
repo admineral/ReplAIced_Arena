@@ -22,8 +22,6 @@
  * - Integrates with Next.js routing for client-side navigation
  */
 
-
-
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -170,21 +168,23 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   if (pathname === '/Arena') {
     return (
       <div className="flex flex-col h-screen w-screen bg-gray-900">
-        <ControlPanel 
-          mode={mode}
-          switchMode={switchMode}
-          openCreateBoxModal={openCreateBoxModal}
-          reloadBoxes={reloadBoxes}
-          clearAllBoxes={clearBoxes}
-          isAttackModeAvailable={isAttackModeAvailable}
-          isLoading={isLoading}
-          setLastUpdateTime={setLastUpdateTime}
-        />
-        <div className="flex-grow relative">
+        <div className="relative z-20">
+          <ControlPanel 
+            mode={mode}
+            switchMode={switchMode}
+            openCreateBoxModal={openCreateBoxModal}
+            reloadBoxes={reloadBoxes}
+            clearAllBoxes={clearBoxes}
+            isAttackModeAvailable={isAttackModeAvailable}
+            isLoading={isLoading}
+            setLastUpdateTime={setLastUpdateTime}
+          />
+        </div>
+        <div className="flex-grow relative z-10">
           <MapCanvas />
           <div className="absolute inset-0 pointer-events-none">
             {mode === 'attack' && (
-              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 pointer-events-auto">
                 <AttackGuidedTour
                   step={selectedBox && targetBox ? 2 : selectedBox ? 1 : 0}
                   selectedBox={selectedBox}
@@ -194,7 +194,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
               </div>
             )}
             
-            <div className="absolute bottom-0 left-0 right-0 flex justify-between items-end p-4">
+            <div className="absolute bottom-0 left-0 right-0 flex justify-between items-end p-4 z-20">
               <div className="pointer-events-auto">
                 <BoxesInfoDisplay 
                   boxCount={boxes.length}
@@ -203,7 +203,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
                 />
               </div>
               
-              <div className="pointer-events-auto flex-grow mx-4 max-w-3xl z-50">
+              <div className="pointer-events-auto flex-grow mx-4 max-w-3xl">
                 <AttackReplayControls />
               </div>
               

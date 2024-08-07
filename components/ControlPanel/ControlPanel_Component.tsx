@@ -18,7 +18,6 @@
  * - Conditionally renders controls based on user authentication and current mode
  */
 
-
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -110,7 +109,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
 
   return (
     <>
-      <div className="flex justify-between items-center p-4 bg-gray-800 bg-opacity-50">
+      <div className="flex justify-between items-center p-4 bg-gray-800 bg-opacity-50 relative z-10">
         <div className="flex space-x-4 items-center">
           <button
             onClick={handleGoToHomepage}
@@ -191,7 +190,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             {user ? (
               <button 
                 onClick={handleProfileClick}
-                className="focus:outline-none transition-transform duration-300 transform hover:scale-110"
+                className="focus:outline-none transition-transform duration-300 transform hover:scale-110 z-20"
               >
                 <Image
                   src={user.photoURL || '/default-avatar.png'}
@@ -204,13 +203,13 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             ) : (
               <button
                 onClick={handleLogin}
-                className="px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                className="px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg z-20"
               >
                 Login
               </button>
             )}
             {user && showDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl py-2 backdrop-filter backdrop-blur-lg bg-opacity-90">
+              <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl py-2 backdrop-filter backdrop-blur-lg bg-opacity-90 z-50">
                 <button
                   onClick={handleGoToProfile}
                   className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors duration-200"
