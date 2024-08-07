@@ -1,3 +1,8 @@
 {
-  "/Profile/page": "app/Profile/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/Profile/page": "app/Profile/page.js",
+  "/Login/page": "app/Login/page.js",
+  "/FireTest/page": "app/FireTest/page.js",
+  "/page": "app/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js"
 }
