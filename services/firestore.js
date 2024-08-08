@@ -19,6 +19,36 @@ import {
 const ATTACKS_COLLECTION = 'attacks';
 const USERS_COLLECTION = 'users';
 
+/**
+ * @typedef {Object} UserRank
+ * @property {string} id
+ * @property {string} displayName
+ * @property {string} photoURL
+ * @property {number} level
+ * @property {number} experience
+ * @property {number} rank
+ * @property {number} streak
+ * @property {number} contributions
+ * @property {number} attacksLaunched
+ * @property {number} defensesSuccessful
+ */
+
+/**
+ * @typedef {Object} AttackData
+ * @property {number} timestamp
+ */
+
+/**
+ * @typedef {Object} Activity
+ * @property {('attack'|'defense'|'contribution')} type
+ * @property {number} timestamp
+ * @property {string} details
+ */
+
+/**
+ * @param {AttackData} attackData
+ * @returns {Promise<string>}
+ */
 export const saveAttack = async (attackData) => {
   try {
     const docRef = await addDoc(collection(db, ATTACKS_COLLECTION), {
@@ -33,6 +63,12 @@ export const saveAttack = async (attackData) => {
   }
 };
 
+/**
+ * @param {Date} date
+ * @param {number} pageSize
+ * @param {import('firebase/firestore').QueryDocumentSnapshot|null} lastDoc
+ * @returns {Promise<{attacks: AttackData[], lastDoc: import('firebase/firestore').QueryDocumentSnapshot}>}
+ */
 export const getAttacks = async (date, pageSize = 100, lastDoc = null) => {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
@@ -63,6 +99,11 @@ export const getAttacks = async (date, pageSize = 100, lastDoc = null) => {
   };
 };
 
+/**
+ * @param {Date} date
+ * @param {function(AttackData[]): void} callback
+ * @returns {function(): void}
+ */
 export const subscribeToAttacks = (date, callback) => {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
@@ -85,6 +126,11 @@ export const subscribeToAttacks = (date, callback) => {
   });
 };
 
+/**
+ * @param {string} userId
+ * @param {Partial<UserRank>} userData
+ * @returns {Promise<void>}
+ */
 export const initializeUserRank = async (userId, userData) => {
   console.log(`Initializing rank data for user: ${userId}`);
   try {
@@ -102,6 +148,11 @@ export const initializeUserRank = async (userId, userData) => {
   }
 };
 
+/**
+ * @param {string} userId
+ * @param {number} experienceGained
+ * @returns {Promise<void>}
+ */
 export const updateUserExperience = async (userId, experienceGained) => {
   console.log(`Updating experience for user: ${userId}`);
   try {
@@ -127,6 +178,10 @@ export const updateUserExperience = async (userId, experienceGained) => {
   }
 };
 
+/**
+ * @param {number} limitCount
+ * @returns {Promise<UserRank[]>}
+ */
 export const getTopUsers = async (limitCount = 100) => {
   console.log(`Fetching top ${limitCount} users from Firestore...`);
   try {
@@ -162,6 +217,8 @@ export const getTopUsers = async (limitCount = 100) => {
         experience: userData.experience || 0,
         streak: userData.streak || 0,
         contributions: userData.contributions || 0,
+        attacksLaunched: userData.attacksLaunched || 0,
+        defensesSuccessful: userData.defensesSuccessful || 0,
         rank: index + 1
       };
     });
@@ -178,7 +235,10 @@ export const getTopUsers = async (limitCount = 100) => {
   }
 };
 
-
+/**
+ * @param {string} userId
+ * @returns {Promise<UserRank | null>}
+ */
 export const getCurrentUserRank = async (userId) => {
   console.log(`Fetching rank for user with ID: ${userId}`);
   try {
@@ -216,17 +276,26 @@ export const getCurrentUserRank = async (userId) => {
     throw error;
   }
 };
-// Function to generate fake user data
+
+/**
+ * @param {number} index
+ * @returns {UserRank}
+ */
 const generateFakeUser = (index) => ({
   displayName: `User ${index}`,
+  photoURL: '/default-avatar.png',
   level: Math.floor(Math.random() * 10) + 1,
   experience: Math.floor(Math.random() * 1000),
   streak: Math.floor(Math.random() * 30),
   contributions: Math.floor(Math.random() * 100),
   attacksLaunched: Math.floor(Math.random() * 50),
   defensesSuccessful: Math.floor(Math.random() * 30),
+  rank: index
 });
 
+/**
+ * @returns {Promise<void>}
+ */
 export const deleteAllUsers = async () => {
   console.log("Deleting all users...");
   try {
@@ -244,7 +313,11 @@ export const deleteAllUsers = async () => {
     throw error;
   }
 };
-// Function to populate the database with fake users
+
+/**
+ * @param {number} userCount
+ * @returns {Promise<void>}
+ */
 export const populateDatabase = async (userCount = 100) => {
   console.log(`Populating database with ${userCount} fake users...`);
   const batch = writeBatch(db);
@@ -259,7 +332,11 @@ export const populateDatabase = async (userCount = 100) => {
   console.log(`Database populated with ${userCount} fake users.`);
 };
 
-// Function to increase experience for random users
+/**
+ * @param {number} userCount
+ * @param {number} experienceIncrease
+ * @returns {Promise<Array<{id: string, displayName: string, newExperience: number, newLevel: number}>>}
+ */
 export const increaseRandomUsersExperience = async (userCount = 10, experienceIncrease = 100) => {
   console.log(`Increasing experience for ${userCount} random users...`);
   const usersSnapshot = await getDocs(collection(db, USERS_COLLECTION));
@@ -295,13 +372,15 @@ export const increaseRandomUsersExperience = async (userCount = 10, experienceIn
   return updatedUsers;
 };
 
-// Placeholder for getUserActivity function
+/**
+ * @param {string} userId
+ * @param {string} timeRange
+ * @returns {Promise<Activity[]>}
+ */
 export const getUserActivity = async (userId, timeRange) => {
-  // This is a placeholder function. You'll need to implement the actual logic
-  // to fetch user activity based on the userId and timeRange.
   console.log(`Fetching activity for user ${userId} in time range ${timeRange}`);
   
-  // For now, return some dummy data
+  // Return dummy data with correct types
   return [
     { type: 'attack', timestamp: Date.now() - 1000000, details: 'Launched an attack' },
     { type: 'defense', timestamp: Date.now() - 2000000, details: 'Successfully defended' },

@@ -16,7 +16,7 @@ const FireIcon = dynamic(() => import('@heroicons/react/24/outline/FireIcon').th
 const UserGroupIcon = dynamic(() => import('@heroicons/react/24/outline/UserGroupIcon').then(mod => mod.default));
 const XMarkIcon = dynamic(() => import('@heroicons/react/24/outline/XMarkIcon').then(mod => mod.default));
 
-interface UserRank {
+export interface UserRank {
   id: string;
   displayName: string;
   photoURL: string;
@@ -209,27 +209,27 @@ const RanklistPage: React.FC = () => {
         </div>
 
         <div className="mb-8 flex justify-between items-center">
-          <div className="flex space-x-4">
+          <div className="flex space-x-2">
             <button
-              className={`px-4 py-2 rounded-md transition-colors ${activeTab === 'overall' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+              className={`flex items-center justify-center min-w-[120px] px-4 py-2 rounded-md transition-colors ${activeTab === 'overall' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
               onClick={() => setActiveTab('overall')}
             >
-              <UserGroupIcon className="inline-block h-5 w-5 mr-2" />
-              Overall
+              <UserGroupIcon className="h-5 w-5 mr-2" />
+              <span className="whitespace-nowrap">Overall</span>
             </button>
             <button
-              className={`px-4 py-2 rounded-md transition-colors ${activeTab === 'attackers' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+              className={`flex items-center justify-center min-w-[120px] px-4 py-2 rounded-md transition-colors ${activeTab === 'attackers' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
               onClick={() => setActiveTab('attackers')}
             >
-              <SparklesIcon className="inline-block h-5 w-5 mr-2" />
-              Top Attackers
+              <SparklesIcon className="h-5 w-5 mr-2" />
+              <span className="whitespace-nowrap">Top Attackers</span>
             </button>
             <button
-              className={`px-4 py-2 rounded-md transition-colors ${activeTab === 'defenders' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+              className={`flex items-center justify-center min-w-[120px] px-4 py-2 rounded-md transition-colors ${activeTab === 'defenders' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
               onClick={() => setActiveTab('defenders')}
             >
-              <ShieldCheckIcon className="inline-block h-5 w-5 mr-2" />
-              Top Defenders
+              <ShieldCheckIcon className="h-5 w-5 mr-2" />
+              <span className="whitespace-nowrap">Top Defenders</span>
             </button>
           </div>
           <div className="flex space-x-2">
