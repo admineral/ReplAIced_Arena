@@ -1,70 +1,70 @@
 {
   "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/BoltIcon": {
-    "id": "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/BoltIcon",
+    "id": 5427,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_heroicons_react_24_outline_esm_BoltIcon_js.js"
+      "static/chunks/427.bcfc8a28827a3deb.js"
     ]
   },
   "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/CalendarIcon": {
-    "id": "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/CalendarIcon",
+    "id": 4351,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_heroicons_react_24_outline_esm_CalendarIcon_js.js"
+      "static/chunks/351.93b24599d0903d52.js"
     ]
   },
   "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/FireIcon": {
-    "id": "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/FireIcon",
+    "id": 6196,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_heroicons_react_24_outline_esm_FireIcon_js.js"
+      "static/chunks/196.49e6d1b9db7251cc.js"
     ]
   },
   "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/MagnifyingGlassIcon": {
-    "id": "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/MagnifyingGlassIcon",
+    "id": 4380,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_heroicons_react_24_outline_esm_MagnifyingGlassIcon_js.js"
+      "static/chunks/380.2ead24effa390b3c.js"
     ]
   },
   "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/ShieldCheckIcon": {
-    "id": "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/ShieldCheckIcon",
+    "id": 2825,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_heroicons_react_24_outline_esm_ShieldCheckIcon_js.js"
+      "static/chunks/825.e53da16973f7f84e.js"
     ]
   },
   "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/SparklesIcon": {
-    "id": "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/SparklesIcon",
+    "id": 8760,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_heroicons_react_24_outline_esm_SparklesIcon_js.js"
+      "static/chunks/760.c129c275e025f2d9.js"
     ]
   },
   "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/TrashIcon": {
-    "id": "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/TrashIcon",
+    "id": 2560,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_heroicons_react_24_outline_esm_TrashIcon_js.js"
+      "static/chunks/560.a4670de4381620dc.js"
     ]
   },
   "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/TrophyIcon": {
-    "id": "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/TrophyIcon",
+    "id": 4413,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_heroicons_react_24_outline_esm_TrophyIcon_js.js"
+      "static/chunks/413.896733541b86e558.js"
     ]
   },
   "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/UserGroupIcon": {
-    "id": "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/UserGroupIcon",
+    "id": 7281,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_heroicons_react_24_outline_esm_UserGroupIcon_js.js"
+      "static/chunks/281.c77ceb131a0cfdbc.js"
     ]
   },
   "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/XMarkIcon": {
-    "id": "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/XMarkIcon",
+    "id": 4573,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_heroicons_react_24_outline_esm_XMarkIcon_js.js"
+      "static/chunks/573.56c3547161320991.js"
     ]
   },
   "node_modules/@react-three/drei/core/VideoTexture.js -> hls.js": {
-    "id": "node_modules/@react-three/drei/core/VideoTexture.js -> hls.js",
+    "id": null,
     "files": []
   },
   "node_modules/@react-three/drei/web/FaceLandmarker.js -> @mediapipe/tasks-vision": {
-    "id": "node_modules/@react-three/drei/web/FaceLandmarker.js -> @mediapipe/tasks-vision",
+    "id": null,
     "files": []
   }
 }
