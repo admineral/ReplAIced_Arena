@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import Login from '../../components/Auth/Login';
+import Link from 'next/link';
 
 interface LandingPageNavbarProps {
   activeSection: string;
@@ -60,6 +61,11 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
                 {section.charAt(0).toUpperCase() + section.slice(1)}
             </button>
             ))}
+            <Link href="/GlobalRank" passHref>
+              <span className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-300 cursor-pointer">
+                Global Rank
+              </span>
+            </Link>
             </div>
           </div>
           <div className="relative" ref={dropdownRef}>
@@ -87,6 +93,11 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
                 >
                   Profile
                 </button>
+                <Link href="/GlobalRank" passHref>
+                  <span className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors duration-200 cursor-pointer">
+                    Global Rank
+                  </span>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-red-600 transition-colors duration-200 rounded-b-lg"
