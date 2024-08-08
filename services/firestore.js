@@ -11,7 +11,9 @@ import {
   limit,
   startAfter,
   onSnapshot,
-  getDoc
+  getDoc,
+  writeBatch,
+  deleteDoc
 } from 'firebase/firestore';
 
 const ATTACKS_COLLECTION = 'attacks';
@@ -128,13 +130,26 @@ export const updateUserExperience = async (userId, experienceGained) => {
 export const getTopUsers = async (limitCount = 100) => {
   console.log(`Fetching top ${limitCount} users from Firestore...`);
   try {
-    const q = query(
+    let q = query(
       collection(db, USERS_COLLECTION),
+      orderBy('level', 'desc'),
       orderBy('experience', 'desc'),
       limit(limitCount)
     );
-    console.log('Query created:', q);
-    const querySnapshot = await getDocs(q);
+
+    let querySnapshot = await getDocs(q);
+
+    // If the complex query fails, try a simpler query
+    if (querySnapshot.empty) {
+      console.log("Complex query failed. Trying simpler query...");
+      q = query(
+        collection(db, USERS_COLLECTION),
+        orderBy('level', 'desc'),
+        limit(limitCount)
+      );
+      querySnapshot = await getDocs(q);
+    }
+
     console.log(`Fetched ${querySnapshot.docs.length} users`);
     const users = querySnapshot.docs.map((doc, index) => {
       const userData = doc.data();
@@ -145,6 +160,8 @@ export const getTopUsers = async (limitCount = 100) => {
         photoURL: userData.photoURL || '/default-avatar.png',
         level: userData.level || 1,
         experience: userData.experience || 0,
+        streak: userData.streak || 0,
+        contributions: userData.contributions || 0,
         rank: index + 1
       };
     });
@@ -152,9 +169,15 @@ export const getTopUsers = async (limitCount = 100) => {
     return users;
   } catch (error) {
     console.error("Error fetching top users:", error);
+    if (error instanceof Error && error.message.includes("The query requires an index")) {
+      const indexLink = error.message.match(/https:\/\/console\.firebase\.google\.com[^\s]+/)?.[0];
+      console.log("Index creation link:", indexLink);
+      throw new Error("Rankings are being prepared. Please create the required index and try again.");
+    }
     throw error;
   }
 };
+
 
 export const getCurrentUserRank = async (userId) => {
   console.log(`Fetching rank for user with ID: ${userId}`);
@@ -172,12 +195,15 @@ export const getCurrentUserRank = async (userId) => {
       const userData = querySnapshot.docs[userIndex].data();
       console.log('User data found:', userData);
       const userRank = {
-        ...userData,
         id: querySnapshot.docs[userIndex].id,
         displayName: userData.displayName || `User ${userIndex + 1}`,
         photoURL: userData.photoURL || '/default-avatar.png',
         level: userData.level || 1,
         experience: userData.experience || 0,
+        streak: userData.streak || 0,
+        contributions: userData.contributions || 0,
+        attacksLaunched: userData.attacksLaunched || 0,
+        defensesSuccessful: userData.defensesSuccessful || 0,
         rank: userIndex + 1
       };
       console.log('Processed user rank:', userRank);
@@ -189,4 +215,96 @@ export const getCurrentUserRank = async (userId) => {
     console.error("Error fetching current user rank:", error);
     throw error;
   }
+};
+// Function to generate fake user data
+const generateFakeUser = (index) => ({
+  displayName: `User ${index}`,
+  level: Math.floor(Math.random() * 10) + 1,
+  experience: Math.floor(Math.random() * 1000),
+  streak: Math.floor(Math.random() * 30),
+  contributions: Math.floor(Math.random() * 100),
+  attacksLaunched: Math.floor(Math.random() * 50),
+  defensesSuccessful: Math.floor(Math.random() * 30),
+});
+
+export const deleteAllUsers = async () => {
+  console.log("Deleting all users...");
+  try {
+    const usersSnapshot = await getDocs(collection(db, USERS_COLLECTION));
+    const batch = writeBatch(db);
+
+    usersSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+    console.log("All users deleted successfully");
+  } catch (error) {
+    console.error("Error deleting users:", error);
+    throw error;
+  }
+};
+// Function to populate the database with fake users
+export const populateDatabase = async (userCount = 100) => {
+  console.log(`Populating database with ${userCount} fake users...`);
+  const batch = writeBatch(db);
+
+  for (let i = 0; i < userCount; i++) {
+    const userData = generateFakeUser(i + 1);
+    const userRef = doc(collection(db, USERS_COLLECTION));
+    batch.set(userRef, userData);
+  }
+
+  await batch.commit();
+  console.log(`Database populated with ${userCount} fake users.`);
+};
+
+// Function to increase experience for random users
+export const increaseRandomUsersExperience = async (userCount = 10, experienceIncrease = 100) => {
+  console.log(`Increasing experience for ${userCount} random users...`);
+  const usersSnapshot = await getDocs(collection(db, USERS_COLLECTION));
+  const users = usersSnapshot.docs;
+
+  const batch = writeBatch(db);
+  const updatedUsers = [];
+
+  for (let i = 0; i < userCount; i++) {
+    const randomIndex = Math.floor(Math.random() * users.length);
+    const userDoc = users[randomIndex];
+    const userData = userDoc.data();
+
+    const newExperience = (userData.experience || 0) + experienceIncrease;
+    const newLevel = Math.floor(Math.sqrt(newExperience / 100)) + 1;
+
+    batch.update(userDoc.ref, {
+      experience: newExperience,
+      level: newLevel,
+      lastUpdated: Date.now()
+    });
+
+    updatedUsers.push({
+      id: userDoc.id,
+      displayName: userData.displayName,
+      newExperience,
+      newLevel
+    });
+  }
+
+  await batch.commit();
+  console.log(`Experience increased for ${userCount} random users:`, updatedUsers);
+  return updatedUsers;
+};
+
+// Placeholder for getUserActivity function
+export const getUserActivity = async (userId, timeRange) => {
+  // This is a placeholder function. You'll need to implement the actual logic
+  // to fetch user activity based on the userId and timeRange.
+  console.log(`Fetching activity for user ${userId} in time range ${timeRange}`);
+  
+  // For now, return some dummy data
+  return [
+    { type: 'attack', timestamp: Date.now() - 1000000, details: 'Launched an attack' },
+    { type: 'defense', timestamp: Date.now() - 2000000, details: 'Successfully defended' },
+    { type: 'contribution', timestamp: Date.now() - 3000000, details: 'Made a contribution' },
+  ];
 };
