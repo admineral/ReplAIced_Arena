@@ -17,7 +17,7 @@
     "date-fns": "^3.6.0",
     "encoding": "^0.1.13",
     "firebase": "^10.12.4",
-    "framer-motion": "^11.3.19",
+    "framer-motion": "^11.3.23",
     "konva": "^9.3.14",
     "next": "^14.2.5",
     "next-auth": "^4.24.7",
