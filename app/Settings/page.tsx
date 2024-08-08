@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { GithubAuthProvider, signInWithPopup, reauthenticateWithPopup, deleteUser, updateProfile } from "firebase/auth";
+import { GithubAuthProvider, reauthenticateWithPopup, deleteUser } from "firebase/auth";
 import { deleteDoc, doc } from 'firebase/firestore';
-import { db, auth } from '@/firebase-config';
+import { db } from '@/firebase-config';
 
 const SettingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -15,46 +14,6 @@ const SettingsPage: React.FC = () => {
   const [imageError, setImageError] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [newProfilePicture, setNewProfilePicture] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const updateProfilePicture = async (file: File) => {
-    if (!user) return;
-    
-    const storage = getStorage();
-    const storageRef = ref(storage, `profile_pictures/${user.uid}`);
-    
-    try {
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      await updateProfile(user, { photoURL: downloadURL });
-    } catch (error) {
-      console.error("Error updating profile picture:", error);
-      throw error;
-    }
-  };
-
-  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setNewProfilePicture(file);
-    }
-  };
-
-  const handleSaveProfilePicture = async () => {
-    if (newProfilePicture && user) {
-      try {
-        await updateProfilePicture(newProfilePicture);
-        setImageError(false);
-        setNewProfilePicture(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-        alert("Profile picture updated successfully!");
-      } catch (error) {
-        console.error("Error updating profile picture:", error);
-        alert("Failed to update profile picture. Please try again.");
-      }
-    }
-  };
 
   const handleDeleteAccount = async () => {
     if (!user) return;
@@ -115,31 +74,6 @@ const SettingsPage: React.FC = () => {
               <div className="uppercase tracking-wide text-sm text-blue-400 font-semibold">Account Settings</div>
               <h1 className="mt-2 text-3xl font-bold">{user.displayName || 'Anonymous User'}</h1>
               <p className="mt-2 text-gray-300">{user.email}</p>
-              <div className="mt-4 flex items-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleProfilePictureChange}
-                  className="hidden"
-                  ref={fileInputRef}
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2"
-                >
-                  Choose File
-                </button>
-                <button
-                  onClick={handleSaveProfilePicture}
-                  disabled={!newProfilePicture}
-                  className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-                >
-                  Save Profile Picture
-                </button>
-              </div>
-              {newProfilePicture && (
-                <p className="mt-2 text-sm text-gray-300">New picture selected. Click "Save" to update.</p>
-              )}
             </div>
           </div>
           <div className="border-t border-gray-700 p-6">

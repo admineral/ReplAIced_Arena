@@ -19,6 +19,7 @@ const nextConfig = {
         pathname: '**',
       },
     ],
+    domains: ['firebasestorage.googleapis.com'],
   },
 };
 
