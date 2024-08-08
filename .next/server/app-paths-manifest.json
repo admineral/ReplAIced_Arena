@@ -1,6 +1,7 @@
 {
-  "/Profile/page": "app/Profile/page.js",
+  "/Settings/page": "app/Settings/page.js",
   "/page": "app/page.js",
+  "/Profile/page": "app/Profile/page.js",
   "/GlobalRank/page": "app/GlobalRank/page.js",
   "/Arena/page": "app/Arena/page.js"
 }
