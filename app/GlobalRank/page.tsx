@@ -159,7 +159,7 @@ const RanklistPage: React.FC = () => {
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-gradient-to-b from-black to-gray-900 text-white">
       <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm">
         <h1 className="text-5xl font-bold mb-8 bg-gradient-to-r from-purple-500 to-cyan-500 bg-clip-text text-transparent pb-2">
-          AI Security Expert Ranklist
+          Global Ranklist
         </h1>
         
         <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
