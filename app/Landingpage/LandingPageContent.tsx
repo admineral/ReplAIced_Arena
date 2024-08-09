@@ -157,7 +157,14 @@ export default function LandingPageContent() {
               </div>
               <div className="md:w-1/2 flex justify-center">
                 <div className="w-48 h-48 sm:w-64 sm:h-64 bg-blue-500 bg-opacity-20 rounded-full flex items-center justify-center">
-                  <span className="text-4xl sm:text-6xl">🔐</span>
+                  <span className="text-4xl sm:text-6xl">
+                  <Image
+                  src={'/default-logo.png'}
+                  alt="Logo"
+                  width={150}
+                  height={150}
+                  className="rounded-full border-2 border-blue-500 shadow-lg"
+                />                  </span>
                 </div>
               </div>
             </div>
