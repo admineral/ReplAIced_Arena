@@ -73,6 +73,7 @@ const AboutUs: React.FC = () => {
       </div>
     </div>
   );
+  
 };
 
 export default AboutUs;
