@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import Login from '../../components/Auth/Login';
 import Link from 'next/link';
-import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt, FaChevronDown } from 'react-icons/fa';
+import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt } from 'react-icons/fa';
 
 interface LandingPageNavbarProps {
   activeSection: string;
@@ -19,15 +19,18 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
   const { user, logout } = useAuth();
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleGoToProfile = () => {
     router.push('/Profile');
     setShowMobileMenu(false);
+    setShowProfileDropdown(false);
   };
 
   const handleGoToSettings = () => {
     router.push('/Settings');
     setShowMobileMenu(false);
+    setShowProfileDropdown(false);
   };
 
   const handleLogout = async () => {
@@ -45,6 +48,23 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
     setShowMobileMenu(!showMobileMenu);
   };
 
+  const handleProfileClick = () => {
+    setShowProfileDropdown(!showProfileDropdown);
+  };
+
+  const handleProfileMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setShowProfileDropdown(true);
+  };
+
+  const handleProfileMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setShowProfileDropdown(false);
+    }, 300);
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -55,6 +75,9 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
   }, []);
 
@@ -113,10 +136,13 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
                 <div 
                   className="relative" 
                   ref={dropdownRef}
-                  onMouseEnter={() => setShowProfileDropdown(true)}
-                  onMouseLeave={() => setShowProfileDropdown(false)}
+                  onMouseEnter={handleProfileMouseEnter}
+                  onMouseLeave={handleProfileMouseLeave}
                 >
-                  <button className="flex items-center space-x-2 focus:outline-none">
+                  <button 
+                    onClick={handleProfileClick}
+                    className="focus:outline-none"
+                  >
                     <Image
                       src={user.photoURL || '/default-avatar.png'}
                       alt="Profile"
@@ -124,13 +150,13 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
                       height={40}
                       className="rounded-full border-2 border-blue-500 shadow-lg"
                     />
-                    <FaChevronDown className={`text-white transition-opacity duration-300 ${showProfileDropdown ? 'opacity-100' : 'opacity-0'}`} />
                   </button>
                   {showProfileDropdown && (
                     <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 border border-gray-700">
                       <Link 
                         href="/Profile"
                         className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                        onClick={() => setShowProfileDropdown(false)}
                       >
                         <FaUser className="mr-2" />
                         <span>Profile</span>
@@ -138,6 +164,7 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
                       <Link 
                         href="/Settings"
                         className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                        onClick={() => setShowProfileDropdown(false)}
                       >
                         <FaCog className="mr-2" />
                         <span>Settings</span>

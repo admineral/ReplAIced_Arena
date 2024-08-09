@@ -62,9 +62,9 @@ const CreateBoxModal = ({ isOpen, onClose, onCreateBox, mapSize }) => {
     const textareaRef = useRef(null);
   
     const handleCreateBox = async () => {
-        const boxId = uuidv4();
-        const combinedSystemPrompt = `${systemPrompt}\n\n${secretSentence} ${secretWord}`;
-        const newBox = {
+      const boxId = uuidv4();
+      const combinedSystemPrompt = `${systemPrompt}\n\n${secretSentence} ${secretWord}`;
+      const newBox = {
           id: boxId,
           type: modelOptions[selectedModelIndex].id,
           model: modelOptions[selectedModelIndex].name,
@@ -75,23 +75,23 @@ const CreateBoxModal = ({ isOpen, onClose, onCreateBox, mapSize }) => {
           difficulty: 'medium',
           createdAt: new Date().toISOString(),
           createdBy: {
-            uid: user ? user.uid : 'anonymous',
-            displayName: user ? (user.displayName || user.email || 'Anonymous') : 'Anonymous'
+              uid: user ? user.uid : 'anonymous',
+              displayName: user ? (user.displayName || user.email || 'Anonymous') : 'Anonymous'
           }
-        };
-      
-        try {
-          await onCreateBox(newBox);
-          if (user) {
-            await addBoxId(boxId);
-            console.log('Box ID added to user document');
+      };
+    
+      try {
+          const result = await onCreateBox(newBox, user ? user.uid : null);
+          if (user && result) {
+              const { firestoreId, customId, x, y } = result;
+              console.log('Box created and indexed:', { firestoreId, customId, x, y });
           }
           onClose();
-        } catch (error) {
+      } catch (error) {
           console.error('Error creating box:', error);
           // Handle the error (e.g., show an error message to the user)
-        }
-    };
+      }
+  };
   
     const handleModelSelect = (index) => {
       setSelectedModelIndex(index);

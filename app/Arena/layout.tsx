@@ -14,8 +14,8 @@ export default function ArenaLayout({
 
   const switchMode = (newMode: string) => setMode(newMode);
   const openCreateBoxModal = () => {/* Implement this function */};
-  const reloadBoxes = () => {/* Implement this function */};
-  const clearAllBoxes = () => {/* Implement this function */};
+  const reloadBoxes = async () => {/* Implement this function */};
+  const clearAllBoxes = async () => {/* Implement this function */};
 
   return (
     <div className="arena-layout">

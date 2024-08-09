@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { User } from 'firebase/auth';
-import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt, FaHome, FaGamepad, FaListOl, FaChevronDown } from 'react-icons/fa';
+import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt, FaHome, FaGamepad, FaListOl } from 'react-icons/fa';
 
 interface NavbarProps {
   user?: User | null;
@@ -19,6 +19,7 @@ export default function Navbar({ user: propUser }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use the prop user if provided, otherwise use the context user
   const user = propUser ?? contextUser;
@@ -38,6 +39,19 @@ export default function Navbar({ user: propUser }: NavbarProps) {
     setShowMobileMenu(!showMobileMenu);
   };
 
+  const handleProfileMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setShowProfileDropdown(true);
+  };
+
+  const handleProfileMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setShowProfileDropdown(false);
+    }, 300); // 300ms delay before closing
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -48,6 +62,9 @@ export default function Navbar({ user: propUser }: NavbarProps) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
   }, []);
 
@@ -101,8 +118,8 @@ export default function Navbar({ user: propUser }: NavbarProps) {
               <div 
                 className="relative" 
                 ref={dropdownRef}
-                onMouseEnter={() => setShowProfileDropdown(true)}
-                onMouseLeave={() => setShowProfileDropdown(false)}
+                onMouseEnter={handleProfileMouseEnter}
+                onMouseLeave={handleProfileMouseLeave}
               >
                 <button
                   className="flex items-center space-x-2 focus:outline-none"
@@ -114,7 +131,6 @@ export default function Navbar({ user: propUser }: NavbarProps) {
                     height={40}
                     className="rounded-full border-2 border-blue-500 shadow-lg"
                   />
-                  <FaChevronDown className={`text-white transition-opacity duration-300 ${showProfileDropdown ? 'opacity-100' : 'opacity-0'}`} />
                 </button>
                 {showProfileDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 border border-gray-700">

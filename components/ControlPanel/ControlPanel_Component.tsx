@@ -1,27 +1,10 @@
-/**
- * ControlPanel Component
- * 
- * This component serves as the main control interface for the Arena page.
- * It integrates the ArenaNavbar for navigation and mode switching, and
- * provides additional controls for managing boxes in the arena.
- * 
- * Key features:
- * - Displays the ArenaNavbar for mode switching and user authentication
- * - Provides buttons for reloading existing boxes and clearing all boxes
- * - Manages the delete confirmation modal for clearing all boxes
- * - Handles loading states and updates the last update time
- * 
- * The component is designed to be flexible and responsive, adapting to different
- * modes (create, preview, attack) and user authentication states.
- */
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import ArenaNavbar from './ArenaNavbar';
 import DeleteConfirmationModal from '../Modals/DeleteConfirmationModal';
 import { useAuth } from '../../contexts/AuthContext';
+import { useMapContext } from '../../contexts/MapContext';
 import { db } from '../../firebase-config';
 import { deleteDoc, doc } from 'firebase/firestore';
 
@@ -47,13 +30,39 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   openCreateBoxModal
 }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const { isAdmin, myBoxIds, user, removeBoxId } = useAuth();
+  const [userHasBox, setUserHasBox] = useState(false);
+  const { isAdmin, user, getUserBoxes } = useAuth();
+  const { setMapPosition, setMapZoom } = useMapContext();
+
+  const checkUserBox = async () => {
+    console.log('Checking user box');
+    if (user) {
+      console.log(`User is logged in. User ID: ${user.uid}`);
+      try {
+        const userBoxes = await getUserBoxes(user.uid);
+        console.log('User boxes retrieved:', userBoxes);
+        setUserHasBox(userBoxes.length > 0);
+        console.log(`User has box: ${userBoxes.length > 0}`);
+      } catch (error) {
+        console.error('Error checking user box:', error);
+        setUserHasBox(false);
+      }
+    } else {
+      console.log('No user logged in');
+      setUserHasBox(false);
+    }
+  };
 
   useEffect(() => {
-    if (myBoxIds.length > 0 && mode === 'create') {
+    console.log('User changed, checking for user box');
+    checkUserBox();
+  }, [user, getUserBoxes]);
+
+  useEffect(() => {
+    if (user && mode === 'create') {
       switchMode('preview');
     }
-  }, [myBoxIds, mode, switchMode]);
+  }, [user, mode, switchMode]);
 
   const handleReload = () => {
     reloadBoxes();
@@ -69,24 +78,57 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     if (isAdmin) {
       try {
         await clearAllBoxes();
-        // Remove all box IDs from the current user's document
-        for (const boxId of myBoxIds) {
-          await removeBoxId(boxId);
-        }
-        console.log('All boxes cleared and removed from user document');
+        console.log('All boxes cleared');
       } catch (error) {
         console.error('Error clearing boxes:', error);
       }
-    } else if (myBoxIds.length > 0) {
+    } else if (user) {
       try {
-        const boxId = myBoxIds[0];
-        const boxRef = doc(db, 'boxes', boxId);
-        await deleteDoc(boxRef);
-        await removeBoxId(boxId);
-        console.log('Box deleted and removed from user document');
+        const userBoxes = await getUserBoxes(user.uid);
+        if (userBoxes.length > 0) {
+          const boxData = userBoxes[0];
+          const boxRef = doc(db, 'boxes', boxData.customId);
+          await deleteDoc(boxRef);
+          const boxOwnerRef = doc(db, 'boxOwners', boxData.firestoreId);
+          await deleteDoc(boxOwnerRef);
+          console.log('Box deleted from boxes and boxOwners collections');
+          setUserHasBox(false);
+        }
       } catch (error) {
         console.error('Error deleting box:', error);
       }
+    }
+  };
+
+  const handleGoToMyBox = async () => {
+    console.log('handleGoToMyBox called');
+    console.log('Current user:', user);
+
+    if (user) {
+      try {
+        const userBoxes = await getUserBoxes(user.uid);
+        if (userBoxes.length > 0) {
+          const boxData = userBoxes[0];
+          console.log('Found box:', boxData);
+
+          // Center the map on the box
+          setMapPosition({ x: boxData.x, y: boxData.y });
+          console.log('Map position set to:', { x: boxData.x, y: boxData.y });
+          
+          // Set an appropriate zoom level
+          const newZoomLevel = 2;
+          setMapZoom(newZoomLevel);
+          console.log('Map zoom set to:', newZoomLevel);
+
+          console.log('Centered map on box:', boxData);
+        } else {
+          console.error('Box not found in the current map data.');
+        }
+      } catch (error) {
+        console.error('Error getting user boxes:', error);
+      }
+    } else {
+      console.warn('No user logged in');
     }
   };
 
@@ -96,10 +138,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         mode={mode}
         switchMode={switchMode}
         isAttackModeAvailable={isAttackModeAvailable}
-        myBoxIds={myBoxIds} // Add this line to pass myBoxIds to ArenaNavbar
+        onGoToMyBox={handleGoToMyBox}
       />
       <div className="flex justify-center space-x-4 mt-4">
-        {mode === 'create' && myBoxIds.length === 0 && (
+        {user && !userHasBox && (
           <button
             className="bg-green-500 text-white rounded-full p-2 shadow-lg hover:bg-green-600 transition-colors duration-300"
             title="Create Box"
@@ -110,41 +152,36 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             </svg>
           </button>
         )}
-        {(mode === 'preview' || mode === 'attack') && (
-          <>
-            {myBoxIds.length > 0 && (
-              <Link href={`/box/${myBoxIds[0]}`}>
-                <button
-                  className="bg-blue-500 text-white rounded-full p-2 shadow-lg hover:bg-blue-600 transition-colors duration-300"
-                  title="Go to Your Box"
-                >
-                  <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                </button>
-              </Link>
-            )}
-            <button
-              onClick={handleReload}
-              disabled={isLoading}
-              className={`bg-blue-500 text-white rounded-full p-2 shadow-lg hover:bg-blue-600 transition-colors duration-300 ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              title="Reload boxes"
-            >
-              {isLoading ? (
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                <svg className="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              )}
-            </button>
-          </>
+        {user && userHasBox && (
+          <button
+            onClick={handleGoToMyBox}
+            className="bg-blue-500 text-white rounded-full p-2 shadow-lg hover:bg-blue-600 transition-colors duration-300"
+            title="Go to Your Box"
+          >
+            <svg className="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+          </button>
         )}
+        <button
+          onClick={handleReload}
+          disabled={isLoading}
+          className={`bg-blue-500 text-white rounded-full p-2 shadow-lg hover:bg-blue-600 transition-colors duration-300 ${
+            isLoading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+          title="Reload boxes"
+        >
+          {isLoading ? (
+            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg className="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          )}
+        </button>
         {isAdmin && (
           <button
             onClick={handleClearAllBoxes}
