@@ -1,30 +1,12 @@
-/**
- * General Navbar Component
- * 
- * Context: Core navigation component used across the application, except for the landing page.
- * Global Purpose: Provides consistent top-level navigation and user authentication status display.
- * Local Purpose: Renders navigation links and user authentication controls.
- * Key Features:
- * - Displays main navigation links (Home, Arena, About)
- * - Shows user authentication status
- * - Provides login/logout functionality
- * - Displays user profile information when logged in
- * - Implements a dropdown menu for authenticated users with profile and settings options
- * - Handles outside clicks to close the dropdown
- * - Responsive design with hamburger menu for mobile views
- * - Integrates with Next.js routing for smooth navigation
- * - Uses Firebase authentication via AuthContext
- */
-
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { User } from 'firebase/auth';
-import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt, FaHome, FaGamepad, FaListOl } from 'react-icons/fa';
 
 interface NavbarProps {
   user?: User | null;
@@ -32,31 +14,17 @@ interface NavbarProps {
 
 export default function Navbar({ user: propUser }: NavbarProps) {
   const { user: contextUser, logout } = useAuth();
-  const [showDropdown, setShowDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const router = useRouter();
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   // Use the prop user if provided, otherwise use the context user
   const user = propUser ?? contextUser;
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
   const handleLogout = async () => {
     try {
       await logout();
-      setShowDropdown(false);
+      setShowMobileMenu(false);
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
@@ -68,9 +36,9 @@ export default function Navbar({ user: propUser }: NavbarProps) {
   };
 
   const navItems = [
-    { href: '/', text: 'Home' },
-    { href: '/Arena', text: 'Arena' },
-    { href: '/About', text: 'About' },
+    { href: '/', text: 'Home', icon: FaHome },
+    { href: '/Arena', text: 'Arena', icon: FaGamepad },
+    { href: '/Ranklist', text: 'Ranklist', icon: FaListOl },
   ];
 
   return (
@@ -78,14 +46,6 @@ export default function Navbar({ user: propUser }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center">
-            <div className="md:hidden mr-4">
-              <button
-                onClick={toggleMobileMenu}
-                className="text-white text-2xl focus:outline-none"
-              >
-                {showMobileMenu ? <FaTimes /> : <FaBars />}
-              </button>
-            </div>
             <Link href="/" className="flex-shrink-0">
               <Image
                 src="/default-logo.png"
@@ -97,18 +57,29 @@ export default function Navbar({ user: propUser }: NavbarProps) {
             </Link>
             <div className="hidden md:flex ml-10 items-baseline space-x-4">
               {navItems.map((item) => (
-                <Link key={item.href} href={item.href} className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                  {item.text}
+                <Link 
+                  key={item.href} 
+                  href={item.href} 
+                  className={`
+                    px-4 py-2 rounded-full text-sm font-medium
+                    transition-all duration-300 ease-in-out
+                    ${pathname === item.href 
+                      ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/50' 
+                      : 'text-gray-300 hover:bg-blue-400 hover:text-white hover:shadow-md hover:shadow-blue-400/50'}
+                    flex items-center space-x-2
+                    border border-transparent hover:border-blue-300
+                    transform hover:scale-105
+                  `}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.text}</span>
                 </Link>
               ))}
             </div>
           </div>
-          <div className="relative" ref={dropdownRef}>
+          <div className="hidden md:block">
             {user ? (
-              <button 
-                onClick={() => setShowDropdown(!showDropdown)}
-                className="focus:outline-none transition-transform duration-300 transform hover:scale-110"
-              >
+              <Link href="/Profile">
                 <Image
                   src={user.photoURL || '/default-avatar.png'}
                   alt="Profile"
@@ -116,7 +87,7 @@ export default function Navbar({ user: propUser }: NavbarProps) {
                   height={40}
                   className="rounded-full border-2 border-blue-500 shadow-lg"
                 />
-              </button>
+              </Link>
             ) : (
               <Link 
                 href="/Login"
@@ -125,45 +96,85 @@ export default function Navbar({ user: propUser }: NavbarProps) {
                 Login
               </Link>
             )}
-            {showDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl py-2 backdrop-filter backdrop-blur-lg bg-opacity-90">
-                <Link href="/Profile" className="flex items-center px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors duration-200">
+          </div>
+          <div className="md:hidden flex items-center">
+            {!user && (
+              <Link 
+                href="/Login"
+                className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded transition-colors text-white font-medium mr-4"
+              >
+                Login
+              </Link>
+            )}
+            <button
+              onClick={toggleMobileMenu}
+              className="text-white text-2xl focus:outline-none"
+            >
+              {showMobileMenu ? <FaTimes /> : <FaBars />}
+            </button>
+          </div>
+        </div>
+      </div>
+      {/* Mobile menu */}
+      <div className={`md:hidden fixed top-0 right-0 h-full w-64 bg-gray-900 bg-opacity-95 transform ${showMobileMenu ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out overflow-y-auto`}>
+        <div className="flex flex-col h-full">
+          <div className="flex justify-end p-4">
+            <button onClick={toggleMobileMenu} className="text-white text-2xl">
+              <FaTimes />
+            </button>
+          </div>
+          <div className="px-2 pt-2 pb-3 space-y-1 flex-grow">
+            {navItems.map((item) => (
+              <Link 
+                key={item.href} 
+                href={item.href}
+                className={`
+                  flex items-center space-x-2
+                  px-3 py-2 rounded-md text-base font-medium
+                  ${pathname === item.href 
+                    ? 'bg-blue-500 text-white shadow-inner' 
+                    : 'text-gray-300 hover:bg-blue-400 hover:text-white'}
+                  transition-colors duration-300
+                `}
+                onClick={toggleMobileMenu}
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.text}</span>
+              </Link>
+            ))}
+          </div>
+          {user && (
+            <>
+              <div className="border-t border-gray-700 my-2"></div>
+              <div className="px-2 pb-3 space-y-1">
+                <Link 
+                  href="/Profile"
+                  className="flex items-center w-full px-3 py-2 text-base font-medium text-white hover:bg-gray-700 transition-colors duration-300"
+                  onClick={toggleMobileMenu}
+                >
                   <FaUser className="mr-2" />
                   <span>Profile</span>
                 </Link>
-                <Link href="/Settings" className="flex items-center px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors duration-200">
+                <Link 
+                  href="/Settings"
+                  className="flex items-center w-full px-3 py-2 text-base font-medium text-white hover:bg-gray-700 transition-colors duration-300"
+                  onClick={toggleMobileMenu}
+                >
                   <FaCog className="mr-2" />
                   <span>Settings</span>
                 </Link>
-                <button 
+                <button
                   onClick={handleLogout}
-                  className="flex items-center w-full text-left px-4 py-2 text-sm text-white hover:bg-red-600 transition-colors duration-200"
+                  className="flex items-center w-full px-3 py-2 text-base font-medium text-white hover:bg-red-600 transition-colors duration-300"
                 >
                   <FaSignOutAlt className="mr-2" />
                   <span>Logout</span>
                 </button>
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
-      {/* Mobile menu */}
-      {showMobileMenu && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-900 bg-opacity-95">
-            {navItems.map((item) => (
-              <Link 
-                key={item.href} 
-                href={item.href}
-                className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-gray-700 transition-colors duration-300"
-                onClick={toggleMobileMenu}
-              >
-                {item.text}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </nav>
   );
 }
