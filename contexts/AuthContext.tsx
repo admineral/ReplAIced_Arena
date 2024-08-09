@@ -12,6 +12,7 @@
  * - Provides login status, logout functionality, and admin status
  * - Admin status is stored in and read from Firestore
  * - Manages a list of box IDs created by the user
+ * - Removes box IDs from the user document when deleted
  * 
  * @module AuthContext
  */
@@ -29,6 +30,7 @@ interface AuthContextType {
   myBoxIds: string[];
   logout: () => Promise<void>;
   addBoxId: (boxId: string) => Promise<void>;
+  removeBoxId: (boxId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -145,6 +147,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const removeBoxId = async (boxId: string) => {
+    if (user) {
+      console.log('Removing box ID from user document:', boxId);
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        myBoxIds: myBoxIds.filter(id => id !== boxId)
+      });
+      setMyBoxIds(prevIds => prevIds.filter(id => id !== boxId));
+      console.log('Box ID removed successfully');
+    } else {
+      console.error('No user logged in, cannot remove box ID');
+    }
+  };
+
   const logout = async () => {
     try {
       console.log('Attempting to log out user');
@@ -161,7 +177,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAdmin,
     myBoxIds,
     logout,
-    addBoxId
+    addBoxId,
+    removeBoxId
   };
 
   return (

@@ -1,30 +1,20 @@
 {
   "pages": {
-    "/Profile/[[...uid]]/page": [
+    "/Arena/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/Profile/[[...uid]]/page.js"
+      "static/chunks/app/Arena/page.js"
+    ],
+    "/Arena/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/Arena/layout.js"
     ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
-    ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
-    "/Settings/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/Settings/page.js"
-    ],
-    "/GlobalRank/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/GlobalRank/page.js"
     ]
   }
 }

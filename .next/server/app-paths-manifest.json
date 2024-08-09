@@ -1,7 +1,3 @@
 {
-  "/Profile/[[...uid]]/page": "app/Profile/[[...uid]]/page.js",
-  "/Settings/page": "app/Settings/page.js",
-  "/page": "app/page.js",
-  "/GlobalRank/page": "app/GlobalRank/page.js",
-  "/api/firebase/route": "app/api/firebase/route.js"
+  "/Arena/page": "app/Arena/page.js"
 }

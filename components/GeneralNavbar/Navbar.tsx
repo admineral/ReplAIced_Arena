@@ -38,10 +38,6 @@ export default function Navbar({ user: propUser }: NavbarProps) {
     setShowMobileMenu(!showMobileMenu);
   };
 
-  const toggleProfileDropdown = () => {
-    setShowProfileDropdown(!showProfileDropdown);
-  };
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -102,9 +98,13 @@ export default function Navbar({ user: propUser }: NavbarProps) {
           {/* Desktop profile dropdown */}
           <div className="hidden md:block">
             {user ? (
-              <div className="relative" ref={dropdownRef}>
+              <div 
+                className="relative" 
+                ref={dropdownRef}
+                onMouseEnter={() => setShowProfileDropdown(true)}
+                onMouseLeave={() => setShowProfileDropdown(false)}
+              >
                 <button
-                  onClick={toggleProfileDropdown}
                   className="flex items-center space-x-2 focus:outline-none"
                 >
                   <Image
@@ -114,7 +114,7 @@ export default function Navbar({ user: propUser }: NavbarProps) {
                     height={40}
                     className="rounded-full border-2 border-blue-500 shadow-lg"
                   />
-                  <FaChevronDown className="text-white" />
+                  <FaChevronDown className={`text-white transition-opacity duration-300 ${showProfileDropdown ? 'opacity-100' : 'opacity-0'}`} />
                 </button>
                 {showProfileDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 border border-gray-700">
