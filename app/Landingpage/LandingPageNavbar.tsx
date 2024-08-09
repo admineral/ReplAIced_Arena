@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
@@ -15,23 +15,29 @@ interface LandingPageNavbarProps {
 
 export default function LandingPageNavbar({ activeSection, scrollToSection }: LandingPageNavbarProps) {
   const [showMobileMenu, setShowMobileMenu] = useState<boolean>(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState<boolean>(false);
   const { user, logout } = useAuth();
   const router = useRouter();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleGoToProfile = () => {
     router.push('/Profile');
     setShowMobileMenu(false);
+    setShowProfileDropdown(false);
   };
 
   const handleGoToSettings = () => {
     router.push('/Settings');
     setShowMobileMenu(false);
+    setShowProfileDropdown(false);
   };
 
   const handleLogout = async () => {
     try {
       await logout();
       setShowMobileMenu(false);
+      setShowProfileDropdown(false);
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
@@ -41,6 +47,39 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
   const toggleMobileMenu = () => {
     setShowMobileMenu(!showMobileMenu);
   };
+
+  const handleProfileClick = () => {
+    setShowProfileDropdown(!showProfileDropdown);
+  };
+
+  const handleProfileMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setShowProfileDropdown(true);
+  };
+
+  const handleProfileMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setShowProfileDropdown(false);
+    }, 300);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowProfileDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const navItems = [
     { id: 'about', text: 'About' },
@@ -53,7 +92,6 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black to-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Logo and desktop navigation */}
           <div className="flex items-center">
             <button 
               onClick={() => scrollToSection('home')}
@@ -92,34 +130,68 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
               ))}
             </div>
           </div>
-          {/* Desktop profile / login */}
-          <div className="hidden md:block">
-            {user ? (
-              <button 
-                onClick={() => router.push('/Profile')}
-                className="focus:outline-none transition-transform duration-300 transform hover:scale-110"
+          <div className="flex items-center">
+            <div className="hidden md:block">
+              {user ? (
+                <div 
+                  className="relative" 
+                  ref={dropdownRef}
+                  onMouseEnter={handleProfileMouseEnter}
+                  onMouseLeave={handleProfileMouseLeave}
+                >
+                  <button 
+                    onClick={handleProfileClick}
+                    className="focus:outline-none"
+                  >
+                    <Image
+                      src={user.photoURL || '/default-avatar.png'}
+                      alt="Profile"
+                      width={40}
+                      height={40}
+                      className="rounded-full border-2 border-blue-500 shadow-lg"
+                    />
+                  </button>
+                  {showProfileDropdown && (
+                    <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 border border-gray-700">
+                      <Link 
+                        href="/Profile"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                        onClick={() => setShowProfileDropdown(false)}
+                      >
+                        <FaUser className="mr-2" />
+                        <span>Profile</span>
+                      </Link>
+                      <Link 
+                        href="/Settings"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                        onClick={() => setShowProfileDropdown(false)}
+                      >
+                        <FaCog className="mr-2" />
+                        <span>Settings</span>
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                      >
+                        <FaSignOutAlt className="mr-2" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Login />
+              )}
+            </div>
+            <div className="md:hidden flex items-center">
+              {!user && <Login />}
+              <button
+                onClick={toggleMobileMenu}
+                className="ml-4 text-white text-2xl focus:outline-none"
               >
-                <Image
-                  src={user.photoURL || '/default-avatar.png'}
-                  alt="Profile"
-                  width={50}
-                  height={50}
-                  className="rounded-full border-2 border-blue-500 shadow-lg"
-                />
+                {showMobileMenu ? <FaTimes /> : <FaBars />}
               </button>
-            ) : (
-              <Login />
-            )}
-          </div>
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            {!user && <Login />}
-            <button
-              onClick={toggleMobileMenu}
-              className="ml-4 text-white text-2xl focus:outline-none"
-            >
-              {showMobileMenu ? <FaTimes /> : <FaBars />}
-            </button>
+            </div>
           </div>
         </div>
       </div>
@@ -160,20 +232,22 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
             <>
               <div className="border-t border-gray-700 my-2"></div>
               <div className="px-2 pb-3 space-y-1">
-                <button
-                  onClick={handleGoToProfile}
+                <Link 
+                  href="/Profile"
                   className="flex items-center w-full px-3 py-2 text-base font-medium text-white hover:bg-gray-700 transition-colors duration-300"
+                  onClick={toggleMobileMenu}
                 >
                   <FaUser className="mr-2" />
                   <span>Profile</span>
-                </button>
-                <button
-                  onClick={handleGoToSettings}
+                </Link>
+                <Link 
+                  href="/Settings"
                   className="flex items-center w-full px-3 py-2 text-base font-medium text-white hover:bg-gray-700 transition-colors duration-300"
+                  onClick={toggleMobileMenu}
                 >
                   <FaCog className="mr-2" />
                   <span>Settings</span>
-                </button>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="flex items-center w-full px-3 py-2 text-base font-medium text-white hover:bg-red-600 transition-colors duration-300"

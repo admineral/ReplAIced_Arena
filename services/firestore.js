@@ -99,6 +99,7 @@ export const getAttacks = async (date, pageSize = 100, lastDoc = null) => {
   };
 };
 
+
 /**
  * @param {Date} date
  * @param {function(AttackData[]): void} callback
@@ -240,21 +241,6 @@ export const getCurrentUserRank = async (userId) => {
   }
 };
 
-/**
- * @param {number} index
- * @returns {UserRank}
- */
-const generateFakeUser = (index) => ({
-  displayName: `User ${index}`,
-  photoURL: '/default-avatar.png',
-  level: Math.floor(Math.random() * 10) + 1,
-  experience: Math.floor(Math.random() * 1000),
-  streak: Math.floor(Math.random() * 30),
-  contributions: Math.floor(Math.random() * 100),
-  attacksLaunched: Math.floor(Math.random() * 50),
-  defensesSuccessful: Math.floor(Math.random() * 30),
-  rank: index
-});
 
 /**
  * @returns {Promise<void>}
@@ -277,63 +263,6 @@ export const deleteAllUsers = async () => {
   }
 };
 
-/**
- * @param {number} userCount
- * @returns {Promise<void>}
- */
-export const populateDatabase = async (userCount = 100) => {
-  console.log(`Populating database with ${userCount} fake users...`);
-  const batch = writeBatch(db);
-
-  for (let i = 0; i < userCount; i++) {
-    const userData = generateFakeUser(i + 1);
-    const userRef = doc(collection(db, USERS_COLLECTION));
-    batch.set(userRef, userData);
-  }
-
-  await batch.commit();
-  console.log(`Database populated with ${userCount} fake users.`);
-};
-
-/**
- * @param {number} userCount
- * @param {number} experienceIncrease
- * @returns {Promise<Array<{id: string, displayName: string, newExperience: number, newLevel: number}>>}
- */
-export const increaseRandomUsersExperience = async (userCount = 10, experienceIncrease = 100) => {
-  console.log(`Increasing experience for ${userCount} random users...`);
-  const usersSnapshot = await getDocs(collection(db, USERS_COLLECTION));
-  const users = usersSnapshot.docs;
-
-  const batch = writeBatch(db);
-  const updatedUsers = [];
-
-  for (let i = 0; i < userCount; i++) {
-    const randomIndex = Math.floor(Math.random() * users.length);
-    const userDoc = users[randomIndex];
-    const userData = userDoc.data();
-
-    const newExperience = (userData.experience || 0) + experienceIncrease;
-    const newLevel = Math.floor(Math.sqrt(newExperience / 100)) + 1;
-
-    batch.update(userDoc.ref, {
-      experience: newExperience,
-      level: newLevel,
-      lastUpdated: Date.now()
-    });
-
-    updatedUsers.push({
-      id: userDoc.id,
-      displayName: userData.displayName,
-      newExperience,
-      newLevel
-    });
-  }
-
-  await batch.commit();
-  console.log(`Experience increased for ${userCount} random users:`, updatedUsers);
-  return updatedUsers;
-};
 
 /**
  * @param {string} userId

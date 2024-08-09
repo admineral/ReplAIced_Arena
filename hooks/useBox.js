@@ -29,13 +29,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { constrainPosition, generateRandomPosition, isPositionValid } from '../utils/mapUtils';
 import mapConfig from '../config/mapConfig';
 import { db } from '../firebase-config';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, getDocs, setDoc, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 
 const useBoxManager = (MAP_SIZE) => {
   const [boxes, setBoxes] = useState([]);
   const [connections, setConnections] = useState([]);
 
-  const addBox = useCallback(async (boxData) => {
+  const addBox = useCallback(async (boxData, userId) => {
     let position;
     if (boxData.x !== undefined && boxData.y !== undefined) {
       position = [boxData.x, boxData.y];
@@ -45,15 +45,16 @@ const useBoxManager = (MAP_SIZE) => {
         position = generateRandomPosition(MAP_SIZE);
         attempts++;
       } while (!isPositionValid(position[0], position[1], MAP_SIZE, boxes, mapConfig.minBoxDistance) && attempts < 100);
-
+  
       if (attempts >= 100) {
         console.error('Failed to find a valid position for new box');
-        return false;
+        return null;
       }
     }
-
+  
+    const customId = boxData.id || uuidv4();
     const newBox = {
-      id: boxData.id || uuidv4(),
+      id: customId,
       x: position[0],
       y: position[1],
       type: boxData.type || 'default',
@@ -65,22 +66,50 @@ const useBoxManager = (MAP_SIZE) => {
       createdAt: boxData.createdAt || new Date().toISOString(),
       createdBy: boxData.createdBy || { uid: 'anonymous', displayName: 'Unknown' },
     };
-
+  
     try {
+      // Add the box to the 'boxes' collection
       const docRef = await addDoc(collection(db, 'boxes'), newBox);
-      console.log('Box added with ID: ', docRef.id);
+      const firestoreId = docRef.id;
+      console.log('Box added with Firestore ID: ', firestoreId);
       
+      // Create coordinate index
+      await setDoc(doc(db, 'boxCoordinates', firestoreId), {
+        x: newBox.x,
+        y: newBox.y,
+        customId: customId
+      });
+      
+      // Create box-owner index
+      if (userId) {
+        await setDoc(doc(db, 'boxOwners', firestoreId), {
+          ownerId: userId,
+          customId: customId,
+          x: newBox.x,
+          y: newBox.y
+        });
+      }
+      
+      // Update local state
       setBoxes(prevBoxes => {
-        const updatedBoxes = [...prevBoxes, { ...newBox, id: docRef.id }];
+        const updatedBoxes = [...prevBoxes, { ...newBox, firestoreId }];
         updateConnections(updatedBoxes);
         return updatedBoxes;
       });
-      return true;
+  
+      // Return both IDs and coordinates
+      return {
+        firestoreId,
+        customId,
+        x: newBox.x,
+        y: newBox.y
+      };
     } catch (error) {
       console.error('Error adding box to Firestore: ', error);
-      return false;
+      return null;
     }
-  }, [MAP_SIZE, boxes]);
+  }, [MAP_SIZE, boxes, mapConfig.minBoxDistance]);
+  
 
   const updateConnections = useCallback((updatedBoxes) => {
     const newConnections = updatedBoxes.map((box, index) => ({
@@ -199,7 +228,8 @@ const useBoxManager = (MAP_SIZE) => {
     handleBoxDrag,
     removeBox, 
     clearAllBoxes,
-    loadBoxesFromFirebase
+    loadBoxesFromFirebase,
+    addBox
   };
 };
 

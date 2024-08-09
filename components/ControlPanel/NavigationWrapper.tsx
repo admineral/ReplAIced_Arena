@@ -28,7 +28,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { MapProvider, useMapContext } from '../../contexts/MapContext';
 import { useAuth } from '../../contexts/AuthContext';
-import Navbar from '../Landingpage/Navbar';
+import Navbar from '../GeneralNavbar/Navbar';
 import LandingPageNavbar from '../../app/Landingpage/LandingPageNavbar';
 import ControlPanel from './ControlPanel_Component';
 import MapCanvas from '../Map/MapCanvas';
