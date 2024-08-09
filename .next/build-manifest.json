@@ -2,7 +2,9 @@
   "polyfillFiles": [
 
   ],
-  "devFiles": [],
+  "devFiles": [
+    "static/chunks/react-refresh.js"
+  ],
   "ampDevFiles": [],
   "lowPriorityFiles": [
     "static/SlE2g0Spr8H4N84_V09Wq/_buildManifest.js",
