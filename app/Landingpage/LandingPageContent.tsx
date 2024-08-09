@@ -1,38 +1,37 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../contexts/AuthContext';
-import Login from '../../components/Auth/Login';
 import LandingPageNavbar from './LandingPageNavbar';
+import Link from 'next/link';
 
 interface Feature {
   title: string;
   icon: string;
   description: string;
+  link?: string;
 }
 
 export default function LandingPageContent() {
-  const [isVideoLoaded, setIsVideoLoaded] = useState<boolean>(false);
-  const [activeSection, setActiveSection] = useState<string>('home');
+  const [isVideoReady, setIsVideoReady] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [activeSection, setActiveSection] = useState<string>('home');
   const sectionsRef = useRef<{ [key: string]: HTMLElement | null }>({});
-  const { user, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const handleCanPlayThrough = () => {
-      setIsVideoLoaded(true);
+    const handleCanPlay = () => {
+      setIsVideoReady(true);
+      video.play().catch(error => console.error('Auto-play failed:', error));
     };
 
-    video.addEventListener('canplaythrough', handleCanPlayThrough);
+    video.addEventListener('canplay', handleCanPlay);
 
     return () => {
-      video.removeEventListener('canplaythrough', handleCanPlayThrough);
+      video.removeEventListener('canplay', handleCanPlay);
     };
   }, []);
 
@@ -60,34 +59,20 @@ export default function LandingPageContent() {
   }, []);
 
   useEffect(() => {
-    // Set up refs after component has mounted
     sectionsRef.current['home'] = document.getElementById('home');
     sectionsRef.current['about'] = document.getElementById('about');
     sectionsRef.current['features'] = document.getElementById('features');
     sectionsRef.current['join'] = document.getElementById('join');
   }, []);
 
-  const handleNavigation = (path: string) => {
-    router.push(path);
-  };
-
   const handleGetStarted = () => {
-    handleNavigation('/Arena');
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      handleNavigation('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+    router.push('/Arena');
   };
 
   const scrollToSection = (sectionId: string) => {
     const section = sectionsRef.current[sectionId];
     if (section) {
-      const navbarHeight = 64; // Adjust this value based on your navbar height
+      const navbarHeight = 64;
       const sectionTop = section.offsetTop - navbarHeight;
       window.scrollTo({
         top: sectionTop,
@@ -98,11 +83,33 @@ export default function LandingPageContent() {
   };
 
   const features: Feature[] = [
-    { title: "Dynamic Challenge Map", icon: "🗺️", description: "Navigate through a landscape of AI models with varying difficulty levels." },
-    { title: "Competitive Gameplay", icon: "🏆", description: "Launch attacks, bypass defenses, and earn points for successful breaches." },
-    { title: "Advanced Security Tools", icon: "🛡️", description: "Utilize cutting-edge features like Similarity Search filters to defend against threats." },
-    { title: "Global Leaderboard", icon: "📊", description: "Compete on a visible rank list that highlights top performers." }
+    { 
+      title: "Dynamic Challenge Map", 
+      icon: "🗺️", 
+      description: "Navigate through a landscape of AI models with varying difficulty levels.",
+      link: "/Arena"
+    },
+    { 
+      title: "Competitive Gameplay", 
+      icon: "🏆", 
+      description: "Launch attacks, bypass defenses, and earn points for successful breaches." 
+    },
+    { 
+      title: "Advanced Security Tools", 
+      icon: "🛡️", 
+      description: "Utilize cutting-edge features like Similarity Search filters to defend against threats." 
+    },
+    { 
+      title: "Global Leaderboard", 
+      icon: "📊", 
+      description: "Compete on a visible rank list that highlights top performers.",
+      link: "/GlobalRank"
+    }
   ];
+
+  const handleFeatureClick = (link: string) => {
+    router.push(link);
+  };
 
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-black">
@@ -113,14 +120,14 @@ export default function LandingPageContent() {
         loop 
         muted 
         playsInline
-        className="fixed z-0 w-auto min-w-full min-h-full max-w-none object-cover"
+        className={`fixed z-0 w-auto min-w-full min-h-full max-w-none object-cover transition-opacity duration-1000 ${isVideoReady ? 'opacity-100' : 'opacity-0'}`}
       >
         <source src="/gen3.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
       {/* Content Overlay */}
-      <div className={`relative z-10 min-h-screen text-white transition-opacity duration-1000 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}>
+      <div className="relative z-10 min-h-screen text-white">
         {/* Navigation */}
         <LandingPageNavbar activeSection={activeSection} scrollToSection={scrollToSection} />
 
@@ -170,10 +177,21 @@ export default function LandingPageContent() {
             <h2 className="text-3xl sm:text-4xl font-bold text-center text-blue-400 mb-12">Key Features</h2>
             <div className="grid md:grid-cols-2 gap-8">
               {features.map((feature, index) => (
-                <div key={index} className="bg-gray-800 bg-opacity-50 p-6 rounded-xl backdrop-filter backdrop-blur-lg transform transition duration-500 hover:scale-105">
+                <div 
+                  key={index} 
+                  className={`bg-gray-800 bg-opacity-50 p-6 rounded-xl backdrop-filter backdrop-blur-lg transform transition duration-500 hover:scale-105 ${feature.link ? 'cursor-pointer' : ''}`}
+                  onClick={() => feature.link && handleFeatureClick(feature.link)}
+                >
                   <div className="text-3xl sm:text-4xl mb-4">{feature.icon}</div>
                   <h3 className="text-xl sm:text-2xl font-semibold mb-2">{feature.title}</h3>
                   <p className="text-sm sm:text-base text-gray-300">{feature.description}</p>
+                  {feature.link && (
+                    <Link href={feature.link} passHref>
+                      <span className="mt-4 inline-block text-blue-400 hover:text-blue-300">
+                        Learn More →
+                      </span>
+                    </Link>
+                  )}
                 </div>
               ))}
             </div>

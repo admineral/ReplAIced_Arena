@@ -2,13 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { getTopUsers, getCurrentUserRank, getUserActivity, populateDatabase, increaseRandomUsersExperience, deleteAllUsers } from '../../services/firestore';
+import { getTopUsers, getCurrentUserRank, getUserActivity } from '../../services/firestore';
 import dynamic from 'next/dynamic';
 
 const MagnifyingGlassIcon = dynamic(() => import('@heroicons/react/24/outline/MagnifyingGlassIcon').then(mod => mod.default));
 const TrophyIcon = dynamic(() => import('@heroicons/react/24/outline/TrophyIcon').then(mod => mod.default));
 const BoltIcon = dynamic(() => import('@heroicons/react/24/outline/BoltIcon').then(mod => mod.default));
-const TrashIcon = dynamic(() => import('@heroicons/react/24/outline/TrashIcon').then(mod => mod.default));
 const CalendarIcon = dynamic(() => import('@heroicons/react/24/outline/CalendarIcon').then(mod => mod.default));
 const ShieldCheckIcon = dynamic(() => import('@heroicons/react/24/outline/ShieldCheckIcon').then(mod => mod.default));
 const SparklesIcon = dynamic(() => import('@heroicons/react/24/outline/SparklesIcon').then(mod => mod.default));
@@ -85,52 +84,6 @@ const RanklistPage: React.FC = () => {
     }
   };
 
-  const handlePopulateDatabase = async () => {
-    try {
-      setIsLoading(true);
-      await populateDatabase(100);
-      alert('Database populated with 100 fake users');
-      await fetchUsers();
-    } catch (error) {
-      console.error('Error populating database:', error);
-      alert('Error populating database');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleIncreaseExperience = async () => {
-    try {
-      setIsLoading(true);
-      await increaseRandomUsersExperience(10, 100);
-      alert(`Experience increased for 10 random users`);
-      await fetchUsers();
-    } catch (error) {
-      console.error('Error increasing experience:', error);
-      alert('Error increasing experience');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteAllUsers = async () => {
-    if (window.confirm("Are you sure you want to delete all users? This action cannot be undone.")) {
-      try {
-        setIsLoading(true);
-        await deleteAllUsers();
-        alert('All users have been deleted');
-        setUsers([]);
-        setCurrentUserRank(null);
-        setSelectedUser(null);
-      } catch (error) {
-        console.error('Error deleting users:', error);
-        alert('Error deleting users');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
   const filteredUsers = users.filter(user => 
     user.displayName.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -156,45 +109,15 @@ const RanklistPage: React.FC = () => {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-gradient-to-b from-black to-gray-900 text-white">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm">
-        <h1 className="text-5xl font-bold mb-8 bg-gradient-to-r from-purple-500 to-cyan-500 bg-clip-text text-transparent pb-2">
+    <main className="flex min-h-screen flex-col items-center justify-between pt-20 md:pt-24 p-4 md:p-24 bg-gradient-to-b from-black to-gray-900 text-white">
+      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm">
+        <h1 className="text-3xl md:text-5xl font-bold mb-8 bg-gradient-to-r from-purple-500 to-cyan-500 bg-clip-text text-transparent pb-2">
           Global Ranklist
         </h1>
         
-        <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <button
-            onClick={handlePopulateDatabase}
-            className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          >
-            <h2 className="mb-3 text-2xl font-semibold">
-              <TrophyIcon className="inline-block h-6 w-6 mr-2" />
-              Populate DB
-            </h2>
-          </button>
-
-          <button
-            onClick={handleIncreaseExperience}
-            className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          >
-            <h2 className="mb-3 text-2xl font-semibold">
-              <BoltIcon className="inline-block h-6 w-6 mr-2" />
-              Boost XP
-            </h2>
-          </button>
-
-          <button
-            onClick={handleDeleteAllUsers}
-            className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          >
-            <h2 className="mb-3 text-2xl font-semibold">
-              <TrashIcon className="inline-block h-6 w-6 mr-2" />
-              Delete All
-            </h2>
-          </button>
-
+        <div className="mb-8">
           <div className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30">
-            <h2 className="mb-3 text-2xl font-semibold">
+            <h2 className="mb-3 text-xl md:text-2xl font-semibold">
               <MagnifyingGlassIcon className="inline-block h-6 w-6 mr-2" />
               Search
             </h2>
@@ -208,31 +131,31 @@ const RanklistPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="mb-8 flex justify-between items-center">
-          <div className="flex space-x-2">
+        <div className="mb-8 flex flex-wrap justify-between items-center gap-4">
+          <div className="flex flex-wrap gap-2">
             <button
-              className={`flex items-center justify-center min-w-[120px] px-4 py-2 rounded-md transition-colors ${activeTab === 'overall' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+              className={`flex items-center justify-center px-4 py-2 rounded-md transition-colors ${activeTab === 'overall' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
               onClick={() => setActiveTab('overall')}
             >
               <UserGroupIcon className="h-5 w-5 mr-2" />
               <span className="whitespace-nowrap">Overall</span>
             </button>
             <button
-              className={`flex items-center justify-center min-w-[120px] px-4 py-2 rounded-md transition-colors ${activeTab === 'attackers' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+              className={`flex items-center justify-center px-4 py-2 rounded-md transition-colors ${activeTab === 'attackers' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
               onClick={() => setActiveTab('attackers')}
             >
               <SparklesIcon className="h-5 w-5 mr-2" />
               <span className="whitespace-nowrap">Top Attackers</span>
             </button>
             <button
-              className={`flex items-center justify-center min-w-[120px] px-4 py-2 rounded-md transition-colors ${activeTab === 'defenders' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+              className={`flex items-center justify-center px-4 py-2 rounded-md transition-colors ${activeTab === 'defenders' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
               onClick={() => setActiveTab('defenders')}
             >
               <ShieldCheckIcon className="h-5 w-5 mr-2" />
               <span className="whitespace-nowrap">Top Defenders</span>
             </button>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             {['week', 'month', 'year'].map((range) => (
               <button
                 key={range}
@@ -259,14 +182,14 @@ const RanklistPage: React.FC = () => {
             <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-          <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+          <div className="bg-gray-800 rounded-lg shadow-lg overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-900">
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Rank</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Level</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Experience</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">XP</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Streak</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Attacks</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Defenses</th>
@@ -345,7 +268,7 @@ const RanklistPage: React.FC = () => {
         )}
 
         {/* Slide-in User Details Panel */}
-        <div className={`fixed top-0 right-0 w-96 h-full bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out ${showUserDetails ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className={`fixed top-0 right-0 w-full md:w-96 h-full bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out ${showUserDetails ? 'translate-x-0' : 'translate-x-full'}`}>
           {selectedUser && (
             <div className="p-6 h-full overflow-y-auto">
               <div className="flex justify-between items-center mb-6">

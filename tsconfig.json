@@ -28,7 +28,9 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "components/Auth/Login.js"
-, "services/firestore.js"  ],
+    "components/Auth/Login.js",
+    "services/firestore.js",
+    "app/types/**/*.d.ts"
+  ],
   "exclude": ["node_modules"]
 }

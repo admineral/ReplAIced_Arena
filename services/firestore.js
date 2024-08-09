@@ -178,62 +178,25 @@ export const updateUserExperience = async (userId, experienceGained) => {
   }
 };
 
-/**
- * @param {number} limitCount
- * @returns {Promise<UserRank[]>}
- */
-export const getTopUsers = async (limitCount = 100) => {
-  console.log(`Fetching top ${limitCount} users from Firestore...`);
-  try {
-    let q = query(
-      collection(db, USERS_COLLECTION),
-      orderBy('level', 'desc'),
-      orderBy('experience', 'desc'),
-      limit(limitCount)
-    );
-
-    let querySnapshot = await getDocs(q);
-
-    // If the complex query fails, try a simpler query
-    if (querySnapshot.empty) {
-      console.log("Complex query failed. Trying simpler query...");
-      q = query(
-        collection(db, USERS_COLLECTION),
-        orderBy('level', 'desc'),
-        limit(limitCount)
-      );
-      querySnapshot = await getDocs(q);
+   /**
+    * @param {number} limitCount
+    * @returns {Promise<UserRank[]>}
+    */
+   export const getTopUsers = async (limitCount = 100) => {
+    console.log(`Fetching top ${limitCount} users from Firestore...`);
+    try {
+      const response = await fetch(`/api/firebase?limitCount=${limitCount}`);
+      if (!response.ok) {
+        throw new Error(`Error fetching top users: ${response.statusText}`);
+      }
+      const users = await response.json();
+      console.log('Processed user data:', users);
+      return users;
+    } catch (error) {
+      console.error("Error fetching top users:", error);
+      throw error;
     }
-
-    console.log(`Fetched ${querySnapshot.docs.length} users`);
-    const users = querySnapshot.docs.map((doc, index) => {
-      const userData = doc.data();
-      console.log(`User ${index + 1}:`, { id: doc.id, ...userData });
-      return {
-        id: doc.id,
-        displayName: userData.displayName || `User ${index + 1}`,
-        photoURL: userData.photoURL || '/default-avatar.png',
-        level: userData.level || 1,
-        experience: userData.experience || 0,
-        streak: userData.streak || 0,
-        contributions: userData.contributions || 0,
-        attacksLaunched: userData.attacksLaunched || 0,
-        defensesSuccessful: userData.defensesSuccessful || 0,
-        rank: index + 1
-      };
-    });
-    console.log('Processed user data:', users);
-    return users;
-  } catch (error) {
-    console.error("Error fetching top users:", error);
-    if (error instanceof Error && error.message.includes("The query requires an index")) {
-      const indexLink = error.message.match(/https:\/\/console\.firebase\.google\.com[^\s]+/)?.[0];
-      console.log("Index creation link:", indexLink);
-      throw new Error("Rankings are being prepared. Please create the required index and try again.");
-    }
-    throw error;
-  }
-};
+  };
 
 /**
  * @param {string} userId

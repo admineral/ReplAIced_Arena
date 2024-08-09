@@ -46,6 +46,8 @@ import * as dataManagement from '../Map/dataManagement';
 
 function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const isLandingPage = pathname === '/';
+  const isArenaPage = pathname === '/Arena';
   const { user } = useAuth();
   const mapContext = useMapContext();
   const [isLoading, setIsLoading] = useState(false);
@@ -87,14 +89,14 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
 
   const loadBoxes = useCallback(
     dataManagement.handleLoadBoxes(
-      mapContext.loadBoxesFromFirebase,
+      isArenaPage ? mapContext.loadBoxesFromFirebase : () => Promise.resolve([]),
       setIsLoading,
       setError,
       setIsTimedOut,
       setLastUpdateTime,
       setLoadingTimeout
     ),
-    [mapContext.loadBoxesFromFirebase]
+    [isArenaPage, mapContext.loadBoxesFromFirebase]
   );
 
   const reloadBoxes = useCallback(() => dataManagement.handleReloadBoxes(loadBoxes)(), [loadBoxes]);
@@ -133,30 +135,32 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
       }
     };
 
-    if (pathname === '/') {
+    if (isLandingPage) {
       window.addEventListener('scroll', handleScroll);
     }
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [pathname]);
+  }, [isLandingPage]);
 
   useEffect(() => {
     setActiveSection('home');
-  }, [pathname]);
+  }, [isLandingPage]);
 
   useEffect(() => {
-    switchMode('preview');
-  }, [switchMode]);
+    if (isArenaPage) {
+      switchMode('preview');
+    }
+  }, [isArenaPage, switchMode]);
 
   useEffect(() => {
-    if (mode === 'preview') {
+    if (mode === 'preview' && isArenaPage) {
       loadBoxes();
     }
-  }, [mode, loadBoxes]);
+  }, [mode, loadBoxes, isArenaPage]);
 
-  if (pathname === '/') {
+  if (isLandingPage) {
     return (
       <>
         <LandingPageNavbar activeSection={activeSection} scrollToSection={scrollToSection} />
@@ -165,7 +169,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (pathname === '/Arena') {
+  if (isArenaPage) {
     return (
       <div className="flex flex-col h-screen w-screen bg-gray-900">
         <div className="relative z-20">
