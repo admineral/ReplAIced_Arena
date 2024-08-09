@@ -13,9 +13,9 @@ interface Feature {
 }
 
 export default function LandingPageContent() {
-  const [isVideoLoaded, setIsVideoLoaded] = useState<boolean>(false);
-  const [activeSection, setActiveSection] = useState<string>('home');
+  const [isVideoReady, setIsVideoReady] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [activeSection, setActiveSection] = useState<string>('home');
   const sectionsRef = useRef<{ [key: string]: HTMLElement | null }>({});
   const router = useRouter();
 
@@ -23,14 +23,15 @@ export default function LandingPageContent() {
     const video = videoRef.current;
     if (!video) return;
 
-    const handleCanPlayThrough = () => {
-      setIsVideoLoaded(true);
+    const handleCanPlay = () => {
+      setIsVideoReady(true);
+      video.play().catch(error => console.error('Auto-play failed:', error));
     };
 
-    video.addEventListener('canplaythrough', handleCanPlayThrough);
+    video.addEventListener('canplay', handleCanPlay);
 
     return () => {
-      video.removeEventListener('canplaythrough', handleCanPlayThrough);
+      video.removeEventListener('canplay', handleCanPlay);
     };
   }, []);
 
@@ -119,14 +120,14 @@ export default function LandingPageContent() {
         loop 
         muted 
         playsInline
-        className="fixed z-0 w-auto min-w-full min-h-full max-w-none object-cover"
+        className={`fixed z-0 w-auto min-w-full min-h-full max-w-none object-cover transition-opacity duration-1000 ${isVideoReady ? 'opacity-100' : 'opacity-0'}`}
       >
         <source src="/gen3.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
       {/* Content Overlay */}
-      <div className={`relative z-10 min-h-screen text-white transition-opacity duration-1000 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}>
+      <div className="relative z-10 min-h-screen text-white">
         {/* Navigation */}
         <LandingPageNavbar activeSection={activeSection} scrollToSection={scrollToSection} />
 
