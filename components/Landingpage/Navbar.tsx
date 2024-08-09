@@ -38,7 +38,7 @@ export default function Navbar({ user: propUser }: NavbarProps) {
   const navItems = [
     { href: '/', text: 'Home', icon: FaHome },
     { href: '/Arena', text: 'Arena', icon: FaGamepad },
-    { href: '/Ranklist', text: 'Ranklist', icon: FaListOl },
+    { href: '/GlobalRank', text: 'Ranklist', icon: FaListOl },
   ];
 
   return (
