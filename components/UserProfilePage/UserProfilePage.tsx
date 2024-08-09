@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { db } from '@/firebase-config';
 import { doc, getDoc, DocumentData } from "firebase/firestore";
@@ -24,60 +24,65 @@ interface Achievement {
   unlocked: boolean;
 }
 
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-}
-
-const ProfilePage: React.FC = () => {
-  const { user } = useAuth() as AuthContextType;
+const UserProfilePage: React.FC = () => {
+  const { user } = useAuth();
   const router = useRouter();
+  const params = useParams();
+  const userIdFromUrl = params.uid as string;
+
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [imageError, setImageError] = useState(false);
+  const [profileUser, setProfileUser] = useState<User | null>(null);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/Login');
-    } else {
-      fetchUserData();
-    }
-  }, [user, router]);
+    const fetchUserData = async (uid: string) => {
+      try {
+        const userDocRef = doc(db, "users", uid);
+        const userDocSnap = await getDoc(userDocRef);
 
-  const fetchUserData = async () => {
-    if (!user) return;
-
-    try {
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data() as DocumentData;
-        setUserStats({
-          attacksLaunched: userData.attacksLaunched || 0,
-          defensesSuccessful: userData.defensesSuccessful || 0,
-          rank: userData.rank || 0,
-          level: userData.level || 1,
-          experience: userData.experience || 0,
-        });
-        setAchievements(userData.achievements || []);
-      } else {
-        console.log("No user data found!");
-        setUserStats({
-          attacksLaunched: 0,
-          defensesSuccessful: 0,
-          rank: 0,
-          level: 1,
-          experience: 0,
-        });
-        setAchievements([]);
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data() as DocumentData;
+          setUserStats({
+            attacksLaunched: userData.attacksLaunched || 0,
+            defensesSuccessful: userData.defensesSuccessful || 0,
+            rank: userData.rank || 0,
+            level: userData.level || 1,
+            experience: userData.experience || 0,
+          });
+          setAchievements(userData.achievements || []);
+          setProfileUser({
+            uid,
+            displayName: userData.displayName,
+            email: userData.email,
+            photoURL: userData.photoURL,
+          } as User);
+        } else {
+          console.log("No user data found!");
+          setUserStats({
+            attacksLaunched: 0,
+            defensesSuccessful: 0,
+            rank: 0,
+            level: 1,
+            experience: 0,
+          });
+          setAchievements([]);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  };
+    };
 
-  if (!user || !userStats) {
+    if (userIdFromUrl) {
+      fetchUserData(userIdFromUrl);
+    } else if (user) {
+      fetchUserData(user.uid);
+    } else {
+      router.push('/Login');
+    }
+  }, [userIdFromUrl, user, router]);
+
+  if (!userStats || !profileUser) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
@@ -87,9 +92,9 @@ const ProfilePage: React.FC = () => {
         <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
           <div className="md:flex">
             <div className="md:flex-shrink-0 p-6">
-              {!imageError && user.photoURL ? (
+              {!imageError && profileUser.photoURL ? (
                 <Image
-                  src={user.photoURL}
+                  src={profileUser.photoURL}
                   alt="Profile"
                   width={150}
                   height={150}
@@ -98,14 +103,14 @@ const ProfilePage: React.FC = () => {
                 />
               ) : (
                 <div className="w-[150px] h-[150px] bg-blue-500 rounded-full flex items-center justify-center text-4xl font-bold border-4 border-blue-300">
-                  {user.displayName ? user.displayName[0].toUpperCase() : 'U'}
+                  {profileUser.displayName ? profileUser.displayName[0].toUpperCase() : 'U'}
                 </div>
               )}
             </div>
             <div className="p-8 flex-grow">
               <div className="uppercase tracking-wide text-sm text-blue-400 font-semibold">AI Security Expert</div>
-              <h1 className="mt-2 text-3xl font-bold">{user.displayName || 'Anonymous User'}</h1>
-              <p className="mt-2 text-gray-300">{user.email}</p>
+              <h1 className="mt-2 text-3xl font-bold">{profileUser.displayName || 'Anonymous User'}</h1>
+              <p className="mt-2 text-gray-300">{profileUser.email}</p>
               <div className="mt-4 flex items-center">
                 <div className="text-yellow-400 text-2xl mr-2">⭐</div>
                 <div className="font-semibold">Level {userStats.level}</div>
@@ -153,4 +158,4 @@ const ProfilePage: React.FC = () => {
   );
 };
 
-export default ProfilePage;
+export default UserProfilePage;
