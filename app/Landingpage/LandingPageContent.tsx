@@ -112,7 +112,7 @@ export default function LandingPageContent() {
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold mb-2">
               Repl<span className="text-blue-500">AI</span>ced
             </h1>
-            <p className="text-xl sm:text-2xl font-light">AI Security Challenge Arena</p>
+            <p className="text-xl sm:text-2xl font-light"></p>
           </div>
           <div className="max-w-md mt-8">
             <p className="text-lg sm:text-xl mb-8">

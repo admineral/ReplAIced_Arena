@@ -31,8 +31,9 @@ const LazyVideo: React.FC = () => {
     video.addEventListener('canplay', handleCanPlay);
     video.addEventListener('ended', handleEnded);
 
-    // Set the initial video source
+    // Set the video source
     video.src = videos[currentVideoIndex];
+    console.log(`Playing video: ${videos[currentVideoIndex]}`);
 
     return () => {
       video.removeEventListener('canplay', handleCanPlay);
@@ -48,7 +49,6 @@ const LazyVideo: React.FC = () => {
       playsInline
       className={`fixed z-0 w-auto min-w-full min-h-full max-w-none object-cover transition-opacity duration-1000 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
     >
-      <source src={videos[currentVideoIndex]} type="video/webm" />
       Your browser does not support the video tag.
     </video>
   );

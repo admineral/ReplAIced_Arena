@@ -1,8 +1,4 @@
 {
   "/page": "app/page.js",
-  "/Profile/[[...uid]]/page": "app/Profile/[[...uid]]/page.js",
-  "/GlobalRank/page": "app/GlobalRank/page.js",
-  "/Attack/page": "app/Attack/page.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/Arena/page": "app/Arena/page.js"
+  "/favicon.ico/route": "app/favicon.ico/route.js"
 }
