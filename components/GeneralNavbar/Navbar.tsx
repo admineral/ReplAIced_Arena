@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { User } from 'firebase/auth';
-import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt, FaHome, FaGamepad, FaListOl } from 'react-icons/fa';
+import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt, FaHome, FaGamepad, FaListOl, FaChevronDown } from 'react-icons/fa';
 
 interface NavbarProps {
   user?: User | null;
@@ -15,8 +15,10 @@ interface NavbarProps {
 export default function Navbar({ user: propUser }: NavbarProps) {
   const { user: contextUser, logout } = useAuth();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Use the prop user if provided, otherwise use the context user
   const user = propUser ?? contextUser;
@@ -25,6 +27,7 @@ export default function Navbar({ user: propUser }: NavbarProps) {
     try {
       await logout();
       setShowMobileMenu(false);
+      setShowProfileDropdown(false);
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
@@ -34,6 +37,23 @@ export default function Navbar({ user: propUser }: NavbarProps) {
   const toggleMobileMenu = () => {
     setShowMobileMenu(!showMobileMenu);
   };
+
+  const toggleProfileDropdown = () => {
+    setShowProfileDropdown(!showProfileDropdown);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowProfileDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const navItems = [
     { href: '/', text: 'Home', icon: FaHome },
@@ -45,6 +65,7 @@ export default function Navbar({ user: propUser }: NavbarProps) {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black to-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
+          {/* Logo and nav items */}
           <div className="flex items-center">
             <Link href="/" className="flex-shrink-0">
               <Image
@@ -77,17 +98,50 @@ export default function Navbar({ user: propUser }: NavbarProps) {
               ))}
             </div>
           </div>
+
+          {/* Desktop profile dropdown */}
           <div className="hidden md:block">
             {user ? (
-              <Link href="/Profile">
-                <Image
-                  src={user.photoURL || '/default-avatar.png'}
-                  alt="Profile"
-                  width={40}
-                  height={40}
-                  className="rounded-full border-2 border-blue-500 shadow-lg"
-                />
-              </Link>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={toggleProfileDropdown}
+                  className="flex items-center space-x-2 focus:outline-none"
+                >
+                  <Image
+                    src={user.photoURL || '/default-avatar.png'}
+                    alt="Profile"
+                    width={40}
+                    height={40}
+                    className="rounded-full border-2 border-blue-500 shadow-lg"
+                  />
+                  <FaChevronDown className="text-white" />
+                </button>
+                {showProfileDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 border border-gray-700">
+                    <Link 
+                      href="/Profile"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                    >
+                      <FaUser className="mr-2" />
+                      <span>Profile</span>
+                    </Link>
+                    <Link 
+                      href="/Settings"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                    >
+                      <FaCog className="mr-2" />
+                      <span>Settings</span>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                    >
+                      <FaSignOutAlt className="mr-2" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <Link 
                 href="/Login"
@@ -97,6 +151,8 @@ export default function Navbar({ user: propUser }: NavbarProps) {
               </Link>
             )}
           </div>
+
+          {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
             {!user && (
               <Link 
@@ -115,6 +171,7 @@ export default function Navbar({ user: propUser }: NavbarProps) {
           </div>
         </div>
       </div>
+
       {/* Mobile menu */}
       <div className={`md:hidden fixed top-0 right-0 h-full w-64 bg-gray-900 bg-opacity-95 transform ${showMobileMenu ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out overflow-y-auto`}>
         <div className="flex flex-col h-full">
