@@ -7,6 +7,7 @@ const videos = [
   // Add more video paths here as needed
   '/gen3_4.webm',
   '/gen3_5.webm',
+  '/gen3_6.webm',
   // ... and so on
 ];
 
