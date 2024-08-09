@@ -11,21 +11,20 @@ const videos = [
 ];
 
 const LazyVideo: React.FC = () => {
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const handleCanPlay = () => {
-      setIsVideoLoaded(true);
+      setIsLoading(false);
       video.play().catch(error => console.error('Auto-play failed:', error));
     };
 
     const handleEnded = () => {
-      // Move to the next video when the current one ends
       setCurrentVideoIndex((prevIndex) => (prevIndex + 1) % videos.length);
     };
 
@@ -34,7 +33,6 @@ const LazyVideo: React.FC = () => {
 
     // Set the initial video source
     video.src = videos[currentVideoIndex];
-    console.log(`Playing video: ${videos[currentVideoIndex]}`);
 
     return () => {
       video.removeEventListener('canplay', handleCanPlay);
@@ -48,8 +46,9 @@ const LazyVideo: React.FC = () => {
       autoPlay 
       muted 
       playsInline
-      className={`fixed z-0 w-auto min-w-full min-h-full max-w-none object-cover transition-opacity duration-1000 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}
+      className={`fixed z-0 w-auto min-w-full min-h-full max-w-none object-cover transition-opacity duration-1000 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
     >
+      <source src={videos[currentVideoIndex]} type="video/webm" />
       Your browser does not support the video tag.
     </video>
   );
