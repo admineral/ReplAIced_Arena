@@ -4,6 +4,7 @@ import { AuthProvider } from '../contexts/AuthContext';
 import NavigationWrapper from '../components/ControlPanel/NavigationWrapper';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://replaiced.com'), // Replace with your actual domain
   title: "ReplAIced",
   description: "ReplAIced - A cutting-edge platform for AI security challenges, competitive gameplay, and vulnerability testing.",
   keywords: "AI security, machine learning, cybersecurity, vulnerability assessment, competitive gaming, AI models, security challenges, ReplAIced, technology innovation, digital safety",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
     title: "ReplAIced - AI Security Challenge Arena",
     description: "Join ReplAIced to challenge AI models, discover vulnerabilities, and redefine security standards in a competitive environment.",
     url: "https://replaiced.com",
-    images: ["/.default-logo.png"], // Replace with the actual image URL
+    images: ["/default-logo.png"], // Make sure this path is correct
   },
 };
 

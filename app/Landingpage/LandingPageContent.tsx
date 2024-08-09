@@ -2,8 +2,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import LandingPageNavbar from './LandingPageNavbar';
 import Link from 'next/link';
+
+const LazyVideo = dynamic(() => import('./LazyVideo'), { ssr: false });
 
 interface Feature {
   title: string;
@@ -13,39 +16,9 @@ interface Feature {
 }
 
 export default function LandingPageContent() {
-  const [isVideoReady, setIsVideoReady] = useState<boolean>(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [activeSection, setActiveSection] = useState<string>('home');
   const sectionsRef = useRef<{ [key: string]: HTMLElement | null }>({});
   const router = useRouter();
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const handleCanPlay = () => {
-      setIsVideoReady(true);
-    };
-
-    const playVideo = () => {
-      video.play().catch(error => {
-        console.error('Auto-play failed:', error);
-        // If autoplay fails, show a play button or fallback image
-        setIsVideoReady(false);
-      });
-    };
-
-    video.addEventListener('canplay', handleCanPlay);
-    video.addEventListener('loadedmetadata', playVideo);
-
-    // Attempt to play the video when the component mounts
-    playVideo();
-
-    return () => {
-      video.removeEventListener('canplay', handleCanPlay);
-      video.removeEventListener('loadedmetadata', playVideo);
-    };
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -125,23 +98,8 @@ export default function LandingPageContent() {
 
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-black">
-      {/* Video Background */}
-      <video 
-        ref={videoRef}
-        loop 
-        muted 
-        playsInline
-        preload="auto"
-        className={`fixed z-0 w-auto min-w-full min-h-full max-w-none object-cover transition-opacity duration-1000 ${isVideoReady ? 'opacity-100' : 'opacity-0'}`}
-      >
-        <source src="/gen3.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-
-      {/* Fallback Image (shown if video fails to play) */}
-      {!isVideoReady && (
-        <div className="fixed z-0 w-full h-full bg-cover bg-center" style={{backgroundImage: 'url(/fallback-image.jpg)'}}></div>
-      )}
+      {/* Lazy loaded Video Background */}
+      <LazyVideo />
 
       {/* Content Overlay */}
       <div className="relative z-10 min-h-screen text-white">
