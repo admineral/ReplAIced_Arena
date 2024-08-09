@@ -25,13 +25,25 @@ export default function LandingPageContent() {
 
     const handleCanPlay = () => {
       setIsVideoReady(true);
-      video.play().catch(error => console.error('Auto-play failed:', error));
+    };
+
+    const playVideo = () => {
+      video.play().catch(error => {
+        console.error('Auto-play failed:', error);
+        // If autoplay fails, show a play button or fallback image
+        setIsVideoReady(false);
+      });
     };
 
     video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('loadedmetadata', playVideo);
+
+    // Attempt to play the video when the component mounts
+    playVideo();
 
     return () => {
       video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('loadedmetadata', playVideo);
     };
   }, []);
 
@@ -116,15 +128,20 @@ export default function LandingPageContent() {
       {/* Video Background */}
       <video 
         ref={videoRef}
-        autoPlay 
         loop 
         muted 
         playsInline
+        preload="auto"
         className={`fixed z-0 w-auto min-w-full min-h-full max-w-none object-cover transition-opacity duration-1000 ${isVideoReady ? 'opacity-100' : 'opacity-0'}`}
       >
         <source src="/gen3.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
+
+      {/* Fallback Image (shown if video fails to play) */}
+      {!isVideoReady && (
+        <div className="fixed z-0 w-full h-full bg-cover bg-center" style={{backgroundImage: 'url(/fallback-image.jpg)'}}></div>
+      )}
 
       {/* Content Overlay */}
       <div className="relative z-10 min-h-screen text-white">
