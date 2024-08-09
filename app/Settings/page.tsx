@@ -6,17 +6,43 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { GithubAuthProvider, reauthenticateWithPopup, deleteUser } from "firebase/auth";
 import { deleteDoc, doc } from 'firebase/firestore';
-import { db } from '@/firebase-config';
+import { db, auth } from '@/firebase-config';
 
 const SettingsPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
   const [imageError, setImageError] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleDeleteAccount = async () => {
-    // ... (keep the handleDeleteAccount function as it is)
+    if (!user) return;
+
+    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      setIsDeleting(true);
+      setDeleteError(null);
+
+      try {
+        // Re-authenticate the user
+        const provider = new GithubAuthProvider();
+        await reauthenticateWithPopup(user, provider);
+
+        // Delete user document from Firestore
+        await deleteDoc(doc(db, 'users', user.uid));
+
+        // Delete user account
+        await deleteUser(user);
+
+        // Log out and redirect to home page
+        await logout();
+        router.push('/');
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        setDeleteError('Failed to delete account. Please try again.');
+      } finally {
+        setIsDeleting(false);
+      }
+    }
   };
 
   if (!user) {
