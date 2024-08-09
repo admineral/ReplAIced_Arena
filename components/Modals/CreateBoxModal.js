@@ -53,7 +53,7 @@ const properties = [
   'textIndent', 'textDecoration', 'letterSpacing', 'wordSpacing'
 ];
 const CreateBoxModal = ({ isOpen, onClose, onCreateBox, mapSize }) => {
-    const { user } = useAuth();
+    const { user, addBoxId } = useAuth();
     const [selectedModelIndex, setSelectedModelIndex] = useState(0);
     const [systemPrompt, setSystemPrompt] = useState('');
     const [secretWord, setSecretWord] = useState('');
@@ -61,10 +61,11 @@ const CreateBoxModal = ({ isOpen, onClose, onCreateBox, mapSize }) => {
     const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
     const textareaRef = useRef(null);
   
-    const handleCreateBox = () => {
+    const handleCreateBox = async () => {
+        const boxId = uuidv4();
         const combinedSystemPrompt = `${systemPrompt}\n\n${secretSentence} ${secretWord}`;
         const newBox = {
-          id: uuidv4(),
+          id: boxId,
           type: modelOptions[selectedModelIndex].id,
           model: modelOptions[selectedModelIndex].name,
           systemPrompt: systemPrompt,
@@ -79,9 +80,18 @@ const CreateBoxModal = ({ isOpen, onClose, onCreateBox, mapSize }) => {
           }
         };
       
-        onCreateBox(newBox);
-        onClose();
-      };
+        try {
+          await onCreateBox(newBox);
+          if (user) {
+            await addBoxId(boxId);
+            console.log('Box ID added to user document');
+          }
+          onClose();
+        } catch (error) {
+          console.error('Error creating box:', error);
+          // Handle the error (e.g., show an error message to the user)
+        }
+    };
   
     const handleModelSelect = (index) => {
       setSelectedModelIndex(index);

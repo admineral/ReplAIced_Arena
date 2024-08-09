@@ -35,12 +35,6 @@
       "static/chunks/760.c129c275e025f2d9.js"
     ]
   },
-  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/TrashIcon": {
-    "id": 2560,
-    "files": [
-      "static/chunks/560.a4670de4381620dc.js"
-    ]
-  },
   "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/TrophyIcon": {
     "id": 4413,
     "files": [

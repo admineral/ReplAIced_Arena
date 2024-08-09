@@ -50,58 +50,60 @@ const SettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-blue-900 text-white">
-      <div className="max-w-6xl mx-auto px-4 py-16">
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-blue-900 text-white pt-20">
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:py-16">
         <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-          <div className="md:flex">
-            <div className="md:flex-shrink-0 p-6">
-              {!imageError && user.photoURL ? (
-                <Image
-                  src={user.photoURL}
-                  alt="Profile"
-                  width={150}
-                  height={150}
-                  className="rounded-full border-4 border-blue-500"
-                  onError={() => setImageError(true)}
-                />
-              ) : (
-                <div className="w-[150px] h-[150px] bg-blue-500 rounded-full flex items-center justify-center text-4xl font-bold border-4 border-blue-300">
-                  {user.displayName ? user.displayName[0].toUpperCase() : 'U'}
-                </div>
-              )}
-            </div>
-            <div className="p-8 flex-grow">
-              <div className="uppercase tracking-wide text-sm text-blue-400 font-semibold">Account Settings</div>
-              <h1 className="mt-2 text-3xl font-bold">{user.displayName || 'Anonymous User'}</h1>
-              <p className="mt-2 text-gray-300">{user.email}</p>
+          <div className="p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start">
+              <div className="flex-shrink-0 mb-4 sm:mb-0 sm:mr-6">
+                {!imageError && user.photoURL ? (
+                  <Image
+                    src={user.photoURL}
+                    alt="Profile"
+                    width={100}
+                    height={100}
+                    className="rounded-full border-4 border-blue-500"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <div className="w-[100px] h-[100px] bg-blue-500 rounded-full flex items-center justify-center text-3xl font-bold border-4 border-blue-300">
+                    {user.displayName ? user.displayName[0].toUpperCase() : 'U'}
+                  </div>
+                )}
+              </div>
+              <div className="text-center sm:text-left">
+                <div className="uppercase tracking-wide text-sm text-blue-400 font-semibold">Account Settings</div>
+                <h1 className="mt-2 text-2xl sm:text-3xl font-bold">{user.displayName || 'Anonymous User'}</h1>
+                <p className="mt-2 text-sm sm:text-base text-gray-300">{user.email}</p>
+              </div>
             </div>
           </div>
           <div className="border-t border-gray-700 p-6">
-            <h2 className="text-2xl font-bold mb-4">Delete Account</h2>
-            <p className="mb-4 text-red-400">Warning: This action cannot be undone.</p>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">Delete Account</h2>
+            <p className="mb-4 text-red-400 text-sm sm:text-base">Warning: This action cannot be undone.</p>
             <button
               onClick={handleDeleteAccount}
               disabled={isDeleting}
-              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded text-sm sm:text-base"
             >
               {isDeleting ? 'Deleting...' : 'Delete Account'}
             </button>
-            {deleteError && <p className="mt-2 text-red-400">{deleteError}</p>}
+            {deleteError && <p className="mt-2 text-red-400 text-sm sm:text-base">{deleteError}</p>}
           </div>
           <div className="border-t border-gray-700 p-6 filter blur-sm">
-            <h2 className="text-2xl font-bold mb-4">Other Settings</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">Other Settings</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="bg-gray-700 rounded-lg p-4 text-center">
-                <h3 className="text-lg font-semibold">Email Notifications</h3>
-                <p className="text-sm text-gray-300">Configure your email preferences</p>
+                <h3 className="text-base sm:text-lg font-semibold">Email Notifications</h3>
+                <p className="text-xs sm:text-sm text-gray-300">Configure your email preferences</p>
               </div>
               <div className="bg-gray-700 rounded-lg p-4 text-center">
-                <h3 className="text-lg font-semibold">Privacy</h3>
-                <p className="text-sm text-gray-300">Manage your privacy settings</p>
+                <h3 className="text-base sm:text-lg font-semibold">Privacy</h3>
+                <p className="text-xs sm:text-sm text-gray-300">Manage your privacy settings</p>
               </div>
               <div className="bg-gray-700 rounded-lg p-4 text-center">
-                <h3 className="text-lg font-semibold">Security</h3>
-                <p className="text-sm text-gray-300">Update password and security options</p>
+                <h3 className="text-base sm:text-lg font-semibold">Security</h3>
+                <p className="text-xs sm:text-sm text-gray-300">Update password and security options</p>
               </div>
             </div>
           </div>
