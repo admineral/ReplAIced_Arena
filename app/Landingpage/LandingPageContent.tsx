@@ -211,9 +211,9 @@ export default function LandingPageContent() {
                 <p>&copy; 2023 ReplAIced. All rights reserved.</p>
               </div>
               <div className="flex space-x-4">
-                <a href="#" className="hover:text-blue-500 transition-colors duration-300">Terms of Service</a>
-                <a href="#" className="hover:text-blue-500 transition-colors duration-300">Privacy Policy</a>
-                <a href="#" className="hover:text-blue-500 transition-colors duration-300">Contact</a>
+                <a href="/TermsOfService" className="hover:text-blue-500 transition-colors duration-300">Terms of Service</a>
+                <a href="/PrivacyPolicy" className="hover:text-blue-500 transition-colors duration-300">Privacy Policy</a>
+                <a href="/AboutUs" className="hover:text-blue-500 transition-colors duration-300">AboutUs</a>
               </div>
             </div>
           </div>
