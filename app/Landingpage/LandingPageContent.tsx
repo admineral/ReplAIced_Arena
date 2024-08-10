@@ -4,6 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import LandingPageNavbar from './LandingPageNavbar';
 import Link from 'next/link';
+import Slider from 'react-slick';
+import { useAuth } from '../../contexts/AuthContext';
+
 
 interface Feature {
   title: string;
@@ -12,12 +15,23 @@ interface Feature {
   link?: string;
 }
 
+interface Article {
+  id: string;
+  title: string;
+  content: string;
+  published: boolean;
+}
+
+
+
+
 export default function LandingPageContent() {
   const [isVideoReady, setIsVideoReady] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [activeSection, setActiveSection] = useState<string>('home');
   const sectionsRef = useRef<{ [key: string]: HTMLElement | null }>({});
   const router = useRouter();
+  const { user, getUserArticles } = useAuth();
 
   useEffect(() => {
     const video = videoRef.current;
@@ -77,6 +91,16 @@ export default function LandingPageContent() {
     sectionsRef.current['join'] = document.getElementById('join');
   }, []);
 
+  useEffect(() => {
+    const fetchArticles = async () => {
+        if (!user?.uid) return; // Use optional chaining to check user and user.uid
+        const userArticles = await getUserArticles(user.uid); // Holen der Artikel des Benutzers
+        setArticles(userArticles);
+    };
+
+    fetchArticles();
+  }, [user, getUserArticles]);
+
   const handleGetStarted = () => {
     router.push('/Arena');
   };
@@ -113,7 +137,7 @@ export default function LandingPageContent() {
     },
     { 
       title: "Global Leaderboard", 
-      icon: "📊", 
+      icon: "", 
       description: "Compete on a visible rank list that highlights top performers.",
       link: "/GlobalRank"
     }
@@ -121,6 +145,14 @@ export default function LandingPageContent() {
 
   const handleFeatureClick = (link: string) => {
     router.push(link);
+  };
+
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
   };
 
   return (
