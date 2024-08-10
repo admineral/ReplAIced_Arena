@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import LandingPageNavbar from './LandingPageNavbar';
 import Link from 'next/link';
+import { db } from '@/firebase-config';
+import { collection, addDoc } from 'firebase/firestore';
+import KeyAnimation from './KeyAnimation';
 
 const LazyVideo = dynamic(() => import('./LazyVideo'), { ssr: false });
 
@@ -96,13 +99,39 @@ export default function LandingPageContent() {
     router.push(link);
   };
 
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitMessage('');
+
+    try {
+      await addDoc(collection(db, 'waitlist'), {
+        email: email,
+        timestamp: new Date()
+      });
+      setSubmitMessage('Thank you for joining our waitlist!');
+      setEmail('');
+    } catch (error) {
+      console.error('Error adding email to waitlist:', error);
+      setSubmitMessage('An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-black">
+    <div className="relative min-h-screen w-full overflow-x-hidden">
       {/* Lazy loaded Video Background */}
-      <LazyVideo />
+      <div className="fixed inset-0 z-0">
+        <LazyVideo />
+      </div>
 
       {/* Content Overlay */}
-      <div className="relative z-10 min-h-screen text-white">
+      <div className="relative z-10 min-h-screen">
         {/* Navigation */}
         <LandingPageNavbar activeSection={activeSection} scrollToSection={scrollToSection} />
 
@@ -128,7 +157,7 @@ export default function LandingPageContent() {
         </section>
 
         {/* About Section */}
-        <section id="about" className="py-24 bg-gradient-to-b from-black via-gray-900 to-blue-900">
+        <section id="about" className="py-24 bg-gradient-to-b from-black/80 via-gray-900/80 to-blue-900/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div className="md:w-1/2 mb-8 md:mb-0">
@@ -138,16 +167,14 @@ export default function LandingPageContent() {
                 </p>
               </div>
               <div className="md:w-1/2 flex justify-center">
-                <div className="w-48 h-48 sm:w-64 sm:h-64 bg-blue-500 bg-opacity-20 rounded-full flex items-center justify-center">
-                  <span className="text-4xl sm:text-6xl">🔐</span>
-                </div>
+                <KeyAnimation />
               </div>
             </div>
           </div>
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-24 bg-gradient-to-b from-blue-900 via-gray-900 to-black">
+        <section id="features" className="py-24 bg-gradient-to-b from-blue-900/80 via-gray-900/80 to-black/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl sm:text-4xl font-bold text-center text-blue-400 mb-12">Key Features</h2>
             <div className="grid md:grid-cols-2 gap-8">
@@ -173,28 +200,44 @@ export default function LandingPageContent() {
           </div>
         </section>
 
-        {/* Join Section */}
-        <section id="join" className="py-24 bg-gradient-to-b from-black to-blue-900">
+        {/* Join Section with Waitlist */}
+        <section id="join" className="py-24 bg-gradient-to-b from-black/80 to-blue-900/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-blue-400">Join the AI Security Revolution</h2>
             <p className="text-base sm:text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-              Be part of a community that's setting new standards in AI security. Together, we'll drive innovation and contribute to a safer, more resilient AI ecosystem.
+              Be part of a community that's setting new standards in AI security. Join our waitlist to get early access and exclusive updates.
             </p>
-            <button 
-              onClick={handleGetStarted}
-              className="px-8 sm:px-12 py-3 sm:py-4 bg-blue-600 text-white text-base sm:text-xl font-semibold rounded-full hover:bg-blue-700 transition duration-300 transform hover:scale-105 shadow-lg"
-            >
-              Get Started Now
-            </button>
+            <form onSubmit={handleWaitlistSubmit} className="max-w-md mx-auto">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  className="flex-grow px-4 py-2 rounded-full text-black"
+                />
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-full hover:bg-blue-700 transition duration-300 disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Joining...' : 'Join Waitlist'}
+                </button>
+              </div>
+              {submitMessage && (
+                <p className="mt-4 text-sm text-blue-300">{submitMessage}</p>
+              )}
+            </form>
           </div>
         </section>
 
         {/* Footer */}
-        <footer className="bg-gray-900 text-white py-8">
+        <footer className="bg-gray-900/80 text-white py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div className="mb-4 md:mb-0">
-                <p>&copy; 2023 ReplAIced. All rights reserved.</p>
+                <p>&copy; 2024 ReplAIced. All rights reserved.</p>
               </div>
               <div className="flex space-x-4">
                 <a href="#" className="hover:text-blue-500 transition-colors duration-300">Terms of Service</a>

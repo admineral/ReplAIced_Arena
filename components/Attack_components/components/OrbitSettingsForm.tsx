@@ -1,8 +1,32 @@
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { AiOutlineEyeInvisible } from 'react-icons/ai';
 import orbitsData from '../../../data/orbits.json';
+
+export interface Orbit {
+  name: string;
+  systemMessage: string;
+  temperature: number;
+  secret: string;
+  secretWrapper: string;
+}
+
+interface OrbitsData {
+  [key: string]: Orbit;
+}
+
+const typedOrbitsData: OrbitsData = orbitsData;
+
+const modelOptions = [
+  { id: 'default', name: 'Default', logo: '/default-logo.png' },
+  { id: 'openai', name: 'OpenAI', logo: '/openai-logo.png' },
+  { id: 'gemini', name: 'Gemini', logo: '/gemini-logo.png' },
+  { id: 'claude', name: 'Claude', logo: '/claude-logo.png' },
+  { id: 'meta', name: 'Meta', logo: '/meta-logo.png' },
+];
 
 const FormSchema = z.object({
   name: z.string().min(1, { message: "Name is required." }),
@@ -12,24 +36,16 @@ const FormSchema = z.object({
   secretWrapper: z.string().min(1, { message: "Secret wrapper is required." }),
 });
 
-interface Orbit {
-  name: string;
-  systemMessage: string;
-  temperature: number;
-  secret: string;
-  secretWrapper: string;
-}
-
-const orbits: { [key: string]: Orbit } = orbitsData;
-
 interface OrbitSettingsFormProps {
   id: string;
+  onUpdate: (id: string, data: Orbit) => void;
+  onClose: () => void;
   onCancel: () => void;
 }
 
-export function OrbitSettingsForm({ id, onCancel }: OrbitSettingsFormProps) {
-  const orbit = orbits[id];
-  const form = useForm({
+export function OrbitSettingsForm({ id, onUpdate, onClose, onCancel }: OrbitSettingsFormProps) {
+  const orbit = typedOrbitsData[id];
+  const { control, handleSubmit, setValue, formState: { errors } } = useForm<Orbit>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       name: orbit.name,
@@ -40,93 +56,161 @@ export function OrbitSettingsForm({ id, onCancel }: OrbitSettingsFormProps) {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof FormSchema>) => {
-    orbits[id] = { ...orbits[id], ...data };
-    console.log("Updated orbit data:", orbits[id]);
-    alert('Settings updated successfully!');
-    onCancel();
+  const onSubmit = (data: Orbit) => {
+    onUpdate(id, data);
+    onClose();
+  };
+
+  const handleModelSelect = (modelId: string) => {
+    // This is a placeholder. You might want to update this based on how you want to handle model selection.
+    console.log(`Selected model: ${modelId}`);
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-8 border border-gray-700 rounded-lg shadow-lg bg-gray-900 text-gray-200">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-3xl font-bold text-blue-400">Orbit Settings</h2>
-        <button onClick={onCancel} type="button" className="text-gray-400 hover:text-gray-200 transition-colors">
-          <AiOutlineEyeInvisible className="h-6 w-6" />
-        </button>
-      </div>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300">Name</label>
-            <input
-              {...form.register("name")}
-              className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-200 sm:text-sm"
-            />
-            {form.formState.errors.name && (
-              <p className="mt-2 text-sm text-red-400">{form.formState.errors.name.message}</p>
-            )}
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      >
+        <motion.div
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -50, opacity: 0 }}
+          className="bg-gray-800 rounded-lg p-6 w-full max-w-md text-white"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-blue-400">Orbit Settings</h2>
+            <button onClick={onCancel} type="button" className="text-gray-400 hover:text-gray-200 transition-colors">
+              <AiOutlineEyeInvisible className="h-6 w-6" />
+            </button>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300">System Message</label>
-            <textarea
-              {...form.register("systemMessage")}
-              rows={3}
-              className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-200 sm:text-sm"
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-center">Select AI Model</h3>
+              <div className="flex justify-between items-center">
+                {modelOptions.map((model) => (
+                  <button
+                    key={model.id}
+                    type="button"
+                    onClick={() => handleModelSelect(model.id)}
+                    className={`flex flex-col items-center p-2 rounded-lg transition-all ${
+                      orbit.name === model.name ? 'bg-blue-600' : 'hover:bg-gray-700'
+                    }`}
+                  >
+                    <div className="w-12 h-12 rounded-full overflow-hidden mb-1">
+                      <img 
+                        src={model.logo} 
+                        alt={model.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-xs">{model.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Controller
+              name="name"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300">Name</label>
+                  <input
+                    {...field}
+                    className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-200 sm:text-sm"
+                  />
+                  {errors.name && <p className="mt-2 text-sm text-red-400">{errors.name.message}</p>}
+                </div>
+              )}
             />
-            {form.formState.errors.systemMessage && (
-              <p className="mt-2 text-sm text-red-400">{form.formState.errors.systemMessage.message}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300">Temperature</label>
-            <input
-              type="number"
-              step="0.01"
-              {...form.register("temperature", { valueAsNumber: true })}
-              className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-200 sm:text-sm"
+
+            <Controller
+              name="systemMessage"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300">System Message</label>
+                  <textarea
+                    {...field}
+                    rows={3}
+                    className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-200 sm:text-sm"
+                  />
+                  {errors.systemMessage && <p className="mt-2 text-sm text-red-400">{errors.systemMessage.message}</p>}
+                </div>
+              )}
             />
-            {form.formState.errors.temperature && (
-              <p className="mt-2 text-sm text-red-400">{form.formState.errors.temperature.message}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300">Secret</label>
-            <input
-              {...form.register("secret")}
-              className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-200 sm:text-sm"
+
+            <Controller
+              name="temperature"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300">Temperature</label>
+                  <input
+                    {...field}
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="1"
+                    className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-200 sm:text-sm"
+                  />
+                  {errors.temperature && <p className="mt-2 text-sm text-red-400">{errors.temperature.message}</p>}
+                </div>
+              )}
             />
-            {form.formState.errors.secret && (
-              <p className="mt-2 text-sm text-red-400">{form.formState.errors.secret.message}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300">Secret Wrapper</label>
-            <input
-              {...form.register("secretWrapper")}
-              className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-200 sm:text-sm"
+
+            <Controller
+              name="secret"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300">Secret Word</label>
+                  <input
+                    {...field}
+                    className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-200 sm:text-sm"
+                  />
+                  {errors.secret && <p className="mt-2 text-sm text-red-400">{errors.secret.message}</p>}
+                </div>
+              )}
             />
-            {form.formState.errors.secretWrapper && (
-              <p className="mt-2 text-sm text-red-400">{form.formState.errors.secretWrapper.message}</p>
-            )}
-          </div>
-        </div>
-        <div className="flex justify-between mt-8">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 transition duration-300 ease-in-out"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition duration-300 ease-in-out"
-          >
-            Save Changes
-          </button>
-        </div>
-      </form>
-    </div>
+
+            <Controller
+              name="secretWrapper"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300">Secret Wrapper</label>
+                  <input
+                    {...field}
+                    className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-200 sm:text-sm"
+                  />
+                  {errors.secretWrapper && <p className="mt-2 text-sm text-red-400">{errors.secretWrapper.message}</p>}
+                </div>
+              )}
+            />
+
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-4 py-2 border border-gray-600 rounded-md text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

@@ -5,8 +5,6 @@ const videos = [
   '/gen3_2.webm',
   '/gen3_3.webm',
   '/gen3_4.webm',
-  '/gen3_5.webm',
-  '/gen3_6.webm',
   // Add more video paths here as needed
 ];
 
