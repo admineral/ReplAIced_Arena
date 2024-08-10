@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getTopUsers, getCurrentUserRank, getUserActivity } from '../../services/firestore';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const MagnifyingGlassIcon = dynamic(() => import('@heroicons/react/24/outline/MagnifyingGlassIcon').then(mod => mod.default));
 const TrophyIcon = dynamic(() => import('@heroicons/react/24/outline/TrophyIcon').then(mod => mod.default));
@@ -36,6 +39,7 @@ interface Activity {
 
 const RanklistPage: React.FC = () => {
   const { user } = useAuth();
+  const router = useRouter();
   const [users, setUsers] = useState<UserRank[]>([]);
   const [currentUserRank, setCurrentUserRank] = useState<UserRank | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,15 +92,6 @@ const RanklistPage: React.FC = () => {
     user.displayName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const generateColor = (userId: string) => {
-    let hash = 0;
-    for (let i = 0; i < userId.length; i++) {
-      hash = userId.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const color = `hsl(${hash % 360}, 70%, 60%)`;
-    return color;
-  };
-
   const sortedUsers = () => {
     switch (activeTab) {
       case 'attackers':
@@ -109,7 +104,7 @@ const RanklistPage: React.FC = () => {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between pt-20 md:pt-24 p-4 md:p-24 bg-gradient-to-b from-black to-gray-900 text-white">
+    <main className="flex min-h-screen flex-col items-center justify-between pt-24 md:pt-28 p-4 md:p-24 bg-gradient-to-b from-black to-gray-900 text-white">
       <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm">
         <h1 className="text-3xl md:text-5xl font-bold mb-8 bg-gradient-to-r from-purple-500 to-cyan-500 bg-clip-text text-transparent pb-2">
           Global Ranklist
@@ -218,14 +213,12 @@ const RanklistPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div
-                          style={{
-                            backgroundColor: generateColor(user.id),
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '50%',
-                            marginRight: '12px'
-                          }}
+                        <Image
+                          src={user.photoURL}
+                          alt={user.displayName}
+                          width={32}
+                          height={32}
+                          className="rounded-full mr-3"
                         />
                         <span className="font-medium">{user.displayName}</span>
                       </div>
@@ -268,9 +261,9 @@ const RanklistPage: React.FC = () => {
         )}
 
         {/* Slide-in User Details Panel */}
-        <div className={`fixed top-0 right-0 w-full md:w-96 h-full bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out ${showUserDetails ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className={`fixed top-0 right-0 w-full md:w-96 h-full bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out ${showUserDetails ? 'translate-x-0' : 'translate-x-full'} overflow-y-auto pt-24 md:pt-28`}>
           {selectedUser && (
-            <div className="p-6 h-full overflow-y-auto">
+            <div className="p-6 h-full">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-semibold">User Details</h2>
                 <button onClick={() => setShowUserDetails(false)} className="text-gray-400 hover:text-white">
@@ -278,15 +271,15 @@ const RanklistPage: React.FC = () => {
                 </button>
               </div>
               <div className="flex items-center mb-6">
-                <div
-                  style={{
-                    backgroundColor: generateColor(selectedUser.id),
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    marginRight: '16px'
-                  }}
-                />
+                <Link href={`/Profile/${selectedUser.id}`}>
+                  <Image
+                    src={selectedUser.photoURL}
+                    alt={selectedUser.displayName}
+                    width={64}
+                    height={64}
+                    className="rounded-full mr-4 cursor-pointer"
+                  />
+                </Link>
                 <div>
                   <p className="font-semibold text-xl">{selectedUser.displayName}</p>
                   <p className="text-gray-400">
