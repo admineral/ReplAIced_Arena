@@ -44,59 +44,33 @@ export default function Chat({
   onPasswordSubmit
 }: ChatProps) {
   const [input, setInput] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isAnimationMinimized, setIsAnimationMinimized] = useState(false);
   const [isChatActive, setIsChatActive] = useState(false);
   const [passwordStatus, setPasswordStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isPasswordMode && !isAnimationMinimized) {
-      setPassword(e.target.value);
-    } else {
-      setInput(e.target.value);
-    }
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-  };
-
-  const handlePasswordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handlePasswordSubmit();
-    }
-  };
-
-  const handlePasswordSubmit = async () => {
-    if (password.trim()) {
-      setPasswordStatus('idle'); // Reset status before submission
-      const isCorrect = await onPasswordSubmit(password.trim());
-      setPasswordStatus(isCorrect ? 'success' : 'error');
-      setPassword('');
-      
-      // If password is correct, transition to chat mode
-      if (isCorrect) {
-        setTimeout(() => {
-          setIsAnimationMinimized(true);
-          setIsChatActive(true);
-        }, 1000); // Delay to show success message
-      }
-    }
+    setInput(e.target.value);
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isPasswordMode && !isAnimationMinimized) {
-      await handlePasswordSubmit();
-    } else {
-      if (input.trim() && !isLoading) {
-        setIsLoading(true);
+    if (input.trim() && !isLoading) {
+      setIsLoading(true);
+      if (isPasswordMode && !isAnimationMinimized) {
+        const isCorrect = await onPasswordSubmit(input.trim());
+        setPasswordStatus(isCorrect ? 'success' : 'error');
+        if (isCorrect) {
+          setTimeout(() => {
+            setIsAnimationMinimized(true);
+            setIsChatActive(true);
+          }, 1000);
+        }
+      } else {
         await onSendMessage(input.trim());
-        setInput('');
-        setIsLoading(false);
       }
+      setInput('');
+      setIsLoading(false);
     }
   };
 
@@ -107,12 +81,12 @@ export default function Chat({
     }
   };
 
-  const handleInputFocus = () => {
+  const handleMinimize = () => {
     setIsAnimationMinimized(true);
     setIsChatActive(true);
   };
 
-  const handleAnimationClick = () => {
+  const handleMaximize = () => {
     setIsAnimationMinimized(false);
     setIsChatActive(false);
   };
@@ -127,7 +101,7 @@ export default function Chat({
           {!isAnimationMinimized && (
             <motion.div
               layout
-              className="mb-4 cursor-pointer"
+              className="mb-4"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -137,6 +111,7 @@ export default function Chat({
                 systemMessage={systemMessage}
                 temperature={temperature}
                 onSendMessage={(id, message) => {}}
+                onMinimize={handleMinimize}
               />
             </motion.div>
           )}
@@ -149,33 +124,9 @@ export default function Chat({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
             >
-              <div className="bg-gray-800 p-3 rounded-lg flex items-center space-x-3 shadow-lg hover:bg-gray-700 transition-colors duration-300" onClick={handleAnimationClick}>
+              <div className="bg-gray-800 p-3 rounded-lg flex items-center space-x-3 shadow-lg hover:bg-gray-700 transition-colors duration-300 cursor-pointer" onClick={handleMaximize}>
                 <MiniatureAnimation />
-                <div className="flex-grow relative">
-                  <input
-                    type={isPasswordMode && !isAnimationMinimized ? "password" : "text"}
-                    placeholder={isPasswordMode && !isAnimationMinimized ? "Enter password..." : "Type your message..."}
-                    value={isPasswordMode && !isAnimationMinimized ? password : input}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    className={`w-full bg-gray-700 text-white px-3 py-2 rounded-full focus:outline-none focus:ring-2 transition-colors duration-300 ${
-                      passwordStatus === 'success' ? 'focus:ring-green-500' : 
-                      passwordStatus === 'error' ? 'focus:ring-red-500' : 'focus:ring-blue-500'
-                    }`}
-                  />
-                  {passwordStatus !== 'idle' && (
-                    <motion.span
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
-                        passwordStatus === 'success' ? 'text-green-500' : 'text-red-500'
-                      }`}
-                    >
-                      {passwordStatus === 'success' ? '✓' : '✗'}
-                    </motion.span>
-                  )}
-                </div>
+                <span className="text-gray-400">Click to expand</span>
               </div>
             </motion.div>
             {messages.map((message, index) => (
@@ -193,12 +144,12 @@ export default function Chat({
       <form onSubmit={handleSubmit} className="p-4 bg-gray-900 border-t border-gray-800">
         <div className="flex items-center space-x-2">
           <input
+            type={isPasswordMode && !isAnimationMinimized ? "password" : "text"}
             className="flex-grow p-2 bg-gray-800 text-white rounded-l-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Type your message..."
+            placeholder={isPasswordMode && !isAnimationMinimized ? "Enter password..." : "Type your message..."}
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            onFocus={handleInputFocus}
           />
           <button
             type="submit"
