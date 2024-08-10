@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
-import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaHome } from 'react-icons/fa';
+import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaHome, FaUserCog } from 'react-icons/fa';
 
 interface ArenaNavbarProps {
   mode: string;
@@ -20,7 +20,7 @@ const ArenaNavbar: React.FC<ArenaNavbarProps> = ({
   isAttackModeAvailable,
   onGoToMyBox
 }) => {
-  const { user, logout, getUserBoxes } = useAuth();
+  const { user, logout, getUserBoxes, isAdmin } = useAuth();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const router = useRouter();
@@ -190,6 +190,16 @@ const ArenaNavbar: React.FC<ArenaNavbarProps> = ({
                       <FaUser className="mr-2" />
                       <span>Profile</span>
                     </button>
+                    {isAdmin && (
+                      <Link 
+                        href="/AdminDashboard"
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                        onClick={() => setShowProfileDropdown(false)}
+                      >
+                        <FaUserCog className="mr-2" />
+                        <span>Admin Dashboard</span>
+                      </Link>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
@@ -288,6 +298,16 @@ const ArenaNavbar: React.FC<ArenaNavbarProps> = ({
                   <FaUser className="mr-2" />
                   <span>Profile</span>
                 </button>
+                {isAdmin && (
+                  <Link 
+                    href="/AdminDashboard"
+                    className="flex items-center w-full px-3 py-2 text-base font-medium text-white hover:bg-gray-700 transition-colors duration-300"
+                    onClick={() => setShowMobileMenu(false)}
+                  >
+                    <FaUserCog className="mr-2" />
+                    <span>Admin Dashboard</span>
+                  </Link>
+                )}
                 <button
                   onClick={() => {
                     handleLogout();

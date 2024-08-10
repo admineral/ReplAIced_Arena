@@ -5,7 +5,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { collection, getDocs, updateDoc, doc, query, orderBy, limit, startAfter } from 'firebase/firestore';
 import { db } from '../../../firebase-config';
 import { useRouter } from 'next/navigation';
-import { FaUserShield, FaUserAltSlash, FaChevronLeft, FaChevronRight, FaUsers, FaUserCog } from 'react-icons/fa';
+import { FaUserShield, FaUserAltSlash, FaChevronLeft, FaChevronRight, FaUsers, FaUserCog, FaUser } from 'react-icons/fa';
 
 interface User {
   id: string;
@@ -78,6 +78,42 @@ const UserManagement = () => {
     setShowConfirmation(true);
   };
 
+  const renderSummaryBox = () => {
+    const adminUsers = users.filter(u => u.isAdmin);
+    const nonAdminUsers = users.filter(u => !u.isAdmin);
+
+    return (
+      <div className="bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <h2 className="text-2xl font-bold mb-4">User Summary</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h3 className="text-xl font-semibold mb-2">Logged In User</h3>
+            <div className="flex items-center">
+              <img src={user?.photoURL || '/default-avatar.png'} alt={user?.displayName || 'User'} className="w-10 h-10 rounded-full mr-3" />
+              <div>
+                <p className="font-medium">{user?.displayName || 'N/A'}</p>
+                <p className="text-sm text-gray-400">{user?.email}</p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold mb-2">User Statistics</h3>
+            <div className="flex space-x-4">
+              <div className="flex items-center">
+                <FaUserShield className="text-2xl text-green-500 mr-2" />
+                <span>{adminUsers.length} Admin{adminUsers.length !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="flex items-center">
+                <FaUser className="text-2xl text-blue-500 mr-2" />
+                <span>{nonAdminUsers.length} Regular User{nonAdminUsers.length !== 1 ? 's' : ''}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
@@ -93,6 +129,9 @@ const UserManagement = () => {
           Go Back to Dashboard
         </button>
       </div>
+
+      {renderSummaryBox()}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center">
