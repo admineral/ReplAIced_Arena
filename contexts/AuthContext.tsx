@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, onAuthStateChanged, signOut } from 'firebase/auth';
+import { User, onAuthStateChanged, signOut, signInWithPopup, GithubAuthProvider } from 'firebase/auth';
 import { auth, db } from '../firebase-config';
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
@@ -16,6 +16,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
+  login: () => Promise<void>;
   logout: () => Promise<void>;
   getUserBoxes: (userId: string) => Promise<BoxId[]>;
 }
@@ -132,10 +133,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return boxes;
   };
 
+  const login = async () => {
+    try {
+      console.log('Attempting to log in user');
+      const provider = new GithubAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      console.log('User logged in successfully:', result.user.uid);
+      // The onAuthStateChanged listener will handle updating the user state and checking admin status
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     loading,
     isAdmin,
+    login,
     logout,
     getUserBoxes
   };

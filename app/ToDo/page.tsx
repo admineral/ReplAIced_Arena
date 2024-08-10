@@ -14,6 +14,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { signInWithPopup, GithubAuthProvider, User } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 interface Todo {
   id: string;
@@ -39,6 +40,7 @@ export default function TodoPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [todoToDelete, setTodoToDelete] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
@@ -162,9 +164,17 @@ export default function TodoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-black text-white py-12 px-4 sm:px-6 lg:px-8 pt-24">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-center">Todo Board</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold">Todo Board</h1>
+          <button
+            onClick={() => router.push('/AdminDashboard')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+          >
+            Go Back to Dashboard
+          </button>
+        </div>
 
         <form onSubmit={addOrUpdateTodo} className="mb-12 bg-gray-900 p-6 rounded-xl shadow-sm">
           <div className="space-y-4">

@@ -104,7 +104,7 @@ const ArenaNavbar: React.FC<ArenaNavbarProps> = ({
   const renderGoToBoxButton = (onClick: (e: React.MouseEvent) => void, className: string) => (
     <button onClick={onClick} className={className}>
       <FaHome className="mr-2" />
-      <span>Go to Your Box</span>
+     
     </button>
   );
 

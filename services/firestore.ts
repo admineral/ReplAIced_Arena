@@ -14,43 +14,55 @@ import {
   getDoc,
   writeBatch,
   deleteDoc,
-  updateDoc
+  updateDoc,
+  QueryDocumentSnapshot,
+  DocumentData
 } from 'firebase/firestore';
 
 const ATTACKS_COLLECTION = 'attacks';
 const USERS_COLLECTION = 'users';
 
-/**
- * @typedef {Object} UserRank
- * @property {string} id
- * @property {string} displayName
- * @property {string} photoURL
- * @property {number} level
- * @property {number} experience
- * @property {number} rank
- * @property {number} streak
- * @property {number} contributions
- * @property {number} attacksLaunched
- * @property {number} defensesSuccessful
- */
+interface UserRank {
+  id: string;
+  displayName: string;
+  photoURL: string;
+  level: number;
+  experience: number;
+  rank: number;
+  streak: number;
+  contributions: number;
+  attacksLaunched: number;
+  defensesSuccessful: number;
+}
 
-/**
- * @typedef {Object} AttackData
- * @property {number} timestamp
- */
+interface AttackData {
+  timestamp: number;
+  [key: string]: any;
+}
 
-/**
- * @typedef {Object} Activity
- * @property {('attack'|'defense'|'contribution')} type
- * @property {number} timestamp
- * @property {string} details
- */
+interface Activity {
+  type: 'attack' | 'defense' | 'contribution';
+  timestamp: number;
+  details: string;
+}
 
-/**
- * @param {AttackData} attackData
- * @returns {Promise<string>}
- */
-export const saveAttack = async (attackData) => {
+interface OrbitConfig {
+  name: string;
+  systemPrompt: string;
+  secretWord: string;
+  difficulty: string;
+  type: string;
+  temperature: number;
+}
+
+interface User {
+  id: string;
+  displayName: string;
+  email: string;
+  isAdmin: boolean;
+}
+
+export const saveAttack = async (attackData: AttackData): Promise<string> => {
   try {
     const docRef = await addDoc(collection(db, ATTACKS_COLLECTION), {
       ...attackData,
@@ -64,13 +76,7 @@ export const saveAttack = async (attackData) => {
   }
 };
 
-/**
- * @param {Date} date
- * @param {number} pageSize
- * @param {import('firebase/firestore').QueryDocumentSnapshot|null} lastDoc
- * @returns {Promise<{attacks: AttackData[], lastDoc: import('firebase/firestore').QueryDocumentSnapshot}>}
- */
-export const getAttacks = async (date, pageSize = 100, lastDoc = null) => {
+export const getAttacks = async (date: Date, pageSize: number = 100, lastDoc: QueryDocumentSnapshot | null = null): Promise<{attacks: AttackData[], lastDoc: QueryDocumentSnapshot}> => {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(date);
@@ -89,10 +95,14 @@ export const getAttacks = async (date, pageSize = 100, lastDoc = null) => {
   }
 
   const querySnapshot = await getDocs(q);
-  const attacks = querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+  const attacks = querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      timestamp: data.timestamp,
+      ...data
+    } as AttackData;
+  });
 
   return {
     attacks,
@@ -100,13 +110,7 @@ export const getAttacks = async (date, pageSize = 100, lastDoc = null) => {
   };
 };
 
-
-/**
- * @param {Date} date
- * @param {function(AttackData[]): void} callback
- * @returns {function(): void}
- */
-export const subscribeToAttacks = (date, callback) => {
+export const subscribeToAttacks = (date: Date, callback: (attacks: AttackData[]) => void): () => void => {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(date);
@@ -120,20 +124,19 @@ export const subscribeToAttacks = (date, callback) => {
   );
 
   return onSnapshot(q, (querySnapshot) => {
-    const attacks = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const attacks = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        timestamp: data.timestamp,
+        ...data
+      } as AttackData;
+    });
     callback(attacks);
   });
 };
 
-/**
- * @param {string} userId
- * @param {Partial<UserRank>} userData
- * @returns {Promise<void>}
- */
-export const initializeUserRank = async (userId, userData) => {
+export const initializeUserRank = async (userId: string, userData: Partial<UserRank>): Promise<void> => {
   console.log(`Initializing rank data for user: ${userId}`);
   try {
     const userRef = doc(db, USERS_COLLECTION, userId);
@@ -150,18 +153,13 @@ export const initializeUserRank = async (userId, userData) => {
   }
 };
 
-/**
- * @param {string} userId
- * @param {number} experienceGained
- * @returns {Promise<void>}
- */
-export const updateUserExperience = async (userId, experienceGained) => {
+export const updateUserExperience = async (userId: string, experienceGained: number): Promise<void> => {
   console.log(`Updating experience for user: ${userId}`);
   try {
     const userRef = doc(db, USERS_COLLECTION, userId);
     const userDoc = await getDoc(userRef);
     if (userDoc.exists()) {
-      const userData = userDoc.data();
+      const userData = userDoc.data() as UserRank;
       const newExperience = (userData.experience || 0) + experienceGained;
       const newLevel = Math.floor(Math.sqrt(newExperience / 100)) + 1;
       await setDoc(userRef, {
@@ -180,31 +178,23 @@ export const updateUserExperience = async (userId, experienceGained) => {
   }
 };
 
-   /**
-    * @param {number} limitCount
-    * @returns {Promise<UserRank[]>}
-    */
-   export const getTopUsers = async (limitCount = 100) => {
-    console.log(`Fetching top ${limitCount} users from Firestore...`);
-    try {
-      const response = await fetch(`/api/firebase?limitCount=${limitCount}`);
-      if (!response.ok) {
-        throw new Error(`Error fetching top users: ${response.statusText}`);
-      }
-      const users = await response.json();
-      console.log('Processed user data:', users);
-      return users;
-    } catch (error) {
-      console.error("Error fetching top users:", error);
-      throw error;
+export const getTopUsers = async (limitCount: number = 100): Promise<UserRank[]> => {
+  console.log(`Fetching top ${limitCount} users from Firestore...`);
+  try {
+    const response = await fetch(`/api/firebase?limitCount=${limitCount}`);
+    if (!response.ok) {
+      throw new Error(`Error fetching top users: ${response.statusText}`);
     }
-  };
+    const users = await response.json();
+    console.log('Processed user data:', users);
+    return users;
+  } catch (error) {
+    console.error("Error fetching top users:", error);
+    throw error;
+  }
+};
 
-/**
- * @param {string} userId
- * @returns {Promise<UserRank | null>}
- */
-export const getCurrentUserRank = async (userId) => {
+export const getCurrentUserRank = async (userId: string): Promise<UserRank | null> => {
   console.log(`Fetching rank for user with ID: ${userId}`);
   try {
     const q = query(
@@ -217,9 +207,9 @@ export const getCurrentUserRank = async (userId) => {
     const userIndex = querySnapshot.docs.findIndex(doc => doc.id === userId);
     console.log(`User index in ranking: ${userIndex}`);
     if (userIndex !== -1) {
-      const userData = querySnapshot.docs[userIndex].data();
+      const userData = querySnapshot.docs[userIndex].data() as UserRank;
       console.log('User data found:', userData);
-      const userRank = {
+      const userRank: UserRank = {
         id: querySnapshot.docs[userIndex].id,
         displayName: userData.displayName || `User ${userIndex + 1}`,
         photoURL: userData.photoURL || '/default-avatar.png',
@@ -242,11 +232,7 @@ export const getCurrentUserRank = async (userId) => {
   }
 };
 
-
-/**
- * @returns {Promise<void>}
- */
-export const deleteAllUsers = async () => {
+export const deleteAllUsers = async (): Promise<void> => {
   console.log("Deleting all users...");
   try {
     const usersSnapshot = await getDocs(collection(db, USERS_COLLECTION));
@@ -264,13 +250,7 @@ export const deleteAllUsers = async () => {
   }
 };
 
-
-/**
- * @param {string} userId
- * @param {string} timeRange
- * @returns {Promise<Activity[]>}
- */
-export const getUserActivity = async (userId, timeRange) => {
+export const getUserActivity = async (userId: string, timeRange: string): Promise<Activity[]> => {
   console.log(`Fetching activity for user ${userId} in time range ${timeRange}`);
   
   // Return dummy data with correct types
@@ -281,11 +261,7 @@ export const getUserActivity = async (userId, timeRange) => {
   ];
 };
 
-/**
- * @param {string} boxId
- * @returns {Promise<OrbitConfig | null>}
- */
-export const getBoxConfig = async (boxId) => {
+export const getBoxConfig = async (boxId: string): Promise<OrbitConfig | null> => {
   console.log(`Fetching box configuration for box ID: ${boxId}`);
   try {
     const boxRef = doc(db, 'boxes', boxId);
@@ -311,14 +287,7 @@ export const getBoxConfig = async (boxId) => {
   }
 };
 
-// Add this function to your existing firestore.ts file
-
-/**
- * @param {string} boxId
- * @param {Object} updatedConfig
- * @returns {Promise<void>}
- */
-export const updateBoxConfig = async (boxId, updatedConfig) => {
+export const updateBoxConfig = async (boxId: string, updatedConfig: Partial<OrbitConfig>): Promise<void> => {
   console.log(`Updating box configuration for box ID: ${boxId}`);
   try {
     const boxRef = doc(db, 'boxes', boxId);
@@ -330,7 +299,7 @@ export const updateBoxConfig = async (boxId, updatedConfig) => {
   }
 };
 
-export const fetchBoxConfiguration = async (userId, boxId) => {
+export const fetchBoxConfiguration = async (userId: string, boxId: string): Promise<DocumentData | null> => {
   console.log(`Fetching box configuration for box ID: ${boxId}`);
   const boxRef = doc(db, 'users', userId, 'boxes', boxId);
   const boxSnap = await getDoc(boxRef);
@@ -342,4 +311,15 @@ export const fetchBoxConfiguration = async (userId, boxId) => {
     console.warn(`No box found with ID: ${boxId}`);
     return null;
   }
+};
+
+export const getAllUsers = async (): Promise<User[]> => {
+  const usersRef = collection(db, USERS_COLLECTION);
+  const snapshot = await getDocs(usersRef);
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    displayName: doc.data().displayName,
+    email: doc.data().email,
+    isAdmin: doc.data().isAdmin || false
+  }));
 };

@@ -9,7 +9,7 @@ import { db } from '../../firebase-config';
 import { deleteDoc, doc } from 'firebase/firestore';
 
 // Custom hook for checking user box
-const useUserBox = (user, getUserBoxes) => {
+const useUserBox = (user:any, getUserBoxes:any) => {
   const [userHasBox, setUserHasBox] = useState(false);
 
   useEffect(() => {

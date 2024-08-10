@@ -110,7 +110,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
       setIsTimedOut,
       setLastUpdateTime,
       setLoadingTimeout,
-      (boxes) => {
+      (boxes: any) => {
         console.log('Setting boxes:', boxes);
         mapContext.setBoxes(boxes); // Use setBoxes instead of updateBox
       }

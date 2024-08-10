@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import Login from '../../components/Auth/Login';
 import Link from 'next/link';
-import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt, FaUserCog } from 'react-icons/fa';
 
 interface LandingPageNavbarProps {
   activeSection: string;
@@ -16,7 +16,7 @@ interface LandingPageNavbarProps {
 export default function LandingPageNavbar({ activeSection, scrollToSection }: LandingPageNavbarProps) {
   const [showMobileMenu, setShowMobileMenu] = useState<boolean>(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState<boolean>(false);
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -111,8 +111,8 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
                 item.href ? (
                   <Link key={item.id} href={item.href} passHref>
                     <span className={`px-3 py-2 rounded-md text-base font-medium ${
-                      activeSection === item.id ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                    } transition-colors duration-300 cursor-pointer`}>
+                      activeSection === item.id ? 'text-white bg-gray-900' : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                    } cursor-pointer transition-colors duration-300`}>
                       {item.text}
                     </span>
                   </Link>
@@ -121,7 +121,7 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
                     key={item.id}
                     onClick={() => scrollToSection(item.id)}
                     className={`px-3 py-2 rounded-md text-base font-medium ${
-                      activeSection === item.id ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                      activeSection === item.id ? 'text-white bg-gray-900' : 'text-gray-300 hover:text-white hover:bg-gray-700'
                     } transition-colors duration-300`}
                   >
                     {item.text}
@@ -130,68 +130,76 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
               ))}
             </div>
           </div>
-          <div className="flex items-center">
-            <div className="hidden md:block">
-              {user ? (
-                <div 
-                  className="relative" 
-                  ref={dropdownRef}
-                  onMouseEnter={handleProfileMouseEnter}
-                  onMouseLeave={handleProfileMouseLeave}
-                >
-                  <button 
-                    onClick={handleProfileClick}
-                    className="focus:outline-none"
-                  >
-                    <Image
-                      src={user.photoURL || '/default-avatar.png'}
-                      alt="Profile"
-                      width={40}
-                      height={40}
-                      className="rounded-full border-2 border-blue-500 shadow-lg"
-                    />
-                  </button>
-                  {showProfileDropdown && (
-                    <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 border border-gray-700">
-                      <Link 
-                        href="/Profile"
-                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
-                        onClick={() => setShowProfileDropdown(false)}
-                      >
-                        <FaUser className="mr-2" />
-                        <span>Profile</span>
-                      </Link>
-                      <Link 
-                        href="/Settings"
-                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
-                        onClick={() => setShowProfileDropdown(false)}
-                      >
-                        <FaCog className="mr-2" />
-                        <span>Settings</span>
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
-                      >
-                        <FaSignOutAlt className="mr-2" />
-                        <span>Logout</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Login />
-              )}
-            </div>
-            <div className="md:hidden flex items-center">
-              {!user && <Login />}
-              <button
-                onClick={toggleMobileMenu}
-                className="ml-4 text-white text-2xl focus:outline-none"
+          <div className="hidden md:block">
+            {user ? (
+              <div 
+                className="relative" 
+                ref={dropdownRef}
+                onMouseEnter={handleProfileMouseEnter}
+                onMouseLeave={handleProfileMouseLeave}
               >
-                {showMobileMenu ? <FaTimes /> : <FaBars />}
-              </button>
-            </div>
+                <button
+                  onClick={handleProfileClick}
+                  className="flex items-center space-x-2 focus:outline-none"
+                >
+                  <Image
+                    src={user.photoURL || '/default-avatar.png'}
+                    alt="Profile"
+                    width={40}
+                    height={40}
+                    className="rounded-full border-2 border-blue-500 shadow-lg"
+                  />
+                </button>
+                {showProfileDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 border border-gray-700">
+                    <Link 
+                      href="/Profile"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                      onClick={() => setShowProfileDropdown(false)}
+                    >
+                      <FaUser className="mr-2" />
+                      <span>Profile</span>
+                    </Link>
+                    <Link 
+                      href="/Settings"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                      onClick={() => setShowProfileDropdown(false)}
+                    >
+                      <FaCog className="mr-2" />
+                      <span>Settings</span>
+                    </Link>
+                    {isAdmin && (
+                      <Link 
+                        href="/AdminDashboard"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                        onClick={() => setShowProfileDropdown(false)}
+                      >
+                        <FaUserCog className="mr-2" />
+                        <span>Admin Dashboard</span>
+                      </Link>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                    >
+                      <FaSignOutAlt className="mr-2" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Login />
+            )}
+          </div>
+          <div className="md:hidden flex items-center">
+            {!user && <Login />}
+            <button
+              onClick={toggleMobileMenu}
+              className="ml-4 text-white text-2xl focus:outline-none"
+            >
+              {showMobileMenu ? <FaTimes /> : <FaBars />}
+            </button>
           </div>
         </div>
       </div>
@@ -248,6 +256,16 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
                   <FaCog className="mr-2" />
                   <span>Settings</span>
                 </Link>
+                {isAdmin && (
+                  <Link 
+                    href="/AdminDashboard"
+                    className="flex items-center w-full px-3 py-2 text-base font-medium text-white hover:bg-gray-700 transition-colors duration-300"
+                    onClick={toggleMobileMenu}
+                  >
+                    <FaUserCog className="mr-2" />
+                    <span>Admin Dashboard</span>
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   className="flex items-center w-full px-3 py-2 text-base font-medium text-white hover:bg-red-600 transition-colors duration-300"

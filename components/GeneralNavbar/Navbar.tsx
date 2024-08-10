@@ -6,14 +6,14 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { User } from 'firebase/auth';
-import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt, FaHome, FaGamepad, FaListOl } from 'react-icons/fa';
+import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt, FaHome, FaGamepad, FaListOl, FaUserCog } from 'react-icons/fa';
 
 interface NavbarProps {
   user?: User | null;
 }
 
 export default function Navbar({ user: propUser }: NavbarProps) {
-  const { user: contextUser, logout } = useAuth();
+  const { user: contextUser, logout, isAdmin } = useAuth();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const router = useRouter();
@@ -148,6 +148,15 @@ export default function Navbar({ user: propUser }: NavbarProps) {
                       <FaCog className="mr-2" />
                       <span>Settings</span>
                     </Link>
+                    {isAdmin && (
+                      <Link 
+                        href="/AdminDashboard"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                      >
+                        <FaUserCog className="mr-2" />
+                        <span>Admin Dashboard</span>
+                      </Link>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
@@ -236,6 +245,16 @@ export default function Navbar({ user: propUser }: NavbarProps) {
                   <FaCog className="mr-2" />
                   <span>Settings</span>
                 </Link>
+                {isAdmin && (
+                  <Link 
+                    href="/AdminDashboard"
+                    className="flex items-center w-full px-3 py-2 text-base font-medium text-white hover:bg-gray-700 transition-colors duration-300"
+                    onClick={toggleMobileMenu}
+                  >
+                    <FaUserCog className="mr-2" />
+                    <span>Admin Dashboard</span>
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   className="flex items-center w-full px-3 py-2 text-base font-medium text-white hover:bg-red-600 transition-colors duration-300"
