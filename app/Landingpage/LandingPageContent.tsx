@@ -124,7 +124,7 @@ export default function LandingPageContent() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden">
+    <div className="relative min-h-screen w-full overflow-x-hidden text-white bg-gray-900">
       {/* Lazy loaded Video Background */}
       <div className="fixed inset-0 z-0">
         <LazyVideo />
@@ -144,7 +144,7 @@ export default function LandingPageContent() {
             <p className="text-xl sm:text-2xl font-light"></p>
           </div>
           <div className="max-w-md mt-8">
-            <p className="text-lg sm:text-xl mb-8">
+            <p className="text-lg sm:text-xl mb-8 text-white">
               Challenge AI models. Expose vulnerabilities. Redefine security.
             </p>
             <button 
@@ -185,7 +185,7 @@ export default function LandingPageContent() {
                   onClick={() => feature.link && handleFeatureClick(feature.link)}
                 >
                   <div className="text-3xl sm:text-4xl mb-4">{feature.icon}</div>
-                  <h3 className="text-xl sm:text-2xl font-semibold mb-2">{feature.title}</h3>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-2 text-white">{feature.title}</h3>
                   <p className="text-sm sm:text-base text-gray-300">{feature.description}</p>
                   {feature.link && (
                     <Link href={feature.link} passHref>

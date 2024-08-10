@@ -1,17 +1,4 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/AboutUs/page": "app/AboutUs/page.js",
-  "/About/page": "app/About/page.js",
-  "/Attack/page": "app/Attack/page.js",
-  "/GlobalRank/page": "app/GlobalRank/page.js",
-  "/Landingpage/page": "app/Landingpage/page.js",
-  "/FireTest/page": "app/FireTest/page.js",
-  "/Profile/[[...uid]]/page": "app/Profile/[[...uid]]/page.js",
-  "/Settings/page": "app/Settings/page.js",
-  "/Login/page": "app/Login/page.js",
-  "/api/openai/route": "app/api/openai/route.js",
   "/page": "app/page.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/api/firebase/route": "app/api/firebase/route.js",
-  "/Arena/page": "app/Arena/page.js"
+  "/favicon.ico/route": "app/favicon.ico/route.js"
 }
