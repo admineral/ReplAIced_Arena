@@ -3,55 +3,112 @@
 import React, { useState, useEffect } from 'react';
 import Chat from "./components/Chat";
 import { callOpenai } from './api';
-import orbitsData from '../../data/orbits.json';
+import { getBoxConfig } from '../../services/firestore';
 
-type Orbit = {
+interface AttackMainProps {
+  attackerId?: string;
+  attackerBoxId?: string;
+  defenderId?: string;
+  defenderBoxId?: string;
+}
+
+interface OrbitConfig {
+  id: string;
   name: string;
-  systemMessage: string;
-  temperature: number;
-  secret: string;
-  secretWrapper: string;
-};
+  systemPrompt: string;
+  secretWord: string;
+  secretSentence: string;
+  difficulty: string;
+  type: string;
+  temperature?: number;
+  combinedSystemPrompt: string;
+}
 
-const orbits: { [key: string]: Orbit } = orbitsData;
-const orbitIds = Object.keys(orbits);
-
-export default function AttackMain() {
+export default function AttackMain({ 
+  attackerId, 
+  attackerBoxId, 
+  defenderId, 
+  defenderBoxId 
+}: AttackMainProps) {
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
-  const [activeOrbitId, setActiveOrbitId] = useState<string>(orbitIds[0]);
+  const [orbitConfig, setOrbitConfig] = useState<OrbitConfig | null>(null);
   const [isPasswordMode, setIsPasswordMode] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isResponding, setIsResponding] = useState(false);
+
+  useEffect(() => {
+    if (attackerId && attackerBoxId && defenderId && defenderBoxId) {
+      fetchAttackData(attackerId, attackerBoxId, defenderId, defenderBoxId);
+    } else {
+      console.log("Missing attack parameters");
+      setIsLoading(false);
+    }
+  }, [attackerId, attackerBoxId, defenderId, defenderBoxId]);
+
+  const fetchAttackData = async (attackerId: string, attackerBoxId: string, defenderId: string, defenderBoxId: string) => {
+    setIsLoading(true);
+    try {
+      const boxConfig = await getBoxConfig(defenderBoxId);
+      if (boxConfig) {
+        setOrbitConfig(boxConfig as OrbitConfig);
+        console.log("Orbit configuration set:", boxConfig);
+      } else {
+        throw new Error("Box configuration not found");
+      }
+    } catch (error) {
+      console.error('Error fetching attack data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     setMessages([]);
     setIsPasswordMode(true);
-  }, [activeOrbitId]);
+  }, [orbitConfig]);
 
   const handleSendMessage = async (message: string) => {
-    console.log(`Sending message to orbit ID: ${activeOrbitId}`);
-    const userMessage = { role: 'user', content: message };
-    setMessages([...messages, userMessage]);
-
+    if (!orbitConfig || isResponding) return;
+    
+    setIsResponding(true);
     try {
-      await callOpenai(activeOrbitId, [...messages, userMessage], (accumulatedMessage: string) => {
-        const assistantMessage = { role: 'assistant', content: accumulatedMessage };
-        setMessages((prevMessages) => {
-          const newMessages = [...prevMessages];
-          const lastMessage = newMessages[newMessages.length - 1];
-          if (lastMessage && lastMessage.role === 'assistant') {
-            lastMessage.content = accumulatedMessage;
-          } else {
-            newMessages.push(assistantMessage);
-          }
-          return newMessages;
-        });
+      setMessages(prevMessages => [...prevMessages, { role: 'user', content: message }]);
+      
+      // Add a placeholder for the AI response
+      setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: '' }]);
+
+      const aiResponse = await callOpenai(
+        defenderBoxId || '', 
+        [...messages, { role: 'user', content: message }], 
+        orbitConfig,
+        (partialResponse: string) => {
+          // Update the AI's response as chunks are received
+          setMessages(prevMessages => {
+            const updatedMessages = [...prevMessages];
+            updatedMessages[updatedMessages.length - 1].content = partialResponse;
+            return updatedMessages;
+          });
+        }
+      );
+
+      // Final update with the complete response (optional, as the streaming updates should have already filled this)
+      setMessages(prevMessages => {
+        const updatedMessages = [...prevMessages];
+        updatedMessages[updatedMessages.length - 1].content = aiResponse;
+        return updatedMessages;
       });
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error sending message:", error);
+      setMessages(prevMessages => [...prevMessages, { role: 'system', content: 'Error: Unable to get response from AI.' }]);
+    } finally {
+      setIsResponding(false);
     }
   };
 
   const handlePasswordSubmit = async (password: string): Promise<boolean> => {
-    const isCorrect = password === orbits[activeOrbitId].secret;
+    if (!orbitConfig) return false;
+
+    const isCorrect = password.toLowerCase() === orbitConfig.secretWord.toLowerCase();
     if (isCorrect) {
       setIsPasswordMode(false);
       setMessages([...messages, { role: 'system', content: 'Access granted. You may now chat with the AI.' }]);
@@ -61,35 +118,27 @@ export default function AttackMain() {
     return isCorrect;
   };
 
-  const handleNextOrbit = () => {
-    const currentIndex = orbitIds.indexOf(activeOrbitId);
-    const nextIndex = (currentIndex + 1) % orbitIds.length;
-    setActiveOrbitId(orbitIds[nextIndex]);
-    console.log(`Switched to orbit ID: ${orbitIds[nextIndex]}`);
-  };
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
-  const getSystemMessageWithSecret = (id: string) => {
-    const orbit = orbits[id];
-    return `${orbit.systemMessage} ${orbit.secretWrapper.replace("(secret)", orbit.secret)}`;
-  };
+  if (!orbitConfig) {
+    return <div>Error: Could not load orbit configuration</div>;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4 relative">
-      <button
-        className="absolute top-4 right-4 px-6 py-3 bg-green-700 text-white font-semibold rounded-lg shadow-md hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-opacity-75 transition duration-300 ease-in-out transform hover:scale-105"
-        onClick={handleNextOrbit}
-      >
-        Next Orbit
-      </button>
       <div className="w-full max-w-md">
         <Chat 
           messages={messages}
           onSendMessage={handleSendMessage}
           onPasswordSubmit={handlePasswordSubmit}
           isPasswordMode={isPasswordMode}
-          activeOrbitId={activeOrbitId}
-          systemMessage={getSystemMessageWithSecret(activeOrbitId)}
-          temperature={orbits[activeOrbitId].temperature}
+          activeOrbitId={defenderBoxId || ''}
+          systemMessage={orbitConfig.combinedSystemPrompt}
+          temperature={orbitConfig.temperature || 0.7}
+          orbitName={orbitConfig.name || 'Unknown Orbit'}
+          isResponding={isResponding}
         />
       </div>
     </div>

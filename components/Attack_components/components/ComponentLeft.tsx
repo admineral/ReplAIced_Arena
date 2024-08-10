@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { AiOutlineEye, AiOutlineEyeInvisible, AiOutlineMinusCircle } from 'react-icons/ai';
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import orbitsData from '../../../data/orbits.json';
-import { OrbitSettingsForm } from "./OrbitSettingsForm";
+import OrbitSettingsForm from "./OrbitSettingsForm";
 
 interface Orbit {
   name: string;
@@ -19,10 +19,11 @@ interface ComponentLeftProps {
   systemMessage: string;
   temperature: number;
   onSendMessage: (id: string, message: string) => void;
-  onMinimize: () => void;  // Add this new prop
+  orbitName: string;
+  onMinimize: () => void;
 }
 
-export default function ComponentLeft({ id, systemMessage, temperature, onSendMessage, onMinimize }: ComponentLeftProps) {
+export default function ComponentLeft({ id, systemMessage, temperature, onSendMessage, orbitName, onMinimize }: ComponentLeftProps) {
   const [secretText, setSecretText] = useState('');
   const [hacked, setHacked] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -39,11 +40,6 @@ export default function ComponentLeft({ id, systemMessage, temperature, onSendMe
 
   const handleSettingsClick = () => {
     setShowSettings(!showSettings);
-  };
-
-  const handleOrbitUpdate = (id: string, updatedOrbit: Orbit) => {
-    console.log(`Updating orbit ${id}:`, updatedOrbit);
-    setShowSettings(false);
   };
 
   const KeyAnimation = () => (
@@ -104,14 +100,8 @@ export default function ComponentLeft({ id, systemMessage, temperature, onSendMe
   return (
     <div className="flex flex-col items-center w-full max-w-md mx-auto bg-gray-900 text-white p-6 rounded-xl shadow-lg">
       <div className="flex items-center justify-between w-full mb-6">
-        <h2 className="text-2xl font-bold text-blue-400">{orbits[id].name}</h2>
+        <h2 className="text-2xl font-bold text-blue-400">{orbitName}</h2>
         <div className="flex space-x-2">
-          <button 
-            onClick={onMinimize}
-            className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors duration-200"
-          >
-            <AiOutlineMinusCircle className="h-6 w-6" />
-          </button>
           <button 
             onClick={handleSettingsClick}
             className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors duration-200"
@@ -126,10 +116,8 @@ export default function ComponentLeft({ id, systemMessage, temperature, onSendMe
         </div>
         <div className={`absolute inset-0 ${showSettings ? 'block' : 'hidden'}`}>
           <OrbitSettingsForm 
-            id={id} 
-            onUpdate={handleOrbitUpdate}
+            orbitId={id}
             onClose={handleSettingsClick}
-            onCancel={handleSettingsClick}
           />
         </div>
       </div>

@@ -1,7 +1,7 @@
-import React, { useState, FormEvent, KeyboardEvent } from 'react';
+import React, { useState, FormEvent, KeyboardEvent, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IoSend } from 'react-icons/io5';
-import { FaKey } from 'react-icons/fa';
+import { IoSend, IoChevronDown, IoChevronUp } from 'react-icons/io5';
+import { FaCog } from 'react-icons/fa';
 import ComponentLeft from './ComponentLeft';
 
 interface ChatProps {
@@ -12,25 +12,15 @@ interface ChatProps {
   systemMessage: string;
   temperature: number;
   onPasswordSubmit: (password: string) => Promise<boolean>;
+  orbitName: string;
+  isResponding: boolean;
 }
 
 const MiniatureAnimation = () => (
-  <div className="relative w-12 h-12">
-    {[0, 1, 2].map((index) => (
-      <motion.div
-        key={index}
-        className="absolute inset-0 border-2 border-blue-500 rounded-full"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 3, repeat: Infinity, delay: index * 0.5, ease: "linear" }}
-      />
-    ))}
-    <motion.div 
-      className="absolute inset-0 flex items-center justify-center text-blue-500"
-      animate={{ rotate: [0, 360] }}
-      transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-    >
-      <FaKey size={16} />
-    </motion.div>
+  <div className="relative w-8 h-8">
+    <div className="absolute inset-0 flex items-center justify-center text-blue-500">
+      <FaCog size={20} />
+    </div>
   </div>
 );
 
@@ -41,13 +31,37 @@ export default function Chat({
   activeOrbitId,
   systemMessage,
   temperature,
-  onPasswordSubmit
+  onPasswordSubmit,
+  orbitName,
+  isResponding,
 }: ChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isAnimationMinimized, setIsAnimationMinimized] = useState(false);
-  const [isChatActive, setIsChatActive] = useState(false);
   const [passwordStatus, setPasswordStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const chatRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (chatRef.current) {
+        const { scrollTop } = chatRef.current;
+        if (scrollTop > 50 && !isAnimationMinimized) {
+          setIsAnimationMinimized(true);
+        }
+      }
+    };
+
+    const chatElement = chatRef.current;
+    if (chatElement) {
+      chatElement.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (chatElement) {
+        chatElement.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [isAnimationMinimized]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
@@ -55,22 +69,19 @@ export default function Chat({
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (input.trim() && !isLoading) {
-      setIsLoading(true);
+    if (input.trim() && !isResponding) {
       if (isPasswordMode && !isAnimationMinimized) {
         const isCorrect = await onPasswordSubmit(input.trim());
         setPasswordStatus(isCorrect ? 'success' : 'error');
         if (isCorrect) {
           setTimeout(() => {
             setIsAnimationMinimized(true);
-            setIsChatActive(true);
           }, 1000);
         }
       } else {
-        await onSendMessage(input.trim());
+        onSendMessage(input.trim());
       }
       setInput('');
-      setIsLoading(false);
     }
   };
 
@@ -83,12 +94,11 @@ export default function Chat({
 
   const handleMinimize = () => {
     setIsAnimationMinimized(true);
-    setIsChatActive(true);
   };
 
   const handleMaximize = () => {
     setIsAnimationMinimized(false);
-    setIsChatActive(false);
+    chatRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -96,50 +106,47 @@ export default function Chat({
       <div className="p-4 border-b border-gray-800">
         <h2 className="text-white text-lg font-semibold">Chat</h2>
       </div>
-      <div className="p-4 flex-grow overflow-y-auto bg-gray-800 flex flex-col">
-        <AnimatePresence>
-          {!isAnimationMinimized && (
-            <motion.div
-              layout
-              className="mb-4"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+      <div ref={chatRef} className="p-4 flex-grow overflow-y-auto bg-gray-800 flex flex-col">
+        {!isAnimationMinimized ? (
+          <div className="relative mb-4">
+            <ComponentLeft
+              id={activeOrbitId}
+              systemMessage={systemMessage}
+              temperature={temperature}
+              onSendMessage={(id, message) => {}}
+              orbitName={orbitName}
+              onMinimize={handleMinimize}
+            />
+            <button
+              className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white p-2 rounded-full hover:bg-gray-600 transition-colors duration-300"
+              onClick={handleMinimize}
             >
-              <ComponentLeft
-                id={activeOrbitId}
-                systemMessage={systemMessage}
-                temperature={temperature}
-                onSendMessage={(id, message) => {}}
-                onMinimize={handleMinimize}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-        {isChatActive && (
-          <>
-            <motion.div
-              layout
-              className="mb-4"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-            >
-              <div className="bg-gray-800 p-3 rounded-lg flex items-center space-x-3 shadow-lg hover:bg-gray-700 transition-colors duration-300 cursor-pointer" onClick={handleMaximize}>
-                <MiniatureAnimation />
-                <span className="text-gray-400">Click to expand</span>
+              <IoChevronDown size={20} />
+            </button>
+          </div>
+        ) : (
+          <div 
+            className="mb-4 bg-gray-800 p-3 rounded-lg flex items-center justify-between shadow-lg hover:bg-gray-700 transition-colors duration-300 cursor-pointer" 
+            onClick={handleMaximize}
+          >
+            <div className="flex items-center space-x-3">
+              <MiniatureAnimation />
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-400 font-medium">Orbit Settings</span>
               </div>
-            </motion.div>
-            {messages.map((message, index) => (
-              <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
-                <span className={`inline-block p-3 rounded-lg ${
-                  message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200'
-                }`}>
-                  {message.content}
-                </span>
-              </div>
-            ))}
-          </>
+            </div>
+            <IoChevronUp size={20} className="text-gray-400" />
+          </div>
         )}
+        {messages.map((message, index) => (
+          <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
+            <span className={`inline-block p-3 rounded-lg ${
+              message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200'
+            }`}>
+              {message.content}
+            </span>
+          </div>
+        ))}
       </div>
       <form onSubmit={handleSubmit} className="p-4 bg-gray-900 border-t border-gray-800">
         <div className="flex items-center space-x-2">
@@ -150,6 +157,7 @@ export default function Chat({
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
+            disabled={isResponding}
           />
           <button
             type="submit"
@@ -157,7 +165,7 @@ export default function Chat({
             disabled={isLoading}
           >
             {isPasswordMode && !isAnimationMinimized ? (
-              <FaKey className={`w-5 h-5 ${isLoading ? 'animate-pulse' : ''}`} />
+              <FaCog className={`w-5 h-5 ${isLoading ? 'animate-pulse' : ''}`} />
             ) : (
               <IoSend className={`w-5 h-5 ${isLoading ? 'animate-pulse' : ''}`} />
             )}

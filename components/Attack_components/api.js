@@ -1,13 +1,7 @@
-import orbits from '../../data/orbits.json';
-
-export async function callOpenai(id, messages, onStreamMessage) {
-  const orbit = orbits[id];
-  if (!orbit) {
-    throw new Error(`No configuration found for ID: ${id}`);
-  }
-
-  const { systemMessage, temperature, secret, secretWrapper } = orbit;
-  const systemMessageWithSecret = `${systemMessage} ${secretWrapper.replace("(secret)", secret)}`;
+export async function callOpenai(id, messages, config, onPartialResponse) {
+  console.log("Calling OpenAI with config:", config);
+  const intendedModel = config.type || "gpt-4-turbo";
+  console.log(`Intended model: ${intendedModel}. Using OpenAI for now.`);
 
   try {
     const response = await fetch('/api/openai', {
@@ -17,9 +11,9 @@ export async function callOpenai(id, messages, onStreamMessage) {
       },
       body: JSON.stringify({
         messages,
-        systemMessage: { role: 'system', content: systemMessageWithSecret },
-        temperature,
-        stream: true,
+        systemMessage: { role: 'system', content: config.systemPrompt || "You are a helpful assistant." },
+        temperature: config.temperature || 0.7,
+        intendedModel: intendedModel,
       }),
     });
 
@@ -30,16 +24,19 @@ export async function callOpenai(id, messages, onStreamMessage) {
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let done = false;
-    let accumulatedMessage = '';
+    let accumulatedResponse = '';
 
-    while (!done) {
-      const { value, done: readerDone } = await reader.read();
-      done = readerDone;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
       const chunk = decoder.decode(value, { stream: true });
-      accumulatedMessage += chunk;
-      onStreamMessage(accumulatedMessage);
+      accumulatedResponse += chunk;
+      if (onPartialResponse) {
+        onPartialResponse(accumulatedResponse);
+      }
     }
+
+    return accumulatedResponse.trim();
   } catch (error) {
     console.error('Error occurred:', error instanceof Error ? error.message : error);
     throw error;

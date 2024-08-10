@@ -1,10 +1,70 @@
 {
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/BoltIcon": {
+    "id": 5427,
+    "files": [
+      "static/chunks/427.bcfc8a28827a3deb.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/CalendarIcon": {
+    "id": 4351,
+    "files": [
+      "static/chunks/351.93b24599d0903d52.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/FireIcon": {
+    "id": 6196,
+    "files": [
+      "static/chunks/196.49e6d1b9db7251cc.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/MagnifyingGlassIcon": {
+    "id": 4380,
+    "files": [
+      "static/chunks/380.2ead24effa390b3c.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/ShieldCheckIcon": {
+    "id": 2825,
+    "files": [
+      "static/chunks/825.e53da16973f7f84e.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/SparklesIcon": {
+    "id": 8760,
+    "files": [
+      "static/chunks/760.c129c275e025f2d9.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/TrophyIcon": {
+    "id": 4413,
+    "files": [
+      "static/chunks/413.896733541b86e558.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/UserGroupIcon": {
+    "id": 7281,
+    "files": [
+      "static/chunks/281.c77ceb131a0cfdbc.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/XMarkIcon": {
+    "id": 4573,
+    "files": [
+      "static/chunks/573.56c3547161320991.js"
+    ]
+  },
+  "app/Landingpage/LandingPageContent.tsx -> ./LazyVideo": {
+    "id": 5272,
+    "files": [
+      "static/chunks/496.4c1e458c32ce1660.js"
+    ]
+  },
   "node_modules/@react-three/drei/core/VideoTexture.js -> hls.js": {
-    "id": "node_modules/@react-three/drei/core/VideoTexture.js -> hls.js",
+    "id": null,
     "files": []
   },
   "node_modules/@react-three/drei/web/FaceLandmarker.js -> @mediapipe/tasks-vision": {
-    "id": "node_modules/@react-three/drei/web/FaceLandmarker.js -> @mediapipe/tasks-vision",
+    "id": null,
     "files": []
   }
 }

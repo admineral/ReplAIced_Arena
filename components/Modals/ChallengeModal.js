@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useAuth } from '../../contexts/AuthContext'; // Add this import
 
 const modelLogos = {
   default: '/default-logo.png',
@@ -20,20 +21,39 @@ const difficultyColors = {
 
 const ChallengeModal = ({ isOpen, onClose, challenge }) => {
     const router = useRouter();
+    const { user } = useAuth(); // Add this line to get the current user
 
-    if (!challenge) return null;
+    console.log('ChallengeModal props:', { isOpen, challenge });
+
+    if (!challenge) {
+        console.log('No challenge data provided, returning null');
+        return null;
+    }
 
     const handleAttack = () => {
-        router.push('/Attack');
+        if (!user) {
+            console.error('User not authenticated');
+            // Handle the case when the user is not logged in
+            return;
+        }
+
+        const attackUrl = `/Attack?attackerId=${user.uid}&attackerBoxId=${challenge.id}&defenderId=${challenge.createdBy.uid}&defenderBoxId=${challenge.id}`;
+        console.log('Initiating attack with URL:', attackUrl);
+        router.push(attackUrl);
     };
 
     const handleCreatorClick = () => {
         if (challenge.createdBy && challenge.createdBy.uid) {
-            router.push(`/Profile/${challenge.createdBy.uid}`);
+            const profileUrl = `/Profile/${challenge.createdBy.uid}`;
+            console.log('Navigating to creator profile:', profileUrl);
+            router.push(profileUrl);
+        } else {
+            console.log('Creator information not available');
         }
     };
 
     const renderCreatedBy = (createdBy) => {
+        console.log('Rendering createdBy information:', createdBy);
         if (typeof createdBy === 'object' && createdBy !== null) {
             return (
                 <div className="flex items-center cursor-pointer" onClick={handleCreatorClick}>
@@ -50,6 +70,8 @@ const ChallengeModal = ({ isOpen, onClose, challenge }) => {
         }
         return 'Anonymous';
     };
+
+    console.log('Rendering ChallengeModal with challenge:', challenge);
 
     return (
         <AnimatePresence>
@@ -83,7 +105,10 @@ const ChallengeModal = ({ isOpen, onClose, challenge }) => {
                                 </div>
                             </div>
                             <button
-                                onClick={onClose}
+                                onClick={() => {
+                                    console.log('Closing ChallengeModal');
+                                    onClose();
+                                }}
                                 className="text-gray-400 hover:text-white transition duration-300"
                             >
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -108,7 +133,10 @@ const ChallengeModal = ({ isOpen, onClose, challenge }) => {
 
                         <div className="flex justify-center mt-6">
                             <button
-                                onClick={handleAttack}
+                                onClick={() => {
+                                    console.log('Attack button clicked');
+                                    handleAttack();
+                                }}
                                 className="bg-red-600 text-white rounded-lg px-8 py-3 text-lg font-semibold hover:bg-red-700 transition duration-300 ease-in-out shadow-md"
                             >
                                 Attack

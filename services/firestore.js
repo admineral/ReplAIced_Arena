@@ -13,7 +13,8 @@ import {
   onSnapshot,
   getDoc,
   writeBatch,
-  deleteDoc
+  deleteDoc,
+  updateDoc
 } from 'firebase/firestore';
 
 const ATTACKS_COLLECTION = 'attacks';
@@ -278,4 +279,53 @@ export const getUserActivity = async (userId, timeRange) => {
     { type: 'defense', timestamp: Date.now() - 2000000, details: 'Successfully defended' },
     { type: 'contribution', timestamp: Date.now() - 3000000, details: 'Made a contribution' },
   ];
+};
+
+/**
+ * @param {string} boxId
+ * @returns {Promise<OrbitConfig | null>}
+ */
+export const getBoxConfig = async (boxId) => {
+  console.log(`Fetching box configuration for box ID: ${boxId}`);
+  try {
+    const boxRef = doc(db, 'boxes', boxId);
+    const boxDoc = await getDoc(boxRef);
+    if (boxDoc.exists()) {
+      const boxData = boxDoc.data();
+      console.log('Box configuration:', boxData);
+      return {
+        name: boxData.name || 'Unknown Orbit',
+        systemPrompt: boxData.systemPrompt || '',
+        secretWord: boxData.secretWord || '',
+        difficulty: boxData.difficulty || 'medium',
+        type: boxData.type || 'default',
+        temperature: boxData.temperature || 0.7
+      };
+    } else {
+      console.log(`No box found with ID: ${boxId}`);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching box configuration:", error);
+    throw error;
+  }
+};
+
+// Add this function to your existing firestore.ts file
+
+/**
+ * @param {string} boxId
+ * @param {Object} updatedConfig
+ * @returns {Promise<void>}
+ */
+export const updateBoxConfig = async (boxId, updatedConfig) => {
+  console.log(`Updating box configuration for box ID: ${boxId}`);
+  try {
+    const boxRef = doc(db, 'boxes', boxId);
+    await updateDoc(boxRef, updatedConfig);
+    console.log('Box configuration updated successfully');
+  } catch (error) {
+    console.error("Error updating box configuration:", error);
+    throw error;
+  }
 };

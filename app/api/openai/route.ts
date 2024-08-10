@@ -11,23 +11,28 @@ const openai = new OpenAI({
 });
 
 export async function POST(req: Request) {
-  const { messages, systemMessage: customSystemMessage, temperature: customTemperature } = await req.json() as { messages: ChatCompletionMessageParam[], systemMessage?: ChatCompletionMessageParam, temperature?: number };
-  console.log(`Received messages from client:
-${messages.map((msg: ChatCompletionMessageParam) => `  - ${msg.role}: ${msg.content}`).join('\n')}`);
+  const { messages, systemMessage: customSystemMessage, temperature: customTemperature, intendedModel } = await req.json() as { 
+    messages: ChatCompletionMessageParam[], 
+    systemMessage?: ChatCompletionMessageParam, 
+    temperature?: number,
+    intendedModel?: string
+  };
+
+  console.log(`Intended model: ${intendedModel}. Using OpenAI's gpt-4-turbo for now.`);
+
+  // Validate messages
+  if (!Array.isArray(messages) || messages.some(msg => typeof msg.content !== 'string')) {
+    return new Response(JSON.stringify({ error: 'Invalid messages format' }), { status: 400 });
+  }
 
   // Add a system message
   const defaultSystemMessage: ChatCompletionMessageParam = { role: 'system', content: 'You are a helpful assistant.' };
   const systemMessage = customSystemMessage || defaultSystemMessage;
   const updatedMessages = [systemMessage, ...messages];
-  console.log(`System message used:
-  - ${systemMessage.role}: ${systemMessage.content}`);
-  console.log(`Messages sent to OpenAI including system message:
-${updatedMessages.map((msg: ChatCompletionMessageParam) => `  - ${msg.role}: ${msg.content}`).join('\n')}`);
 
   // Set temperature
   const defaultTemperature = 0.7;
   const temperature = customTemperature ?? defaultTemperature;
-  console.log(`Temperature used: ${temperature}`);
 
   try {
     const response = await openai.chat.completions.create({
