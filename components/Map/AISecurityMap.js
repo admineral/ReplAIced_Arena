@@ -27,6 +27,7 @@ import ErrorOverlay from './ErrorOverlay';
 import BoxesInfoDisplay from './BoxesInfoDisplay';
 import AttackGuidedTour from './AttackGuidedTour';
 import AttackReplayControls from '../AttackReplay/AttackReplayControls';
+import { useMediaQuery } from 'react-responsive';
 
 const AISecurityMapContent = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +36,9 @@ const AISecurityMapContent = () => {
   const [isCreateBoxModalOpen, setIsCreateBoxModalOpen] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(null);
   const [isTimedOut, setIsTimedOut] = useState(false);
+  const [isReplayControlsOpen, setIsReplayControlsOpen] = useState(false);
+
+  const isMobile = useMediaQuery({ maxWidth: 768 });
 
   const { user } = useAuth();
   const mapContext = useMapContext();
@@ -96,6 +100,10 @@ const AISecurityMapContent = () => {
     }
   }, [mode, loadBoxes]);
 
+  const toggleReplayControls = () => {
+    setIsReplayControlsOpen(!isReplayControlsOpen);
+  };
+
   return (
     <div className="flex flex-col h-screen w-screen bg-gray-900">
       <div className="flex-none">
@@ -125,9 +133,9 @@ const AISecurityMapContent = () => {
           )}
           
           {/* Layout for bottom components */}
-          <div className="absolute bottom-0 left-0 right-0 flex justify-between items-end p-4">
-            {/* BoxesInfoDisplay - left bottom */}
-            <div className="pointer-events-auto">
+          <div className={`absolute bottom-0 left-0 right-0 flex ${isMobile ? 'flex-col' : 'justify-between'} items-end p-4`}>
+            {/* BoxesInfoDisplay - left bottom on desktop, top on mobile */}
+            <div className={`pointer-events-auto ${isMobile ? 'mb-2 w-full' : ''}`}>
               <BoxesInfoDisplay 
                 boxCount={boxes.length}
                 lastUpdateTime={lastUpdateTime}
@@ -135,13 +143,25 @@ const AISecurityMapContent = () => {
               />
             </div>
             
-            {/* AttackReplayControls - center bottom */}
-            <div className="pointer-events-auto flex-grow mx-4 max-w-3xl z-50">
-              <AttackReplayControls />
-            </div>
+            {/* AttackReplayControls - center bottom on desktop, collapsible on mobile */}
+            {isMobile ? (
+              <div className="pointer-events-auto w-full mb-2">
+                <button
+                  onClick={toggleReplayControls}
+                  className="w-full bg-gray-800 text-white py-2 px-4 rounded-md"
+                >
+                  {isReplayControlsOpen ? 'Hide Replay Controls' : 'Show Replay Controls'}
+                </button>
+                {isReplayControlsOpen && <AttackReplayControls />}
+              </div>
+            ) : (
+              <div className="pointer-events-auto flex-grow mx-4 max-w-3xl z-50">
+                <AttackReplayControls />
+              </div>
+            )}
             
-            {/* MiniMap - right bottom */}
-            <div className="pointer-events-auto">
+            {/* MiniMap - right bottom on desktop, bottom on mobile */}
+            <div className={`pointer-events-auto ${isMobile ? 'w-full' : ''}`}>
               <MiniMap 
                 boxes={boxes} 
                 mapSize={MAP_SIZE} 
@@ -149,7 +169,7 @@ const AISecurityMapContent = () => {
                 currentZoom={mapControls.zoom}
                 onPositionChange={handleMiniMapPositionChange}
                 onZoomChange={handleMiniMapZoomChange}
-                miniMapSize={200}
+                miniMapSize={isMobile ? 150 : 200}
                 miniMapZoom={1.5}
                 boxSize={4}
                 padding={8}

@@ -32,8 +32,6 @@
  * but rather receives this state as props and passes it down to child components.
  ****************************************************************************/
 
-
-
 import React from 'react';
 import ChallengeModal from './ChallengeModal';
 import BoxConfigForm from './BoxConfigFormModal';
@@ -60,11 +58,13 @@ const ModalManager = ({
           onClose={() => setIsConfigOpen(false)}
         />
       )}
-      <ChallengeModal
-        isOpen={isChallengeOpen}
-        onClose={() => setIsChallengeOpen(false)}
-        challenge={selectedBox}
-      />
+      {isChallengeOpen && selectedBox && (
+        <ChallengeModal
+          isOpen={isChallengeOpen}
+          onClose={() => setIsChallengeOpen(false)}
+          challenge={selectedBox}
+        />
+      )}
       {isAttackModalOpen && selectedBox && targetBox && (
         <AttackConfirmationModal
           selectedBox={selectedBox}

@@ -92,7 +92,7 @@ export const MapProvider = ({ children }) => {
 
   const boxManager = useBoxManager(MAP_SIZE);
   const { 
-    boxes, 
+    boxes: managedBoxes, 
     connections, 
     addBox, 
     updateBox, 
@@ -101,6 +101,17 @@ export const MapProvider = ({ children }) => {
     loadBoxesFromFirebase,
     clearAllBoxes
   } = boxManager;
+
+  const [boxes, setBoxes] = useState([]); // Add this line
+
+  // Use useEffect to update the boxes state when managedBoxes changes
+  useEffect(() => {
+    setBoxes(managedBoxes);
+  }, [managedBoxes]);
+
+  useEffect(() => {
+    console.log('Boxes state updated in MapContext:', boxes);
+  }, [boxes]);
 
   const attackManager = useAttackManager(boxes, mode, setMode);
   const { 
@@ -149,13 +160,11 @@ export const MapProvider = ({ children }) => {
   }, [mode, boxes, initiateAttack, setIsConfigOpen]);
 
   const switchMode = useCallback((newMode) => {
-    console.log('Switching mode to:', newMode);
-    if (newMode === 'attack' && !isAttackModeAvailable) {
-      return;
+    if (newMode !== mode) {
+      console.log('Switching mode to:', newMode);
+      setMode(newMode);
     }
-    setMode(newMode);
-    initiateAttack(null);
-  }, [isAttackModeAvailable, initiateAttack, setMode]);
+  }, [mode]);
 
   const handleConfirmAttack = useCallback(async () => {
     console.log('handleConfirmAttack called');
@@ -210,6 +219,7 @@ export const MapProvider = ({ children }) => {
     setIsAttackModalOpen,
     isAttacking,
     boxes,
+    setBoxes, // Add this line
     connections,
     selectedBox,
     targetBox,

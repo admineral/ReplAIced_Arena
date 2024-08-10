@@ -21,12 +21,12 @@ const difficultyColors = {
 
 const ChallengeModal = ({ isOpen, onClose, challenge }) => {
     const router = useRouter();
-    const { user } = useAuth(); // Add this line to get the current user
+    const { user } = useAuth();
 
     console.log('ChallengeModal props:', { isOpen, challenge });
 
-    if (!challenge) {
-        console.log('No challenge data provided, returning null');
+    if (!isOpen || !challenge) {
+        console.log('ChallengeModal is not open or no challenge data, returning null');
         return null;
     }
 

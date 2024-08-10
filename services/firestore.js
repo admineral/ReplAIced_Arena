@@ -329,3 +329,17 @@ export const updateBoxConfig = async (boxId, updatedConfig) => {
     throw error;
   }
 };
+
+export const fetchBoxConfiguration = async (userId, boxId) => {
+  console.log(`Fetching box configuration for box ID: ${boxId}`);
+  const boxRef = doc(db, 'users', userId, 'boxes', boxId);
+  const boxSnap = await getDoc(boxRef);
+
+  if (boxSnap.exists()) {
+    console.log(`Box found with ID: ${boxId}`);
+    return boxSnap.data();
+  } else {
+    console.warn(`No box found with ID: ${boxId}`);
+    return null;
+  }
+};

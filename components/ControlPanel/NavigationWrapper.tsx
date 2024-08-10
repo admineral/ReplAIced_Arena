@@ -87,17 +87,37 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   const handleMiniMapPositionChange = eventHandlers.handleMiniMapPositionChange(mapContext.setMapPosition);
   const handleMiniMapZoomChange = eventHandlers.handleMiniMapZoomChange(mapContext.setMapZoom);
 
-  const loadBoxes = useCallback(
-    dataManagement.handleLoadBoxes(
-      isArenaPage ? mapContext.loadBoxesFromFirebase : () => Promise.resolve([]),
+  const loadBoxes = useCallback(() => {
+    const loadBoxesFromFirebase = async () => {
+      if (isArenaPage) {
+        try {
+          const result = await mapContext.loadBoxesFromFirebase();
+          console.log('Result from loadBoxesFromFirebase:', result);
+          return result; // This should already be an array of boxes
+        } catch (error) {
+          console.error('Error loading boxes from Firestore:', error);
+          throw error;
+        }
+      } else {
+        return [];
+      }
+    };
+
+    const loadBoxesHandler = dataManagement.handleLoadBoxes(
+      loadBoxesFromFirebase,
       setIsLoading,
       setError,
       setIsTimedOut,
       setLastUpdateTime,
-      setLoadingTimeout
-    ),
-    [isArenaPage, mapContext.loadBoxesFromFirebase]
-  );
+      setLoadingTimeout,
+      (boxes) => {
+        console.log('Setting boxes:', boxes);
+        mapContext.setBoxes(boxes); // Use setBoxes instead of updateBox
+      }
+    );
+
+    return loadBoxesHandler();
+  }, [isArenaPage, mapContext.loadBoxesFromFirebase, mapContext.setBoxes, setIsLoading, setError, setIsTimedOut, setLastUpdateTime, setLoadingTimeout]);
 
   const reloadBoxes = useCallback(() => dataManagement.handleReloadBoxes(loadBoxes)(), [loadBoxes]);
   const clearBoxes = useCallback(() => dataManagement.handleClearBoxes(mapContext.clearAllBoxes, setIsLoading, setError, setLastUpdateTime)(), [mapContext.clearAllBoxes]);
