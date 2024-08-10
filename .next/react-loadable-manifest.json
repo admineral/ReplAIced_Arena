@@ -1,16 +1,70 @@
 {
-  "app/Landingpage/LandingPageContent.tsx -> ./LazyVideo": {
-    "id": "app/Landingpage/LandingPageContent.tsx -> ./LazyVideo",
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/BoltIcon": {
+    "id": 5427,
     "files": [
-      "static/chunks/_app-pages-browser_app_Landingpage_LazyVideo_tsx.js"
+      "static/chunks/5427.c2578acad67e6e11.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/CalendarIcon": {
+    "id": 4351,
+    "files": [
+      "static/chunks/4351.8899270581b6c4aa.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/FireIcon": {
+    "id": 6196,
+    "files": [
+      "static/chunks/6196.a794d346db515687.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/MagnifyingGlassIcon": {
+    "id": 4380,
+    "files": [
+      "static/chunks/4380.d5df1a7021d82680.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/ShieldCheckIcon": {
+    "id": 2825,
+    "files": [
+      "static/chunks/2825.9ce82f8cc3b14075.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/SparklesIcon": {
+    "id": 8760,
+    "files": [
+      "static/chunks/8760.b01f62c4e5cdd452.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/TrophyIcon": {
+    "id": 4413,
+    "files": [
+      "static/chunks/4413.5b1621e342546780.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/UserGroupIcon": {
+    "id": 7281,
+    "files": [
+      "static/chunks/7281.f8d0e9b16c729d62.js"
+    ]
+  },
+  "app/GlobalRank/page.tsx -> @heroicons/react/24/outline/XMarkIcon": {
+    "id": 4573,
+    "files": [
+      "static/chunks/4573.1f6150294ce40587.js"
+    ]
+  },
+  "app/Landingpage/LandingPageContent.tsx -> ./LazyVideo": {
+    "id": 5272,
+    "files": [
+      "static/chunks/5272.41fd98ae3c923570.js"
     ]
   },
   "node_modules/@react-three/drei/core/VideoTexture.js -> hls.js": {
-    "id": "node_modules/@react-three/drei/core/VideoTexture.js -> hls.js",
+    "id": null,
     "files": []
   },
   "node_modules/@react-three/drei/web/FaceLandmarker.js -> @mediapipe/tasks-vision": {
-    "id": "node_modules/@react-three/drei/web/FaceLandmarker.js -> @mediapipe/tasks-vision",
+    "id": null,
     "files": []
   }
 }

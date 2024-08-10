@@ -1,6 +1,22 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/About/page": "app/About/page.js",
+  "/AdminDashboard/mapconfig/page": "app/AdminDashboard/mapconfig/page.js",
+  "/AdminDashboard/ToDo/page": "app/AdminDashboard/ToDo/page.js",
+  "/AboutUs/page": "app/AboutUs/page.js",
+  "/AdminDashboard/page": "app/AdminDashboard/page.js",
+  "/AdminDashboard/settings/page": "app/AdminDashboard/settings/page.js",
+  "/AdminDashboard/users/page": "app/AdminDashboard/users/page.js",
+  "/Attack/page": "app/Attack/page.js",
+  "/GlobalRank/page": "app/GlobalRank/page.js",
+  "/Landingpage/page": "app/Landingpage/page.js",
+  "/Login/page": "app/Login/page.js",
   "/Profile/[[...uid]]/page": "app/Profile/[[...uid]]/page.js",
   "/Settings/page": "app/Settings/page.js",
+  "/ToDo/page": "app/ToDo/page.js",
+  "/api/firebase/route": "app/api/firebase/route.js",
+  "/api/openai/route": "app/api/openai/route.js",
+  "/page": "app/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/Arena/page": "app/Arena/page.js"
 }

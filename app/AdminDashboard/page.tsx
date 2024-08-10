@@ -211,7 +211,7 @@ const AdminDashboard = () => {
             <FaUsers className="text-2xl sm:text-3xl mb-2 text-blue-400" />
             <h2 className="text-lg sm:text-xl font-semibold">Manage Users</h2>
           </Link>
-          <Link href="/AdminDashboard/challenges" className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors">
+          <Link href="/AdminDashboard/mapconfig" className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors">
             <FaMap className="text-2xl sm:text-3xl mb-2 text-green-400" />
             <h2 className="text-lg sm:text-xl font-semibold">Manage Challenges</h2>
           </Link>

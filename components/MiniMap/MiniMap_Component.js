@@ -14,6 +14,7 @@
  * Props:
  * - boxes: Array of box objects, each containing id, x, y, and type properties
  * - mapSize: Number representing the size of the main map
+ * - disableHoverEnlarge: Boolean to disable hover-to-enlarge feature
  * 
  * Key Features:
  * 1. Scales node positions from the main map to fit within the minimap
@@ -44,14 +45,14 @@ const MiniMap = ({
     padding = 5,
     backgroundColor = 'rgba(0, 0, 0, 0.5)',
     borderColor = 'white',
-    viewRectColor = 'yellow'
+    viewRectColor = 'yellow',
+    disableHoverEnlarge = false
 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const miniMapRef = useRef(null);
     const worldSize = mapSize * mapConfig.worldSize;
-    const expandedSize = miniMapSize * 1.5; // 50% larger when expanded
-    const effectiveMiniMapSize = isHovered ? expandedSize : miniMapSize;
+    const effectiveMiniMapSize = disableHoverEnlarge ? miniMapSize : (isHovered ? miniMapSize * 1.5 : miniMapSize);
 
     const deadZoneSize = 30; // Size of the dead zone in the top-right corner
 
@@ -93,7 +94,7 @@ const MiniMap = ({
     };
 
     const handleMouseEnter = (e) => {
-        if (!isInDeadZone(e)) {
+        if (!disableHoverEnlarge && !isInDeadZone(e)) {
             setIsHovered(true);
         }
     };
@@ -103,7 +104,7 @@ const MiniMap = ({
             updatePosition(e);
         } else if (isInDeadZone(e)) {
             setIsHovered(false);
-        } else {
+        } else if (!disableHoverEnlarge) {
             setIsHovered(true);
         }
     };
@@ -157,7 +158,7 @@ const MiniMap = ({
                 backgroundColor: backgroundColor, 
                 border: `1px solid ${borderColor}`, 
                 position: 'relative',
-                transition: 'all 0.3s ease',
+                transition: disableHoverEnlarge ? 'none' : 'all 0.3s ease',
                 cursor: isDragging ? 'grabbing' : 'grab'
             }}
             onMouseEnter={handleMouseEnter}

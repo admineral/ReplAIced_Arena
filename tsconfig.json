@@ -31,6 +31,6 @@
     "components/Auth/Login.js",
     "services/firestore.ts",
     "app/types/**/*.d.ts"
-  ],
+, "components/MiniMap/AdvancedMiniMap.js"  ],
   "exclude": ["node_modules"]
 }
