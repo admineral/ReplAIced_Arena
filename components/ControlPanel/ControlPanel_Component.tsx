@@ -56,7 +56,7 @@ const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
 }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const { isAdmin, user, getUserBoxes } = useAuth();
-  const { setMapPosition, setMapZoom } = useMapContext();
+  const { setMapPosition, setMapZoom, forceReloadBoxes } = useMapContext();
 
   const userHasBox = useUserBox(user, getUserBoxes);
 
@@ -67,9 +67,9 @@ const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
   }, [user, mode, switchMode]);
 
   const handleReload = useCallback(() => {
+    console.log('Reloading boxes');
     reloadBoxes();
-    setLastUpdateTime(new Date());
-  }, [reloadBoxes, setLastUpdateTime]);
+  }, [reloadBoxes]);
 
   const handleClearAllBoxes = useCallback(() => {
     setIsDeleteModalOpen(true);

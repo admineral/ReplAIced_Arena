@@ -51,7 +51,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const mapContext = useMapContext();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
   const [isCreateBoxModalOpen, setIsCreateBoxModalOpen] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(null);
@@ -119,7 +119,54 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
     return loadBoxesHandler();
   }, [isArenaPage, mapContext.loadBoxesFromFirebase, mapContext.setBoxes, setIsLoading, setError, setIsTimedOut, setLastUpdateTime, setLoadingTimeout]);
 
-  const reloadBoxes = useCallback(() => dataManagement.handleReloadBoxes(loadBoxes)(), [loadBoxes]);
+  const forceReloadBoxes = useCallback(async () => {
+    console.log('Force reloading boxes');
+    setIsLoading(true);
+    try {
+      const boxes = await mapContext.loadBoxesFromFirebase(true);
+      console.log('Boxes fetched during force reload:', boxes);
+      mapContext.setBoxes(boxes);
+      setLastUpdateTime(new Date());
+    } catch (error) {
+      console.error('Error force reloading boxes:', error);
+      setError('Failed to reload boxes. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [mapContext, setLastUpdateTime, setError]);
+
+  const reloadBoxes = useCallback((forceRefresh = false) => {
+    const loadBoxesFromFirebase = async () => {
+      if (isArenaPage) {
+        try {
+          setIsLoading(true);
+          const result = await mapContext.loadBoxesFromFirebase(forceRefresh);
+          console.log('Result from loadBoxesFromFirebase:', result);
+          setLastUpdateTime(new Date());
+          return result;
+        } catch (error) {
+          console.error('Error loading boxes from Firestore:', error);
+          setError('Failed to load boxes. Please try again.');
+          throw error;
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        return [];
+      }
+    };
+
+    return dataManagement.handleLoadBoxes(
+      loadBoxesFromFirebase,
+      setIsLoading,
+      setError,
+      setIsTimedOut,
+      setLastUpdateTime,
+      setLoadingTimeout,
+      mapContext.setBoxes
+    )(forceRefresh);
+  }, [isArenaPage, mapContext, setError, setIsLoading, setIsTimedOut, setLastUpdateTime, setLoadingTimeout]);
+
   const clearBoxes = useCallback(() => dataManagement.handleClearBoxes(mapContext.clearAllBoxes, setIsLoading, setError, setLastUpdateTime)(), [mapContext.clearAllBoxes]);
   const retryLoading = useCallback(() => eventHandlers.handleRetry(loadingTimeout, loadBoxes)(), [loadingTimeout, loadBoxes]);
 
@@ -197,7 +244,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
             mode={mode}
             switchMode={switchMode}
             openCreateBoxModal={openCreateBoxModal}
-            reloadBoxes={reloadBoxes}
+            reloadBoxes={forceReloadBoxes}
             clearAllBoxes={clearBoxes}
             isAttackModeAvailable={isAttackModeAvailable}
             isLoading={isLoading}

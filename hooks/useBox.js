@@ -29,7 +29,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { constrainPosition, generateRandomPosition, isPositionValid } from '../utils/mapUtils';
 import mapConfig from '../config/mapConfig';
 import { db } from '../firebase-config';
-import { collection, addDoc, getDocs, setDoc, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, getDocs, setDoc, doc, updateDoc, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
 
 const useBoxManager = (MAP_SIZE) => {
   const [boxes, setBoxes] = useState([]);
@@ -110,7 +110,6 @@ const useBoxManager = (MAP_SIZE) => {
     }
   }, [MAP_SIZE, boxes, mapConfig.minBoxDistance]);
   
-
   const updateConnections = useCallback((updatedBoxes) => {
     const newConnections = updatedBoxes.map((box, index) => ({
       from: box.id,
@@ -149,10 +148,6 @@ const useBoxManager = (MAP_SIZE) => {
       console.log('Box position updated in Firestore:', id);
     } catch (error) {
       console.error('Error updating box position in Firestore:', error);
-      // Optionally, revert the local state change if the Firestore update fails
-      // setBoxes(prevBoxes => prevBoxes.map(box => 
-      //   box.id === id ? { ...box, x: box.x, y: box.y } : box
-      // ));
     }
   }, [MAP_SIZE]);
 
@@ -172,16 +167,34 @@ const useBoxManager = (MAP_SIZE) => {
   const clearAllBoxes = useCallback(async () => {
     try {
       const batch = writeBatch(db);
-      const querySnapshot = await getDocs(collection(db, 'boxes'));
-      querySnapshot.docs.forEach((doc) => {
+      
+      // Clear boxes
+      const boxesSnapshot = await getDocs(collection(db, 'boxes'));
+      boxesSnapshot.docs.forEach((doc) => {
         batch.delete(doc.ref);
       });
+
+      // Clear attacks
+      const attacksSnapshot = await getDocs(collection(db, 'attacks'));
+      attacksSnapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+
+      // Clear boxCoordinates
+      const boxCoordinatesSnapshot = await getDocs(collection(db, 'boxCoordinates'));
+      boxCoordinatesSnapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+
+      // Commit the batch
       await batch.commit();
+
+      // Clear local state
       setBoxes([]);
       setConnections([]);
-      console.log('All boxes cleared from Firestore');
+      console.log('All boxes, attacks, and boxCoordinates cleared from Firestore');
     } catch (error) {
-      console.error('Error clearing all boxes from Firestore:', error);
+      console.error('Error clearing data from Firestore:', error);
       throw error;
     }
   }, []);
@@ -228,8 +241,7 @@ const useBoxManager = (MAP_SIZE) => {
     handleBoxDrag,
     removeBox, 
     clearAllBoxes,
-    loadBoxesFromFirebase,
-    addBox
+    loadBoxesFromFirebase
   };
 };
 

@@ -85,7 +85,13 @@ const AISecurityMapContent = () => {
     [mapContext.loadBoxesFromFirebase]
   );
 
-  const reloadBoxes = useCallback(() => dataManagement.handleReloadBoxes(loadBoxes)(), [loadBoxes]);
+  const reloadBoxes = useCallback(() => {
+    const currentPosition = mapContext.mapControls.position;
+    dataManagement.handleReloadBoxes(loadBoxes, true)().then(() => {
+      mapContext.setMapPosition(currentPosition);
+    });
+  }, [loadBoxes, mapContext]);
+
   const clearBoxes = useCallback(() => dataManagement.handleClearBoxes(mapContext.clearAllBoxes, setIsLoading, setError, setLastUpdateTime)(), [mapContext.clearAllBoxes]);
   const retryLoading = useCallback(() => eventHandlers.handleRetry(loadingTimeout, loadBoxes)(), [loadingTimeout, loadBoxes]);
 

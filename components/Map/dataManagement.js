@@ -50,7 +50,7 @@ export const handleLoadBoxes = (loadBoxesFromFirebase, setIsLoading, setError, s
       return;
     }
     
-    console.log('Starting load boxes operation.');
+    console.log('Starting load boxes operation. Force refresh:', forceRefresh);
     isLoading = true;
     setIsLoading(true);
     setError(null);
@@ -60,9 +60,7 @@ export const handleLoadBoxes = (loadBoxesFromFirebase, setIsLoading, setError, s
       setIsTimedOut(true);
       setIsLoading(false);
       setError('Loading timed out. Please try again.');
-      console.log('Load boxes operation timed out.');
-      isLoading = false;
-    }, 10000); // 10 seconds timeout
+    }, 30000);
 
     setLoadingTimeout(timeoutId);
 
@@ -70,38 +68,26 @@ export const handleLoadBoxes = (loadBoxesFromFirebase, setIsLoading, setError, s
       console.log('Fetching boxes from Firebase.');
       const loadedBoxes = await loadBoxesFromFirebase();
       console.log('Loaded boxes:', loadedBoxes);
-      
-      if (!Array.isArray(loadedBoxes)) {
-        throw new Error(`loadBoxesFromFirebase did not return an array. Received: ${typeof loadedBoxes}`);
+
+      if (loadedBoxes.length > 0) {
+        console.log(`Successfully loaded ${loadedBoxes.length} boxes.`);
+        setBoxes(loadedBoxes);
+        boxCache = { data: loadedBoxes, timestamp: currentTime };
+        console.log('Box cache updated.');
+      } else {
+        console.log('No boxes loaded.');
+        setBoxes([]);
+        boxCache = { data: [], timestamp: currentTime };
       }
 
-      const validBoxes = loadedBoxes.filter(validateBoxData);
-      if (validBoxes.length !== loadedBoxes.length) {
-        console.warn(`${loadedBoxes.length - validBoxes.length} boxes were invalid and filtered out.`);
-      }
-      console.log(`Successfully loaded ${validBoxes.length} boxes.`);
-      
-      // Update cache
-      boxCache = {
-        data: validBoxes,
-        timestamp: currentTime
-      };
-      console.log('Box cache updated.');
-      
-      if (typeof setBoxes !== 'function') {
-        console.error('setBoxes is not a function:', setBoxes);
-        throw new Error('setBoxes is not a function');
-      }
-      
-      setBoxes(validBoxes);
-      setLastUpdateTime(new Date(currentTime));
-      clearTimeout(timeoutId);
-    } catch (err) {
+      setLastUpdateTime(new Date());
+    } catch (error) {
+      console.error('Error loading boxes:', error);
       setError('Failed to load boxes. Please try again.');
-      console.error('Error loading boxes:', err);
     } finally {
-      setIsLoading(false);
       clearTimeout(timeoutId);
+      setLoadingTimeout(null);
+      setIsLoading(false);
       isLoading = false;
       console.log('Load boxes operation completed.');
     }

@@ -19,6 +19,7 @@
  * - targetBox: Target box for attack
  * - mapControls: Position and zoom state for map navigation
  * - user: Current authenticated user (null if not logged in)
+ * - isLoading: Loading state for box loading operations
  * 
  * Key Functionalities:
  * 1. Managing application mode and UI states
@@ -62,6 +63,7 @@ const useScreenSize = () => {
 export const MapProvider = ({ children }) => {
   const screenSize = useScreenSize();
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const MAP_SIZE = useMemo(() => {
     const aspectRatio = screenSize.width / screenSize.height;
@@ -207,6 +209,20 @@ export const MapProvider = ({ children }) => {
     console.log('MapContext: Map position changed:', mapControls.position);
   }, [mapControls.position]);
 
+  const forceReloadBoxes = useCallback(async () => {
+    const currentPosition = mapControls.position;
+    setIsLoading(true);
+    try {
+      const boxes = await loadBoxesFromFirebase(true);
+      setBoxes(boxes);
+    } catch (error) {
+      console.error('Error force reloading boxes:', error);
+    } finally {
+      setIsLoading(false);
+      setMapPosition(currentPosition);
+    }
+  }, [loadBoxesFromFirebase, setBoxes, mapControls.position, setMapPosition]);
+
   const contextValue = {
     MAP_SIZE,
     mode,
@@ -219,7 +235,7 @@ export const MapProvider = ({ children }) => {
     setIsAttackModalOpen,
     isAttacking,
     boxes,
-    setBoxes, // Add this line
+    setBoxes,
     connections,
     selectedBox,
     targetBox,
@@ -241,7 +257,9 @@ export const MapProvider = ({ children }) => {
     handleLogin,
     handleLogout,
     attackReplay,
-    setReplayDate
+    setReplayDate,
+    forceReloadBoxes,
+    isLoading
   };
 
   return (
