@@ -19,6 +19,7 @@ interface AuthContextType {
   login: () => Promise<void>;
   logout: () => Promise<void>;
   getUserBoxes: (userId: string) => Promise<BoxId[]>;
+  getUserArticles: (userId: string) => Promise<{ id: string; title: string; content: string; published: boolean }[]>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -146,13 +147,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+
+  const getUserArticles = async (userId: string): Promise<{ id: string; title: string; content: string; published: boolean }[]> => {
+    const articlesRef = collection(db, 'articles');
+    const articlesSnapshot = await getDocs(articlesRef);
+    return articlesSnapshot.docs
+      .filter(doc => doc.data().userId === userId && doc.data().published) // Filter for published articles
+      .map(doc => ({
+        id: doc.id,
+        title: doc.data().title,
+        content: doc.data().content,
+        published: doc.data().published || false,
+      }));
+  };
+
+
+
   const value = {
     user,
     loading,
     isAdmin,
     login,
     logout,
-    getUserBoxes
+    getUserBoxes,
+    getUserArticles
   };
 
   return (
