@@ -19,11 +19,7 @@ interface AuthContextType {
   login: () => Promise<void>;
   logout: () => Promise<void>;
   getUserBoxes: (userId: string) => Promise<BoxId[]>;
-<<<<<<< HEAD
   getUserArticles: (userId: string) => Promise<{ id: string; title: string; content: string; published: boolean }[]>;
-=======
-  getUserArticles: (userId: string) => Promise<{ id: string; title: string; content: string; published: boolean }[]>; // Veröffentlichungsstatus hinzufügen
->>>>>>> refs/remotes/origin/feature/Articels
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -117,7 +113,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-<<<<<<< HEAD
   const login = async () => {
     try {
       console.log('Attempting to log in user');
@@ -132,8 +127,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
 
-=======
->>>>>>> refs/remotes/origin/feature/Articels
   const getUserArticles = async (userId: string): Promise<{ id: string; title: string; content: string; published: boolean }[]> => {
     const articlesRef = collection(db, 'articles');
     const articlesSnapshot = await getDocs(articlesRef);
@@ -148,10 +141,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
 
-<<<<<<< HEAD
-
-=======
->>>>>>> refs/remotes/origin/feature/Articels
   const value = {
     user,
     loading,
@@ -159,11 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     getUserBoxes,
-<<<<<<< HEAD
     getUserArticles
-=======
-    getUserArticles,
->>>>>>> refs/remotes/origin/feature/Articels
   };
 
   return (
