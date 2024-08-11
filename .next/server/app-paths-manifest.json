@@ -1,7 +1,4 @@
 {
-  "/Attack/page": "app/Attack/page.js",
-  "/AdminDashboard/ToDo/page": "app/AdminDashboard/ToDo/page.js",
-  "/Profile/[[...uid]]/page": "app/Profile/[[...uid]]/page.js",
-  "/GlobalRank/page": "app/GlobalRank/page.js",
-  "/page": "app/page.js"
+  "/page": "app/page.js",
+  "/Profile/[[...uid]]/page": "app/Profile/[[...uid]]/page.js"
 }
