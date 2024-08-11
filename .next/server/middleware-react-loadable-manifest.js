@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 self.__REACT_LOADABLE_MANIFEST="{\"app/Landingpage/LandingPageContent.tsx -> ./LazyVideo\":{\"id\":\"app/Landingpage/LandingPageContent.tsx -> ./LazyVideo\",\"files\":[\"static/chunks/_app-pages-browser_app_Landingpage_LazyVideo_tsx.js\"]},\"node_modules/@react-three/drei/core/VideoTexture.js -> hls.js\":{\"id\":\"node_modules/@react-three/drei/core/VideoTexture.js -> hls.js\",\"files\":[]},\"node_modules/@react-three/drei/web/FaceLandmarker.js -> @mediapipe/tasks-vision\":{\"id\":\"node_modules/@react-three/drei/web/FaceLandmarker.js -> @mediapipe/tasks-vision\",\"files\":[]}}"
+=======
+self.__REACT_LOADABLE_MANIFEST="{\"node_modules/@react-three/drei/core/VideoTexture.js -> hls.js\":{\"id\":\"node_modules/@react-three/drei/core/VideoTexture.js -> hls.js\",\"files\":[]},\"node_modules/@react-three/drei/web/FaceLandmarker.js -> @mediapipe/tasks-vision\":{\"id\":\"node_modules/@react-three/drei/web/FaceLandmarker.js -> @mediapipe/tasks-vision\",\"files\":[]}}"
+>>>>>>> refs/remotes/origin/feature/Articels

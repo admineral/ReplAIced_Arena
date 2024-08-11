@@ -1,5 +1,8 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
+<<<<<<< HEAD
   "/page": "app/page.js",
+=======
+>>>>>>> refs/remotes/origin/feature/Articels
   "/Profile/[[...uid]]/page": "app/Profile/[[...uid]]/page.js"
 }

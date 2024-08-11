@@ -32,8 +32,13 @@
     "react-hook-form": "^7.52.2",
     "react-icons": "^5.2.1",
     "react-konva": "^18.2.10",
+<<<<<<< HEAD
     "react-responsive": "^10.0.0",
+=======
+    "react-slick": "^0.30.2",
+>>>>>>> refs/remotes/origin/feature/Articels
     "react-zoom-pan-pinch": "^3.6.1",
+    "slick-carousel": "^1.8.1",
     "three": "^0.167.0",
     "use-image": "^1.1.1",
     "uuid": "^10.0.0",

@@ -6,11 +6,14 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
+<<<<<<< HEAD
     "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
+=======
+>>>>>>> refs/remotes/origin/feature/Articels
     "/Profile/[[...uid]]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",

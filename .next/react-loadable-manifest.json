@@ -1,10 +1,13 @@
 {
+<<<<<<< HEAD
   "app/Landingpage/LandingPageContent.tsx -> ./LazyVideo": {
     "id": "app/Landingpage/LandingPageContent.tsx -> ./LazyVideo",
     "files": [
       "static/chunks/_app-pages-browser_app_Landingpage_LazyVideo_tsx.js"
     ]
   },
+=======
+>>>>>>> refs/remotes/origin/feature/Articels
   "node_modules/@react-three/drei/core/VideoTexture.js -> hls.js": {
     "id": "node_modules/@react-three/drei/core/VideoTexture.js -> hls.js",
     "files": []
