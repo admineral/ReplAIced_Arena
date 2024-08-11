@@ -8,6 +8,8 @@ import { useMapContext } from '../../../contexts/MapContext';
 import { db } from '../../../firebase-config';
 import { collection, getDocs, addDoc, deleteDoc, doc, setDoc, getDoc, DocumentData } from 'firebase/firestore';
 import { useAuth } from '../../../contexts/AuthContext';
+import ConfigApplyModal from './ConfigApplyModal';
+import { writeBoxesToFirestore } from '../../../services/firestore';
 
 interface Box {
   id: string;
@@ -30,6 +32,34 @@ interface MapConfig {
   boxes: Box[];
   attacks: Attack[];
   boxCoordinates: { [key: string]: { x: number; y: number } };
+  worldSize: number;
+  minBoxDistance: number;
+  initialPosition: { x: number; y: number };
+  initialZoom: number;
+  minZoom: number;
+  maxZoom: number;
+  zoomStep: number;
+  mapSize: number;
+  panLimit: number;
+  dragSpeed: number;
+  invertDragX: boolean;
+  invertDragY: boolean;
+  miniMapSize: number;
+  miniMapMinZoom: number;
+  miniMapMaxZoom: number;
+  miniMapZoomStep: number;
+  miniMapSpeedFactor: number;
+  toolbox: {
+    size: number;
+    padding: number;
+    iconSize: number;
+    borderRadius: number;
+    backgroundColor: string;
+    hoverBackgroundColor: string;
+    activeBackgroundColor: string;
+    iconColor: string;
+    position: { x: number; y: number };
+  };
 }
 
 interface MapSettings {
@@ -74,9 +104,8 @@ const modelLogos: { [key: string]: string } = {
 const MapConfigPage: React.FC = () => {
   const router = useRouter();
   const { user, isAdmin } = useAuth();
-  const { boxes, loadBoxesFromFirebase, clearAllBoxes, setBoxes, attacks, getBoxCoordinates } = useMapContext();
+  const { boxes, loadBoxesFromFirebase, clearAllBoxes, setBoxes, attacks } = useMapContext();
   const [configs, setConfigs] = useState<MapConfig[]>([]);
-  const [selectedConfig, setSelectedConfig] = useState<MapConfig | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [expandedBoxes, setExpandedBoxes] = useState<string[]>([]);
   const [mapSettings, setMapSettings] = useState<MapSettings>({
@@ -109,6 +138,8 @@ const MapConfigPage: React.FC = () => {
       position: { x: 10, y: 10 },
     },
   });
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [selectedConfig, setSelectedConfig] = useState<MapConfig | null>(null);
 
   const loadConfigs = async (): Promise<void> => {
     setIsLoading(true);
@@ -157,21 +188,56 @@ const MapConfigPage: React.FC = () => {
 
   const saveCurrentConfig = async (): Promise<void> => {
     const name = prompt('Enter a name for this configuration:');
-    if (name) {
+    if (name && name.trim()) {
+      setIsLoading(true);
+      const boxCoordinates = boxes.reduce((acc: { [key: string]: { x: number; y: number } }, box: { id: string; x: number; y: number }) => {
+        acc[box.id] = { x: box.x, y: box.y };
+        return acc;
+      }, {} as { [key: string]: { x: number; y: number } });
+
       const newConfig: Omit<MapConfig, 'id'> = {
-        name,
+        name: name.trim(),
         timestamp: Date.now(),
         boxes,
         attacks: attacks || [],
-        boxCoordinates: getBoxCoordinates()
+        boxCoordinates,
+        worldSize: mapSettings.worldSize,
+        minBoxDistance: mapSettings.minBoxDistance,
+        initialPosition: mapSettings.initialPosition,
+        initialZoom: mapSettings.initialZoom,
+        minZoom: mapSettings.minZoom,
+        maxZoom: mapSettings.maxZoom,
+        zoomStep: mapSettings.zoomStep,
+        mapSize: mapSettings.mapSize,
+        panLimit: mapSettings.panLimit,
+        dragSpeed: mapSettings.dragSpeed,
+        invertDragX: mapSettings.invertDragX,
+        invertDragY: mapSettings.invertDragY,
+        miniMapSize: mapSettings.miniMapSize,
+        miniMapMinZoom: mapSettings.miniMapMinZoom,
+        miniMapMaxZoom: mapSettings.miniMapMaxZoom,
+        miniMapZoomStep: mapSettings.miniMapZoomStep,
+        miniMapSpeedFactor: mapSettings.miniMapSpeedFactor,
+        toolbox: mapSettings.toolbox,
       };
       try {
         const docRef = await addDoc(collection(db, 'mapConfigs'), newConfig);
-        setConfigs([...configs, { id: docRef.id, ...newConfig }]);
+        const savedConfig = { id: docRef.id, ...newConfig };
+        setConfigs(prevConfigs => [...prevConfigs, savedConfig]);
+        setSelectedConfig(savedConfig);
+        alert('Configuration saved successfully!');
       } catch (error) {
         console.error("Error saving configuration:", error);
-        alert("Failed to save configuration. Please try again.");
+        if (error instanceof Error) {
+          alert(`Failed to save configuration: ${error.message}`);
+        } else {
+          alert("Failed to save configuration. Please try again.");
+        }
+      } finally {
+        setIsLoading(false);
       }
+    } else if (name !== null) {
+      alert("Please enter a valid name for the configuration.");
     }
   };
 
@@ -188,22 +254,22 @@ const MapConfigPage: React.FC = () => {
     setBoxes(config.boxes);
   };
 
-  const applyConfig = async (): Promise<void> => {
-    if (selectedConfig) {
-      setIsLoading(true);
-      try {
-        const configStillExists = configs.some(config => config.id === selectedConfig.id);
-        if (!configStillExists) {
-          throw new Error("Selected configuration no longer exists.");
-        }
-        await setDoc(doc(db, 'currentMapConfig', 'current'), selectedConfig);
-        alert('Configuration applied successfully!');
-      } catch (error) {
-        console.error("Error applying configuration:", error);
-        alert("Failed to apply configuration. Please try again.");
+  const applyConfig = async (config: MapConfig): Promise<void> => {
+    setIsLoading(true);
+    try {
+      const configStillExists = configs.some(c => c.id === config.id);
+      if (!configStillExists) {
+        throw new Error("Selected configuration no longer exists.");
       }
-      setIsLoading(false);
+      await setDoc(doc(db, 'currentMapConfig', 'current'), config);
+      await writeBoxesToFirestore(config.boxes);
+      setBoxes(config.boxes);
+      alert('Configuration applied successfully!');
+    } catch (error) {
+      console.error("Error applying configuration:", error);
+      alert("Failed to apply configuration. Please try again.");
     }
+    setIsLoading(false);
   };
 
   const resetToLive = async (): Promise<void> => {
@@ -269,6 +335,29 @@ const MapConfigPage: React.FC = () => {
     setIsLoading(false);
   };
 
+  const handleApplyConfig = (config: MapConfig) => {
+    setSelectedConfig(config);
+    setShowApplyModal(true);
+  };
+
+  const confirmApplyConfig = async () => {
+    if (selectedConfig) {
+      await applyConfig(selectedConfig);
+      setShowApplyModal(false);
+    }
+  };
+
+  const cancelApplyConfig = () => {
+    setShowApplyModal(false);
+  };
+
+  useEffect(() => {
+    if (configs.length > 0) {
+      const lastConfig = document.querySelector('.saved-configs-list li:last-child');
+      lastConfig?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [configs.length]);
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen bg-gray-900 text-white">Loading...</div>;
   }
@@ -329,14 +418,14 @@ const MapConfigPage: React.FC = () => {
               </h2>
             </div>
             <div className="p-6">
-              <ul className="space-y-4">
+              <ul className="space-y-4 saved-configs-list">
                 {configs.map(config => (
-                  <li key={config.id} className="bg-gray-700 rounded-lg overflow-hidden">
+                  <li key={config.id} className={`bg-gray-700 rounded-lg overflow-hidden ${selectedConfig?.id === config.id ? 'border-2 border-blue-500' : ''}`}>
                     <div className="p-4 flex items-center justify-between">
                       <span className="font-semibold">{config.name}</span>
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => previewConfig(config)}
+                          onClick={() => handleApplyConfig(config)}
                           className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
                         >
                           <FaEye />
@@ -532,24 +621,12 @@ const MapConfigPage: React.FC = () => {
           </div>
         </div>
 
-        {selectedConfig && (
-          <div className="mt-8 bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-            <div className="p-6 border-b border-gray-700">
-              <h2 className="text-xl font-semibold mb-4 flex items-center">
-                <FaCheck className="mr-2 text-green-400" />
-                Selected Configuration: {selectedConfig.name}
-              </h2>
-            </div>
-            <div className="p-6">
-              <button
-                onClick={applyConfig}
-                className="flex items-center px-6 py-3 bg-yellow-600 text-white rounded-full hover:bg-yellow-700 transition-colors w-full justify-center"
-              >
-                <FaCheck className="mr-2" />
-                Apply Configuration
-              </button>
-            </div>
-          </div>
+        {showApplyModal && selectedConfig && (
+          <ConfigApplyModal
+            config={selectedConfig}
+            onApply={confirmApplyConfig}
+            onCancel={cancelApplyConfig}
+          />
         )}
       </div>
     </div>

@@ -4,7 +4,14 @@ import { db } from '../../firebase-config';
 import mapConfig from '../../config/mapConfig';
 import { FaPlus, FaMinus, FaCompass } from 'react-icons/fa';
 
-const modelColors = {
+interface Box {
+  id: string;
+  x: number;
+  y: number;
+  type: string;
+}
+
+const modelColors: { [key: string]: string } = {
   default: '#808080',
   openai: '#00A67E',
   gemini: '#8E44AD',
@@ -12,40 +19,57 @@ const modelColors = {
   meta: '#1877F2',
 };
 
-const AdvancedMiniMap = ({ containerClassName = '' }) => {
-  const [boxes, setBoxes] = useState([]);
-  const [miniMapZoom, setMiniMapZoom] = useState(1);
+export interface AdvancedMiniMapProps {
+  containerClassName?: string;
+  boxes?: Box[];
+  worldSize?: number;
+  initialZoom?: number;
+  minZoom?: number;
+  maxZoom?: number;
+}
+
+const AdvancedMiniMap: React.FC<AdvancedMiniMapProps> = ({
+  containerClassName = '',
+  boxes: initialBoxes = [],
+  worldSize = 1000,
+  initialZoom = 1,
+  minZoom = 0.25,
+  maxZoom = 4
+}) => {
+  const [boxes, setBoxes] = useState<Box[]>(initialBoxes);
+  const [miniMapZoom, setMiniMapZoom] = useState(initialZoom);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const fetchBoxes = async () => {
-      const boxesCollection = collection(db, 'boxes');
-      const boxesSnapshot = await getDocs(boxesCollection);
-      const boxesData = boxesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setBoxes(boxesData);
-    };
+    if (initialBoxes.length === 0) {
+      const fetchBoxes = async () => {
+        const boxesCollection = collection(db, 'boxes');
+        const boxesSnapshot = await getDocs(boxesCollection);
+        const boxesData = boxesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Box));
+        setBoxes(boxesData);
+      };
+      fetchBoxes();
+    }
+  }, [initialBoxes]);
 
-    fetchBoxes();
-  }, []);
-
-  const handleMiniMapZoom = (zoomIn, e) => {
+  const handleMiniMapZoom = (zoomIn: boolean, e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+
     const rect = canvas.getBoundingClientRect();
     const canvasSize = canvas.width;
 
-    // Calculate mouse position relative to canvas
     const mouseX = ((e.clientX - rect.left) / rect.width) * canvasSize;
     const mouseY = ((e.clientY - rect.top) / rect.height) * canvasSize;
 
     setMiniMapZoom(prev => {
-      const zoomFactor = 1.05; // Even more gradual zoom (changed from 1.1)
+      const zoomFactor = 1.05;
       const newZoom = zoomIn ? prev * zoomFactor : prev / zoomFactor;
-      const clampedZoom = Math.min(Math.max(newZoom, mapConfig.miniMapMinZoom / 4), mapConfig.miniMapMaxZoom);
+      const clampedZoom = Math.min(Math.max(newZoom, minZoom), maxZoom);
       
-      // Calculate the new pan offset to keep the mouse position in place
       const zoomRatio = clampedZoom / prev;
       const newPanOffsetX = mouseX - (mouseX - panOffset.x) * zoomRatio;
       const newPanOffsetY = mouseY - (mouseY - panOffset.y) * zoomRatio;
@@ -56,9 +80,11 @@ const AdvancedMiniMap = ({ containerClassName = '' }) => {
     });
   };
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (isDragging) {
       const canvas = canvasRef.current;
+      if (!canvas) return;
+
       const rect = canvas.getBoundingClientRect();
       const canvasSize = canvas.width;
       const currentX = ((e.clientX - rect.left) / rect.width) * canvasSize;
@@ -80,8 +106,10 @@ const AdvancedMiniMap = ({ containerClassName = '' }) => {
     setIsDragging(false);
   };
 
-  const handleMouseDown = (e) => {
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+
     const rect = canvas.getBoundingClientRect();
     const canvasSize = canvas.width;
 
@@ -97,15 +125,15 @@ const AdvancedMiniMap = ({ containerClassName = '' }) => {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
     const canvasSize = canvas.width;
 
     ctx.clearRect(0, 0, canvasSize, canvasSize);
 
-    // Draw background
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // Draw grid
     ctx.strokeStyle = '#2a2a2a';
     ctx.lineWidth = 1;
     const gridSize = 50 * miniMapZoom;
@@ -122,7 +150,6 @@ const AdvancedMiniMap = ({ containerClassName = '' }) => {
       ctx.stroke();
     }
 
-    // Draw boxes
     boxes.forEach(box => {
       const x = (box.x * miniMapZoom + canvasSize / 2) - panOffset.x;
       const y = (canvasSize / 2 - box.y * miniMapZoom) - panOffset.y;
@@ -154,13 +181,13 @@ const AdvancedMiniMap = ({ containerClassName = '' }) => {
       />
       <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
         <button 
-          onClick={(e) => handleMiniMapZoom(true, e.nativeEvent)} 
+          onClick={(e) => handleMiniMapZoom(true, e.nativeEvent as unknown as React.MouseEvent<HTMLCanvasElement>)} 
           className="p-2 bg-white bg-opacity-20 text-white rounded-full shadow-lg hover:bg-opacity-30 transition-all duration-200"
         >
           <FaPlus />
         </button>
         <button 
-          onClick={(e) => handleMiniMapZoom(false, e.nativeEvent)} 
+          onClick={(e) => handleMiniMapZoom(false, e.nativeEvent as unknown as React.MouseEvent<HTMLCanvasElement>)} 
           className="p-2 bg-white bg-opacity-20 text-white rounded-full shadow-lg hover:bg-opacity-30 transition-all duration-200"
         >
           <FaMinus />

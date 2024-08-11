@@ -62,6 +62,16 @@ interface User {
   isAdmin: boolean;
 }
 
+interface Box {
+  id: string;
+  type: string;
+  x: number;
+  y: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  systemPrompt: string;
+  secretWord: string;
+}
+
 export const saveAttack = async (attackData: AttackData): Promise<string> => {
   try {
     const docRef = await addDoc(collection(db, ATTACKS_COLLECTION), {
@@ -322,4 +332,25 @@ export const getAllUsers = async (): Promise<User[]> => {
     email: doc.data().email,
     isAdmin: doc.data().isAdmin || false
   }));
+};
+
+export const writeBoxesToFirestore = async (boxes: Box[]): Promise<void> => {
+  console.log('Writing boxes to Firestore:', boxes);
+  const batch = writeBatch(db);
+  const boxesRef = collection(db, 'boxes');
+
+  // Delete all existing boxes
+  const existingBoxes = await getDocs(boxesRef);
+  existingBoxes.forEach((doc) => {
+    batch.delete(doc.ref);
+  });
+
+  // Add new boxes
+  boxes.forEach((box) => {
+    const newBoxRef = doc(boxesRef);
+    batch.set(newBoxRef, box);
+  });
+
+  await batch.commit();
+  console.log('Boxes written to Firestore successfully');
 };

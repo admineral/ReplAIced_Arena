@@ -213,7 +213,7 @@ const AdminDashboard = () => {
           </Link>
           <Link href="/AdminDashboard/mapconfig" className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors">
             <FaMap className="text-2xl sm:text-3xl mb-2 text-green-400" />
-            <h2 className="text-lg sm:text-xl font-semibold">Manage Challenges</h2>
+            <h2 className="text-lg sm:text-xl font-semibold">Map Configurator</h2>
           </Link>
           <Link href="/AdminDashboard/ToDo" className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors">
             <FaExclamationTriangle className="text-2xl sm:text-3xl mb-2 text-yellow-400" />
