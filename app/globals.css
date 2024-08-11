@@ -38,7 +38,3 @@ body {
   from { transform: rotate(0deg) translateX(50px) rotate(0deg); }
   to   { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
 }
-
-
-@import '~slick-carousel/slick/slick.css';
-@import '~slick-carousel/slick/slick-theme.css';
