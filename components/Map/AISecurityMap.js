@@ -37,18 +37,13 @@ const AISecurityMapContent = () => {
   }, [mapPosition, MAP_SIZE]);
 
   const miniMapSize = useMemo(() => {
-    if (isMobile) return 60; // Even smaller for mobile
-    if (isTablet) return 80;
-    return 100;
+    if (isMobile) return 80; // Reduced size for mobile
+    if (isTablet) return 100;
+    return 120; // Reduced size for desktop
   }, [isMobile, isTablet]);
 
-  const mapCanvasHeight = useMemo(() => {
-    if (isMobile) return 'calc(100vh - 160px)'; // Adjust this value to fit everything without scrolling
-    return '100%';
-  }, [isMobile]);
-
   const replayControlsStyle = useMemo(() => {
-    if (isMobile) return "w-[calc(100%-70px)]"; // Adjusted to leave space for minimap
+    if (isMobile) return "w-[calc(100%-90px)]"; // Adjusted to leave space for minimap on mobile
     if (isTablet) return `w-[calc(100%-${miniMapSize + 32}px)]`;
     return isMapExpanded 
       ? `w-[calc(100%-${miniMapSize + 48}px)]` 
@@ -71,14 +66,18 @@ const AISecurityMapContent = () => {
     }
   }, [handleMapZoomChange]);
 
+  const mapCanvasStyle = useMemo(() => ({
+    height: isMobile ? 'calc(100vh - 180px)' : '100%', // Adjust 180px based on your navbar height + controls height
+  }), [isMobile]);
+
   return (
     <div className="flex flex-col h-full w-full bg-gray-900 relative">
-      <div className="flex-grow relative" style={{ height: mapCanvasHeight }}>
+      <div className="flex-grow relative" style={mapCanvasStyle}>
         <MapCanvas />
       </div>
       <div className="absolute inset-0 pointer-events-none">
         {mode === 'attack' && (
-          <div className="absolute top-1 left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
             <AttackGuidedTour
               step={selectedBox && targetBox ? 2 : selectedBox ? 1 : 0}
               selectedBox={selectedBox}
@@ -88,12 +87,12 @@ const AISecurityMapContent = () => {
           </div>
         )}
         
-        <div className="absolute bottom-1 left-1 right-1 flex items-end justify-between">
+        <div className={`absolute ${isMobile ? 'bottom-0' : 'bottom-2'} left-2 right-2 flex items-end justify-between`}>
           <div className={`pointer-events-auto ${replayControlsStyle}`}>
             <AttackReplayControls isMapExpanded={isMapExpanded} isMobile={isMobile} />
           </div>
           
-          <div className="pointer-events-auto ml-1">
+          <div className="pointer-events-auto ml-2">
             <MiniMap 
               boxes={boxes} 
               mapSize={MAP_SIZE} 
@@ -103,8 +102,8 @@ const AISecurityMapContent = () => {
               onZoomChange={handleMiniMapZoomChange}
               miniMapSize={miniMapSize}
               miniMapZoom={1.5}
-              boxSize={isMobile ? 1 : 2}
-              padding={isMobile ? 1 : 2}
+              boxSize={isMobile ? 2 : 3}
+              padding={isMobile ? 2 : 4}
               backgroundColor="rgba(0, 0, 0, 0.7)"
               borderColor="#4a5568"
               viewRectColor="#ffd700"
