@@ -37,9 +37,9 @@ const AISecurityMapContent = () => {
   }, [mapPosition, MAP_SIZE]);
 
   const miniMapSize = useMemo(() => {
-    if (isMobile) return 100;
-    if (isTablet) return 120;
-    return 150;
+    if (isMobile) return 80; // Reduced size for mobile
+    if (isTablet) return 100;
+    return 120; // Reduced size for desktop
   }, [isMobile, isTablet]);
 
   const replayControlsStyle = useMemo(() => {
@@ -77,10 +77,12 @@ const AISecurityMapContent = () => {
 
   return (
     <div className="flex flex-col h-full w-full bg-gray-900 relative">
-      <MapCanvas />
+      <div className="flex-grow relative">
+        <MapCanvas />
+      </div>
       <div className="absolute inset-0 pointer-events-none">
         {mode === 'attack' && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
             <AttackGuidedTour
               step={selectedBox && targetBox ? 2 : selectedBox ? 1 : 0}
               selectedBox={selectedBox}
@@ -90,13 +92,13 @@ const AISecurityMapContent = () => {
           </div>
         )}
         
-        <div className="absolute bottom-4 left-4 right-4 flex flex-col items-start">
+        <div className="absolute bottom-2 left-2 right-2 flex flex-col items-start">
           <div className="flex w-full items-end justify-between">
             <div className={`pointer-events-auto ${replayControlsStyle}`}>
               <AttackReplayControls isMapExpanded={isMapExpanded} isMobile={isMobile} />
             </div>
             
-            <div className="pointer-events-auto ml-4">
+            <div className="pointer-events-auto ml-2">
               <MiniMap 
                 boxes={boxes} 
                 mapSize={MAP_SIZE} 
@@ -106,8 +108,8 @@ const AISecurityMapContent = () => {
                 onZoomChange={handleMiniMapZoomChange}
                 miniMapSize={miniMapSize}
                 miniMapZoom={1.5}
-                boxSize={isMobile ? 3 : 4}
-                padding={isMobile ? 4 : 8}
+                boxSize={isMobile ? 2 : 3}
+                padding={isMobile ? 2 : 4}
                 backgroundColor="rgba(0, 0, 0, 0.7)"
                 borderColor="#4a5568"
                 viewRectColor="#ffd700"
