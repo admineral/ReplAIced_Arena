@@ -1,9 +1,9 @@
 import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import { useMapContext } from '../../contexts/MapContext';
-import { PlayIcon, PauseIcon, StopIcon, HomeIcon, ForwardIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, StopIcon, HomeIcon, ForwardIcon } from '@heroicons/react/24/solid';
 import { useMediaQuery } from 'react-responsive';
 
-const TimeDisplay = React.memo(({ time, isMobile }) => {
+const TimeDisplay = React.memo(({ time }) => {
   const formatTime = (seconds) => {
     const date = new Date(0);
     date.setSeconds(seconds);
@@ -11,7 +11,7 @@ const TimeDisplay = React.memo(({ time, isMobile }) => {
   };
 
   return (
-    <span className={`text-white font-mono ${isMobile ? 'text-lg' : 'text-xs'}`}>
+    <span className="text-white font-mono text-xs">
       {formatTime(time)}
     </span>
   );
@@ -38,27 +38,6 @@ const AttackMarker = ({ marker, maxTime, onMarkerClick }) => {
   );
 };
 
-const MiniAttackReplayControls = ({ isPlaying, handlePlayPause, currentTime, maxTime, attackMarkers, handleMarkerClick }) => {
-  return (
-    <div className="w-full bg-gray-800 bg-opacity-95 p-2 rounded-lg shadow-lg">
-      <div className="relative w-full h-2 bg-gray-700 rounded-full">
-        <div 
-          className="absolute top-0 left-0 h-full bg-blue-500 opacity-50 rounded-full transition-all duration-300 ease-in-out"
-          style={{ width: `${(currentTime / maxTime) * 100}%` }}
-        ></div>
-        {attackMarkers.map(marker => (
-          <AttackMarker 
-            key={marker.id} 
-            marker={marker} 
-            maxTime={maxTime} 
-            onMarkerClick={handleMarkerClick}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
 const AttackReplayControls = ({ isMapExpanded, isMobile }) => {
   const { attackReplay, setMode, setMapPosition, setMapZoom, boxes } = useMapContext();
   const { 
@@ -79,7 +58,6 @@ const AttackReplayControls = ({ isMapExpanded, isMobile }) => {
   } = attackReplay;
 
   const [sliderMax, setSliderMax] = useState(maxTime);
-  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     const latestMarkerTime = Math.max(...attackMarkers.map(marker => marker.time), 0);
@@ -131,47 +109,9 @@ const AttackReplayControls = ({ isMapExpanded, isMobile }) => {
     }
   }, [handleAttackMarkerClick, setMode, setMapPosition, setMapZoom, boxes, triggerAttackVisualization]);
 
-  const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
-  };
-
-  if (isMobile && !isExpanded) {
-    return (
-      <div className="w-full">
-        <button
-          onClick={toggleExpand}
-          className="w-full flex justify-center items-center mb-2 text-white"
-        >
-          <ChevronUpIcon className="w-6 h-6" />
-        </button>
-        <MiniAttackReplayControls 
-          isPlaying={isPlaying}
-          handlePlayPause={handlePlayPause}
-          currentTime={currentTime}
-          maxTime={sliderMax}
-          attackMarkers={sortedAttackMarkers}
-          handleMarkerClick={handleMarkerClick}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className={`w-full bg-gray-800 bg-opacity-95 p-4 pt-6 rounded-lg shadow-lg relative`}>
-      {isMobile && (
-        <button
-          onClick={toggleExpand}
-          className="w-full flex justify-center items-center mb-2 text-white"
-        >
-          <ChevronDownIcon className="w-6 h-6" />
-        </button>
-      )}
-      <div className="relative w-full h-3 bg-gray-700 rounded-full mb-4 overflow-visible">
-        {!isMobile && (
-          <div className="absolute -top-6 right-0">
-            <TimeDisplay time={currentTime} isMobile={isMobile} />
-          </div>
-        )}
+    <div className={`w-full bg-gray-800 bg-opacity-95 p-4 rounded-lg shadow-lg relative`}>
+      <div className="relative w-full h-3 bg-gray-700 rounded-full mb-1 overflow-visible">
         <div 
           className="absolute top-0 left-0 h-full bg-blue-500 opacity-50 rounded-full transition-all duration-300 ease-in-out z-10" 
           style={{ width: `${(currentTime / sliderMax) * 100}%` }}
@@ -192,6 +132,9 @@ const AttackReplayControls = ({ isMapExpanded, isMobile }) => {
           onChange={handleSliderChange}
           className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer z-20"
         />
+      </div>
+      <div className="flex justify-end mb-2">
+        <TimeDisplay time={currentTime} />
       </div>
       <div className="flex justify-between items-center">
         <div className="flex space-x-1">
@@ -221,7 +164,6 @@ const AttackReplayControls = ({ isMapExpanded, isMobile }) => {
             <span className="ml-1 font-semibold text-xs">{playbackSpeed}x</span>
           </button>
         </div>
-        {isMobile && <TimeDisplay time={currentTime} isMobile={isMobile} />}
       </div>
     </div>
   );

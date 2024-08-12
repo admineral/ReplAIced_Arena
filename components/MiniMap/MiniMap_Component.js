@@ -14,7 +14,14 @@
  * Props:
  * - boxes: Array of box objects, each containing id, x, y, and type properties
  * - mapSize: Number representing the size of the main map
- * - disableHoverEnlarge: Boolean to disable hover-to-enlarge feature
+ * - miniMapSize: Number representing the size of the minimap
+ * - miniMapZoom: Number representing the zoom level of the minimap
+ * - boxSize: Number representing the size of the box
+ * - padding: Number representing the padding around the minimap
+ * - backgroundColor: String representing the background color of the minimap
+ * - borderColor: String representing the border color of the minimap
+ * - viewRectColor: String representing the color of the view rectangle
+ * - onHoverChange: Function to handle hover state changes
  * 
  * Key Features:
  * 1. Scales node positions from the main map to fit within the minimap
@@ -46,13 +53,13 @@ const MiniMap = ({
     backgroundColor = 'rgba(0, 0, 0, 0.5)',
     borderColor = 'white',
     viewRectColor = 'yellow',
-    disableHoverEnlarge = false
+    onHoverChange
 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const miniMapRef = useRef(null);
     const worldSize = mapSize * mapConfig.worldSize;
-    const effectiveMiniMapSize = disableHoverEnlarge ? miniMapSize : (isHovered ? miniMapSize * 1.5 : miniMapSize);
+    const effectiveMiniMapSize = isHovered ? miniMapSize * 1.5 : miniMapSize;
 
     const scalePosition = useCallback((value) => {
         return ((value + worldSize / 2) / worldSize) * (effectiveMiniMapSize - 2 * padding) + padding;
@@ -85,14 +92,14 @@ const MiniMap = ({
     const visibleAreaY = scalePosition(-currentPosition.y) - visibleAreaHeight / 2;
 
     const handleMouseEnter = () => {
-        if (!disableHoverEnlarge) {
-            setIsHovered(true);
-        }
+        setIsHovered(true);
+        if (onHoverChange) onHoverChange(true);
     };
 
     const handleMouseLeave = () => {
         setIsHovered(false);
         setIsDragging(false);
+        if (onHoverChange) onHoverChange(false);
     };
 
     const updatePosition = useCallback((e) => {
@@ -152,7 +159,7 @@ const MiniMap = ({
                 backgroundColor: backgroundColor, 
                 border: `1px solid ${borderColor}`, 
                 position: 'relative',
-                transition: disableHoverEnlarge ? 'none' : 'all 0.3s ease',
+                transition: 'all 0.3s ease',
                 cursor: isDragging ? 'grabbing' : 'grab'
             }}
             onMouseEnter={handleMouseEnter}
