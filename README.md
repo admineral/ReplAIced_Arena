@@ -68,9 +68,9 @@ We welcome contributions to ReplAIced! Our platform isn't just about meeting tod
 
 ReplAIced is developed and maintained by:
 
-- Elias Zobler
-- Nikoll Gjokaj
-- Daniel Prundianu
+- Elias Z.
+- Nikoll G.
+- Daniel P.
 
 ## Support Us
 
