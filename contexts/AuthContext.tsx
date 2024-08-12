@@ -12,6 +12,13 @@ interface BoxId {
   y: number;
 }
 
+interface Article {
+  id: string;
+  title: string;
+  content: string;
+  published: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -19,6 +26,7 @@ interface AuthContextType {
   login: () => Promise<void>;
   logout: () => Promise<void>;
   getUserBoxes: (userId: string) => Promise<BoxId[]>;
+  getUserArticles: (userId: string) => Promise<Article[]>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -133,6 +141,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return boxes;
   };
 
+  const getUserArticles = async (userId: string): Promise<Article[]> => {
+    console.log(`Attempting to get articles for user: ${userId}`);
+    const articlesRef = collection(db, 'articles');
+    const articlesQuery = query(articlesRef, where('userId', '==', userId), where('published', '==', true));
+    const articlesSnapshot = await getDocs(articlesQuery);
+    console.log(`Query snapshot received. Number of documents: ${articlesSnapshot.size}`);
+    const articles = articlesSnapshot.docs.map(doc => {
+      const data = doc.data();
+      console.log('Article data:', data);
+      return {
+        id: doc.id,
+        title: data.title,
+        content: data.content,
+        published: data.published || false,
+      };
+    });
+    console.log(`Returning ${articles.length} articles for user ${userId}`);
+    return articles;
+  };
+
   const login = async () => {
     try {
       console.log('Attempting to log in user');
@@ -152,7 +180,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAdmin,
     login,
     logout,
-    getUserBoxes
+    getUserBoxes,
+    getUserArticles
   };
 
   return (
