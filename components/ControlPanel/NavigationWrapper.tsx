@@ -43,6 +43,7 @@ import AttackReplayControls from '../AttackReplay/AttackReplayControls';
 import { useUpdateTimeInterval } from '../../hooks/useUpdateTimeInterval';
 import * as eventHandlers from '../Map/eventHandlers';
 import * as dataManagement from '../Map/dataManagement';
+import { BoxData } from '../../types/BoxTypes'; // Make sure to import or define this type
 
 function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -84,7 +85,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   const openCreateBoxModal = eventHandlers.handleOpenCreateBoxModal(setIsCreateBoxModalOpen);
   const closeCreateBoxModal = eventHandlers.handleCloseCreateBoxModal(setIsCreateBoxModalOpen);
   const createBox = eventHandlers.handleCreateBox(
-    (boxData) => mapContext.addBox(boxData, user?.uid),
+    (boxData: BoxData) => mapContext.addBox(boxData, user?.uid),
     MAP_SIZE,
     mapContext.setMapPosition,
     mapContext.setMapZoom,
@@ -255,6 +256,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
             isAttackModeAvailable={isAttackModeAvailable}
             isLoading={isLoading}
             setLastUpdateTime={setLastUpdateTime}
+            onBoxCreated={() => loadBoxes()} // Added this line
           />
         </div>
         <div className="flex-grow relative z-10">

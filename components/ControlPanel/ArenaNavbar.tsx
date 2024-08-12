@@ -6,19 +6,24 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaUserCog } from 'react-icons/fa';
+import { User } from 'firebase/auth';
 
 interface ArenaNavbarProps {
   mode: string;
   switchMode: (mode: string) => void;
   isAttackModeAvailable: boolean;
+  isAdmin: boolean;
+  user: User | null;
 }
 
 const ArenaNavbar: React.FC<ArenaNavbarProps> = ({ 
   mode, 
   switchMode, 
-  isAttackModeAvailable
+  isAttackModeAvailable,
+  isAdmin,
+  user
 }) => {
-  const { user, logout, isAdmin } = useAuth();
+  const { logout } = useAuth();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const router = useRouter();

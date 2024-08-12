@@ -1,21 +1,24 @@
 'use client'
 
-import React, { useState } from 'react';
+import React from 'react';
 import ControlPanel from '../../components/ControlPanel/ControlPanel_Component';
+import { useMapContext } from '../../contexts/MapContext';
 
 export default function ArenaLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [mode, setMode] = useState('preview');
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
-
-  const switchMode = (newMode: string) => setMode(newMode);
-  const openCreateBoxModal = () => {/* Implement this function */};
-  const reloadBoxes = async () => {/* Implement this function */};
-  const clearAllBoxes = async () => {/* Implement this function */};
+  const { 
+    mode, 
+    switchMode, 
+    isAttackModeAvailable, 
+    isLoading, 
+    openCreateBoxModal,
+    reloadBoxes,
+    clearAllBoxes,
+    setLastUpdateTime
+  } = useMapContext();
 
   return (
     <div className="arena-layout">
@@ -25,9 +28,10 @@ export default function ArenaLayout({
         openCreateBoxModal={openCreateBoxModal}
         reloadBoxes={reloadBoxes}
         clearAllBoxes={clearAllBoxes}
-        isAttackModeAvailable={true}
+        isAttackModeAvailable={isAttackModeAvailable}
         isLoading={isLoading}
         setLastUpdateTime={setLastUpdateTime}
+        onBoxCreated={reloadBoxes}
       />
       {children}
     </div>

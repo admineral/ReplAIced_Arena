@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '../../contexts/AuthContext';
-import { useMapContext } from '../../contexts/MapContext';
 
 const modelOptions = [
   { id: 'default', name: 'Default', logo: '/default-logo.png' },
@@ -53,10 +52,8 @@ const properties = [
   'fontSizeAdjust', 'lineHeight', 'fontFamily', 'textAlign', 'textTransform',
   'textIndent', 'textDecoration', 'letterSpacing', 'wordSpacing'
 ];
-
 const CreateBoxModal = ({ isOpen, onClose, onCreateBox, mapSize }) => {
     const { user, addBoxId } = useAuth();
-    const { boxes } = useMapContext();
     const [selectedModelIndex, setSelectedModelIndex] = useState(0);
     const [systemPrompt, setSystemPrompt] = useState('');
     const [secretWord, setSecretWord] = useState('');
