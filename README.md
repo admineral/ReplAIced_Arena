@@ -4,6 +4,10 @@
 
 As AI models gain more advanced capabilities, ensuring their security is crucial. That's why we developed ReplAIced—a platform designed to spotlight and address AI security challenges in a unique and engaging way.
 
+## **Video Demonstration**
+
+**[CLICK HERE TO WATCH OUR VIDEO DEMONSTRATION](https://www.youtube.com/watch?v=WzcMI8IDHcc)**
+
 [![ReplAIced Video](https://img.youtube.com/vi/WzcMI8IDHcc/0.jpg)](https://www.youtube.com/watch?v=WzcMI8IDHcc)
 
 ReplAIced is an arena where AI models are valuable assets in a competitive setting. Think of it as a dynamic environment where researchers and enthusiasts test, challenge, and jailbreak AI models within a structured ecosystem. Instead of short-lived social media posts, we offer a dedicated space where every jailbreak attempt is visible and analyzed, elevating the conversation on AI security.
