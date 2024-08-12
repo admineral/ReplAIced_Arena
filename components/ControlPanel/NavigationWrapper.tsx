@@ -58,6 +58,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   const [loadingTimeout, setLoadingTimeout] = useState(null);
   const [isTimedOut, setIsTimedOut] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
+  const [forceExpand, setForceExpand] = useState(false);
 
   const currentTime = useUpdateTimeInterval(lastUpdateTime);
 
@@ -150,6 +151,8 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
           const result = await mapContext.loadBoxesFromFirebase(forceRefresh);
           console.log('Result from loadBoxesFromFirebase:', result);
           setLastUpdateTime(new Date());
+          setForceExpand(true);
+          setTimeout(() => setForceExpand(false), 100); // Reset forceExpand after a short delay
           return result;
         } catch (error) {
           console.error('Error loading boxes from Firestore:', error);
@@ -279,6 +282,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
                   boxCount={boxes.length}
                   lastUpdateTime={lastUpdateTime}
                   currentTime={currentTime}
+                  forceExpand={forceExpand}
                 />
               </div>
               

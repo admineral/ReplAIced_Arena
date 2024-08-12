@@ -37,6 +37,7 @@ const AISecurityMapContent = () => {
   const [loadingTimeout, setLoadingTimeout] = useState(null);
   const [isTimedOut, setIsTimedOut] = useState(false);
   const [isReplayControlsOpen, setIsReplayControlsOpen] = useState(false);
+  const [forceExpand, setForceExpand] = useState(false);
 
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
@@ -89,6 +90,8 @@ const AISecurityMapContent = () => {
     const currentPosition = mapContext.mapControls.position;
     dataManagement.handleReloadBoxes(loadBoxes, true)().then(() => {
       mapContext.setMapPosition(currentPosition);
+      setForceExpand(true);
+      setTimeout(() => setForceExpand(false), 100); // Reset forceExpand after a short delay
     });
   }, [loadBoxes, mapContext]);
 
@@ -146,6 +149,7 @@ const AISecurityMapContent = () => {
                 boxCount={boxes.length}
                 lastUpdateTime={lastUpdateTime}
                 currentTime={currentTime}
+                forceExpand={forceExpand}
               />
             </div>
             
