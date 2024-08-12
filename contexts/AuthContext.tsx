@@ -115,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getUserBoxes = async (userId: string): Promise<BoxId[]> => {
     console.log(`Attempting to get boxes for user: ${userId}`);
-    const boxesQuery = query(collection(db, 'boxOwners'), where('ownerId', '==', userId));
+    const boxesQuery = query(collection(db, 'boxCoordinates'), where('ownerId', '==', userId));
     console.log('Query created:', boxesQuery);
     const querySnapshot = await getDocs(boxesQuery);
     console.log(`Query snapshot received. Number of documents: ${querySnapshot.size}`);

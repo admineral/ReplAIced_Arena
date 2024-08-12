@@ -83,7 +83,13 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
 
   const openCreateBoxModal = eventHandlers.handleOpenCreateBoxModal(setIsCreateBoxModalOpen);
   const closeCreateBoxModal = eventHandlers.handleCloseCreateBoxModal(setIsCreateBoxModalOpen);
-  const createBox = eventHandlers.handleCreateBox(mapContext.addBox, MAP_SIZE, mapContext.setMapPosition, mapContext.setMapZoom, setIsCreateBoxModalOpen);
+  const createBox = eventHandlers.handleCreateBox(
+    (boxData) => mapContext.addBox(boxData, user?.uid),
+    MAP_SIZE,
+    mapContext.setMapPosition,
+    mapContext.setMapZoom,
+    setIsCreateBoxModalOpen
+  );
   const handleMiniMapPositionChange = eventHandlers.handleMiniMapPositionChange(mapContext.setMapPosition);
   const handleMiniMapZoomChange = eventHandlers.handleMiniMapZoomChange(mapContext.setMapZoom);
 

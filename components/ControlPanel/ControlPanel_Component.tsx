@@ -177,7 +177,6 @@ const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
         mode={mode}
         switchMode={switchMode}
         isAttackModeAvailable={isAttackModeAvailable}
-        onGoToMyBox={handleGoToMyBox}
       />
       {renderButtons}
       <DeleteConfirmationModal
