@@ -43,12 +43,12 @@ const AISecurityMapContent = () => {
   }, [isMobile, isTablet]);
 
   const mapCanvasHeight = useMemo(() => {
-    if (isMobile) return 'calc(100vh - 120px)'; // Adjust this value based on your navbar and other elements
+    if (isMobile) return 'calc(100vh - 160px)'; // Adjust this value to fit everything without scrolling
     return '100%';
   }, [isMobile]);
 
   const replayControlsStyle = useMemo(() => {
-    if (isMobile) return "w-full";
+    if (isMobile) return "w-[calc(100%-70px)]"; // Adjusted to leave space for minimap
     if (isTablet) return `w-[calc(100%-${miniMapSize + 32}px)]`;
     return isMapExpanded 
       ? `w-[calc(100%-${miniMapSize + 48}px)]` 
@@ -56,7 +56,6 @@ const AISecurityMapContent = () => {
   }, [isMobile, isTablet, isMapExpanded, miniMapSize]);
 
   const handleMiniMapPositionChange = useCallback((newPosition) => {
-    console.log('MiniMap position change:', newPosition);
     if (typeof handleMapPositionChange === 'function') {
       handleMapPositionChange(newPosition);
     } else {
@@ -65,20 +64,12 @@ const AISecurityMapContent = () => {
   }, [handleMapPositionChange]);
 
   const handleMiniMapZoomChange = useCallback((newZoom) => {
-    console.log('MiniMap zoom change:', newZoom);
     if (typeof handleMapZoomChange === 'function') {
       handleMapZoomChange(newZoom);
     } else {
       console.warn('handleMapZoomChange is not a function');
     }
   }, [handleMapZoomChange]);
-
-  const miniMapStyle = useMemo(() => ({
-    position: 'absolute',
-    bottom: isMobile ? '8px' : '16px',
-    right: isMobile ? '8px' : '16px',
-    left: isMobile ? '8px' : 'auto',
-  }), [isMobile]);
 
   return (
     <div className="flex flex-col h-full w-full bg-gray-900 relative">
@@ -98,7 +89,7 @@ const AISecurityMapContent = () => {
         )}
         
         <div className="absolute bottom-1 left-1 right-1 flex items-end justify-between">
-          <div className={`pointer-events-auto ${isMobile ? 'w-3/4' : replayControlsStyle}`}>
+          <div className={`pointer-events-auto ${replayControlsStyle}`}>
             <AttackReplayControls isMapExpanded={isMapExpanded} isMobile={isMobile} />
           </div>
           
