@@ -54,8 +54,6 @@ const MiniMap = ({
     const worldSize = mapSize * mapConfig.worldSize;
     const effectiveMiniMapSize = disableHoverEnlarge ? miniMapSize : (isHovered ? miniMapSize * 1.5 : miniMapSize);
 
-    const deadZoneSize = 30; // Size of the dead zone in the top-right corner
-
     const scalePosition = useCallback((value) => {
         return ((value + worldSize / 2) / worldSize) * (effectiveMiniMapSize - 2 * padding) + padding;
     }, [worldSize, effectiveMiniMapSize, padding]);
@@ -86,42 +84,14 @@ const MiniMap = ({
     const visibleAreaX = scalePosition(currentPosition.x) - visibleAreaWidth / 2;
     const visibleAreaY = scalePosition(-currentPosition.y) - visibleAreaHeight / 2;
 
-    const isInDeadZone = (e) => {
-        const rect = miniMapRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        return x > rect.width - deadZoneSize && y < deadZoneSize;
-    };
-
-    const handleMouseEnter = (e) => {
-        if (!disableHoverEnlarge && !isInDeadZone(e)) {
-            setIsHovered(true);
-        }
-    };
-
-    const handleMouseMove = (e) => {
-        if (isDragging) {
-            updatePosition(e);
-        } else if (isInDeadZone(e)) {
-            setIsHovered(false);
-        } else if (!disableHoverEnlarge) {
+    const handleMouseEnter = () => {
+        if (!disableHoverEnlarge) {
             setIsHovered(true);
         }
     };
 
     const handleMouseLeave = () => {
         setIsHovered(false);
-        setIsDragging(false);
-    };
-
-    const handleMouseDown = (e) => {
-        if (!isInDeadZone(e)) {
-            setIsDragging(true);
-            updatePosition(e);
-        }
-    };
-
-    const handleMouseUp = () => {
         setIsDragging(false);
     };
 
@@ -135,11 +105,24 @@ const MiniMap = ({
         onPositionChange({ x: newX, y: newY });
     }, [inverseScalePosition, onPositionChange, padding]);
 
-    const handleDoubleClick = (e) => {
-        if (!isInDeadZone(e)) {
+    const handleMouseDown = (e) => {
+        setIsDragging(true);
+        updatePosition(e);
+    };
+
+    const handleMouseMove = (e) => {
+        if (isDragging) {
             updatePosition(e);
-            onZoomChange(currentZoom * 1.5);
         }
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    const handleDoubleClick = (e) => {
+        updatePosition(e);
+        onZoomChange(currentZoom * 1.5);
     };
 
     const handleReset = (e) => {
