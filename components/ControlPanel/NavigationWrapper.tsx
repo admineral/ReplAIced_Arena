@@ -228,6 +228,8 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
             mapZoom={mapZoom}
             onMapPositionChange={handleMapPositionChange}
             onMapZoomChange={handleMapZoomChange}
+            boxCount={boxes.length}
+            lastUpdateTime={lastUpdateTime}
           />
         </div>
         <div className="flex-grow relative z-10 overflow-hidden">

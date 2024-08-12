@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useMapContext } from '../../contexts/MapContext';
 import { useUpdateTimeInterval } from '../../hooks/useUpdateTimeInterval';
 import MapCanvas from './MapCanvas';
-import BoxesInfoDisplay from './BoxesInfoDisplay';
 import AttackGuidedTour from './AttackGuidedTour';
 import AttackReplayControls from '../AttackReplay/AttackReplayControls';
 import MiniMap from '../MiniMap/MiniMap_Component';
@@ -24,7 +23,6 @@ const AISecurityMapContent = () => {
     selectedBox,
     targetBox,
     isAttacking,
-    lastUpdateTime,
     mapPosition,
     mapZoom,
     MAP_SIZE,
@@ -56,14 +54,6 @@ const AISecurityMapContent = () => {
     <div className="flex flex-col h-full w-full bg-gray-900 relative">
       <MapCanvas />
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-4 left-4 right-4 z-20 pointer-events-auto">
-          <BoxesInfoDisplay 
-            boxCount={boxes.length}
-            lastUpdateTime={lastUpdateTime}
-            currentTime={currentTime}
-          />
-        </div>
-        
         {mode === 'attack' && (
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
             <AttackGuidedTour

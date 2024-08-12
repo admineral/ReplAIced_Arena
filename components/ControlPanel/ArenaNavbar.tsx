@@ -133,7 +133,7 @@ const ArenaNavbar: React.FC<ArenaNavbarProps> = ({
     <nav className="bg-gray-800 bg-opacity-50">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         <div className="relative flex items-center justify-between h-16">
-          {/* Logo */}
+          {/* Logo and Title */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/">
               <Image
@@ -144,6 +144,8 @@ const ArenaNavbar: React.FC<ArenaNavbarProps> = ({
                 className="block h-8 w-auto"
               />
             </Link>
+            <span className="text-white font-bold ml-2 text-lg hidden sm:block">ReplAIced</span>
+            <span className="text-white font-bold ml-2 text-lg sm:hidden">ReplAIced</span>
           </div>
 
           {/* Desktop menu */}

@@ -21,7 +21,9 @@ export default function ArenaLayout({
     mapPosition,
     mapZoom,
     handleMapPositionChange,
-    handleMapZoomChange
+    handleMapZoomChange,
+    boxes,
+    lastUpdateTime
   } = useMapContext();
 
   return (
@@ -40,6 +42,8 @@ export default function ArenaLayout({
         mapZoom={mapZoom}
         onMapPositionChange={handleMapPositionChange}
         onMapZoomChange={handleMapZoomChange}
+        boxCount={boxes.length}
+        lastUpdateTime={lastUpdateTime}
       />
       {children}
     </div>

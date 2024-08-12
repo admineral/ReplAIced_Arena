@@ -3,14 +3,18 @@ import { useMapContext } from '../../contexts/MapContext';
 import { PlayIcon, PauseIcon, StopIcon, HomeIcon, ForwardIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/solid';
 import { useMediaQuery } from 'react-responsive';
 
-const TimeDisplay = React.memo(({ time }) => {
+const TimeDisplay = React.memo(({ time, isMobile }) => {
   const formatTime = (seconds) => {
     const date = new Date(0);
     date.setSeconds(seconds);
     return date.toISOString().substr(11, 8);
   };
 
-  return <span className="text-white font-mono text-lg">{formatTime(time)}</span>;
+  return (
+    <span className={`text-white font-mono ${isMobile ? 'text-lg' : 'text-xs'}`}>
+      {formatTime(time)}
+    </span>
+  );
 });
 
 const AttackMarker = ({ marker, maxTime, onMarkerClick }) => {
@@ -153,7 +157,7 @@ const AttackReplayControls = ({ isMapExpanded, isMobile }) => {
   }
 
   return (
-    <div className={`w-full bg-gray-800 bg-opacity-95 p-2 rounded-lg shadow-lg relative`}>
+    <div className={`w-full bg-gray-800 bg-opacity-95 p-4 pt-6 rounded-lg shadow-lg relative`}>
       {isMobile && (
         <button
           onClick={toggleExpand}
@@ -162,7 +166,12 @@ const AttackReplayControls = ({ isMapExpanded, isMobile }) => {
           <ChevronDownIcon className="w-6 h-6" />
         </button>
       )}
-      <div className="relative w-full h-3 bg-gray-700 rounded-full mb-2 overflow-visible">
+      <div className="relative w-full h-3 bg-gray-700 rounded-full mb-4 overflow-visible">
+        {!isMobile && (
+          <div className="absolute -top-6 right-0">
+            <TimeDisplay time={currentTime} isMobile={isMobile} />
+          </div>
+        )}
         <div 
           className="absolute top-0 left-0 h-full bg-blue-500 opacity-50 rounded-full transition-all duration-300 ease-in-out z-10" 
           style={{ width: `${(currentTime / sliderMax) * 100}%` }}
@@ -212,7 +221,7 @@ const AttackReplayControls = ({ isMapExpanded, isMobile }) => {
             <span className="ml-1 font-semibold text-xs">{playbackSpeed}x</span>
           </button>
         </div>
-        <TimeDisplay time={currentTime} />
+        {isMobile && <TimeDisplay time={currentTime} isMobile={isMobile} />}
       </div>
     </div>
   );
