@@ -223,7 +223,13 @@ export default function UserProfilePage() {
           <div className="border-t border-gray-700 p-6">
             <h2 className="text-xl font-bold mb-4">Articles</h2>
             <div>
-              <button onClick={() => setIsPopupOpen(true)} className="bg-blue-500 text-white px-4 py-2 rounded">Create Article</button>
+              <button 
+                onClick={() => setIsPopupOpen(true)} 
+                className="bg-blue-500 text-white px-4 py-2 rounded" 
+                style={{ display: 'none' }}
+              >
+                Create Article
+              </button>
               <div className="grid grid-cols-1 gap-4 mt-4">
                 {articles.map(article => (
                   <div

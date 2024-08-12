@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, onAuthStateChanged, signOut, signInWithPopup, GithubAuthProvider } from 'firebase/auth';
+import { User, onAuthStateChanged, signOut, signInWithPopup, GithubAuthProvider, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
 import { auth, db } from '../firebase-config';
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
@@ -181,7 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     getUserBoxes,
-    getUserArticles
+    getUserArticles,
   };
 
   return (

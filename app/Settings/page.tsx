@@ -23,9 +23,11 @@ const SettingsPage: React.FC = () => {
       setDeleteError(null);
 
       try {
-        // Re-authenticate the user
-        const provider = new GithubAuthProvider();
-        await reauthenticateWithPopup(user, provider);
+        // Check if the user is a GitHub user
+        if (user.providerData[0].providerId === 'github.com') {
+          const provider = new GithubAuthProvider();
+          await reauthenticateWithPopup(user, provider);
+        }
 
         // Delete user document from Firestore
         await deleteDoc(doc(db, 'users', user.uid));
