@@ -37,8 +37,8 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   const [isTimedOut, setIsTimedOut] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [forceExpand, setForceExpand] = useState(false);
-
   const isMobile = useMediaQuery({ maxWidth: 768 });
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
 
   const currentTime = useUpdateTimeInterval(lastUpdateTime);
 
@@ -69,6 +69,12 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
     loadBoxesFromFirebase,
     clearAllBoxes,
   } = mapContext;
+
+  useEffect(() => {
+    const expanded = mapPosition.x < 0 || mapPosition.y < 0 || 
+                     mapPosition.x > MAP_SIZE || mapPosition.y > MAP_SIZE;
+    setIsMapExpanded(expanded);
+  }, [mapPosition, MAP_SIZE]);
 
   const openCreateBoxModal = eventHandlers.handleOpenCreateBoxModal(setIsCreateBoxModalOpen);
   const closeCreateBoxModal = eventHandlers.handleCloseCreateBoxModal(setIsCreateBoxModalOpen);
@@ -226,23 +232,6 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
         </div>
         <div className="flex-grow relative z-10 overflow-hidden">
           <AISecurityMap />
-          <div className={`pointer-events-auto absolute ${isMobile ? 'top-4 right-4' : 'bottom-4 right-4'}`}>
-            <MiniMap 
-              boxes={boxes} 
-              mapSize={MAP_SIZE} 
-              currentPosition={mapPosition}
-              currentZoom={mapZoom}
-              onPositionChange={handleMiniMapPositionChange}
-              onZoomChange={handleMiniMapZoomChange}
-              miniMapSize={isMobile ? 100 : 150}
-              miniMapZoom={1.5}
-              boxSize={4}
-              padding={8}
-              backgroundColor="rgba(0, 0, 0, 0.7)"
-              borderColor="#4a5568"
-              viewRectColor="#ffd700"
-            />
-          </div>
         </div>
         
         <ModalManager
