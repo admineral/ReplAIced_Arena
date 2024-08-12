@@ -96,7 +96,10 @@ const MiniMap = ({
     };
 
     const updatePosition = useCallback((e) => {
-        if (!miniMapRef.current) return;
+        if (!miniMapRef.current || typeof onPositionChange !== 'function') {
+            console.warn('MiniMap: onPositionChange is not a function or miniMapRef is not available');
+            return;
+        }
         const rect = miniMapRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left - padding;
         const y = e.clientY - rect.top - padding;
@@ -106,6 +109,10 @@ const MiniMap = ({
     }, [inverseScalePosition, onPositionChange, padding]);
 
     const handleMouseDown = (e) => {
+        if (typeof onPositionChange !== 'function') {
+            console.warn('MiniMap: onPositionChange is not a function');
+            return;
+        }
         setIsDragging(true);
         updatePosition(e);
     };
@@ -128,8 +135,12 @@ const MiniMap = ({
     const handleReset = (e) => {
         e.stopPropagation();
         e.preventDefault();
-        onPositionChange({ x: 0, y: 0 });
-        onZoomChange(1);
+        if (typeof onPositionChange === 'function') {
+            onPositionChange({ x: 0, y: 0 });
+        }
+        if (typeof onZoomChange === 'function') {
+            onZoomChange(1);
+        }
     };
 
     return (
