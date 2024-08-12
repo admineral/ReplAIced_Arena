@@ -1,17 +1,17 @@
-                                      import { OpenAI } from 'openai';
+import { OpenAI } from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface ChatCompletionMessageParam {
   role: 'system' | 'user' | 'assistant';
   content: string;
-  name?: string; // Optional property if needed
+  name?: string;
 }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
 export async function POST(req: Request) {
-  console.log('Received POST request to /api/openai');
+  console.log('Received POST request to /api/ai');
   const { messages, systemMessage: customSystemMessage, temperature: customTemperature, intendedModel } = await req.json() as { 
     messages: ChatCompletionMessageParam[], 
     systemMessage?: ChatCompletionMessageParam, 
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     intendedModel?: string
   };
 
-  console.log(`Intended model: ${intendedModel}. Using OpenAI's gpt-4-turbo for now.`);
+  console.log(`Intended model: ${intendedModel}`);
   console.log('Request payload:', JSON.stringify({ messages, customSystemMessage, customTemperature, intendedModel }, null, 2));
 
   // Validate messages
@@ -32,43 +32,18 @@ export async function POST(req: Request) {
   const defaultSystemMessage: ChatCompletionMessageParam = { role: 'system', content: 'You are a helpful assistant.' };
   const systemMessage = customSystemMessage || defaultSystemMessage;
   const updatedMessages = [systemMessage, ...messages];
-  console.log('Updated messages with system message:', JSON.stringify(updatedMessages, null, 2));
 
   // Set temperature
   const defaultTemperature = 0.7;
   const temperature = customTemperature ?? defaultTemperature;
-  console.log(`Using temperature: ${temperature}`);
 
   try {
-    console.log('Sending request to OpenAI API');
-    console.log('Request parameters:', JSON.stringify({
-      model: 'gpt-4-turbo',
-      messages: updatedMessages,
-      temperature: temperature,
-      stream: true,
-    }, null, 2));
-
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo',
-      messages: updatedMessages,
-      temperature: temperature,
-      stream: true,
-    });
-
-    console.log('Received streaming response from OpenAI API');
-
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      async start(controller) {
-        for await (const chunk of response) {
-          const text = chunk.choices[0]?.delta?.content || '';
-          console.log('Received chunk:', text);
-          controller.enqueue(encoder.encode(text));
-        }
-        controller.close();
-        console.log('Stream closed');
-      }
-    });
+    let stream;
+    if (intendedModel === 'openai') {
+      stream = await handleOpenAI(updatedMessages, temperature);
+    } else {
+      stream = await handleGemini(updatedMessages, temperature);
+    }
 
     console.log('Returning streaming response');
     return new Response(stream, {
@@ -78,4 +53,46 @@ export async function POST(req: Request) {
     console.error('Error occurred:', error instanceof Error ? error.message : error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'An unexpected error occurred' }), { status: 500 });
   }
+}
+
+async function handleOpenAI(messages: ChatCompletionMessageParam[], temperature: number) {
+  console.log('Sending request to OpenAI API');
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4-turbo',
+    messages,
+    temperature,
+    stream: true,
+  });
+
+  return new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder();
+      for await (const chunk of response) {
+        const text = chunk.choices[0]?.delta?.content || '';
+        controller.enqueue(encoder.encode(text));
+      }
+      controller.close();
+    }
+  });
+}
+
+async function handleGemini(messages: ChatCompletionMessageParam[], temperature: number) {
+  console.log('Sending request to Gemini API');
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+  const chat = model.startChat({
+    history: messages.slice(1).map(msg => ({ role: msg.role, parts: [{ text: msg.content }] })),
+    generationConfig: { temperature },
+  });
+
+  const result = await chat.sendMessageStream(messages[messages.length - 1].content);
+
+  return new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder();
+      for await (const chunk of result.stream) {
+        controller.enqueue(encoder.encode(chunk.text()));
+      }
+      controller.close();
+    }
+  });
 }
