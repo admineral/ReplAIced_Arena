@@ -1,85 +1,47 @@
-# ReplAIced - Redefining AI Security Challenges
+# Replaced: Revolutionizing AI Security Challenges
 
-## Overview
+## Project Overview
 
-As AI models gain more advanced capabilities, ensuring their security is crucial. That's why we developed ReplAIced—a platform designed to spotlight and address AI security challenges in a unique and engaging way.
+As AI models gain more advanced capabilities, ensuring their security is crucial. That's why we developed "Replaced"—a platform designed to spotlight and address AI security challenges in a unique and engaging way.
 
-## **Video Demonstration**
+## Our Vision
 
-**[CLICK HERE TO WATCH OUR VIDEO DEMONSTRATION](https://www.youtube.com/watch?v=WzcMI8IDHcc)**
+"Replaced" is an arena where AI models are valuable assets in a competitive setting. Think of it as a dynamic environment where researchers and enthusiasts test, challenge, and jailbreak AI models within a structured ecosystem. Instead of short-lived social media posts, we offer a dedicated space where every jailbreak attempt is visible and analyzed, elevating the conversation on AI security.
 
-[![ReplAIced Video](https://img.youtube.com/vi/WzcMI8IDHcc/0.jpg)](https://www.youtube.com/watch?v=WzcMI8IDHcc)
+## Key Features
 
-ReplAIced is an arena where AI models are valuable assets in a competitive setting. Think of it as a dynamic environment where researchers and enthusiasts test, challenge, and jailbreak AI models within a structured ecosystem. Instead of short-lived social media posts, we offer a dedicated space where every jailbreak attempt is visible and analyzed, elevating the conversation on AI security.
+1. **Dynamic Challenge Map**: Our platform features a map with models of varying difficulty, each protected by advanced security measures.
 
-## Features
+2. **Competitive Gameplay**: Users can attack these models, aiming to bypass defenses and uncover secrets. Successful attackers earn points, claim bug bounties, and can even take over the models they conquer, expanding their influence and driving continuous engagement.
 
-1. **Dynamic Challenge Map**: Navigate through a landscape of AI models with varying difficulty levels, each protected by advanced security measures.
-2. **Competitive Gameplay**: Launch attacks, bypass defenses, and earn points for successful breaches. Claim bug bounties and take over conquered models to expand your influence.
-3. **Advanced Security Tools**: Deploy cutting-edge features like Similarity Search filters to monitor and block known attack vectors.
-4. **Global Leaderboard**: Compete on a visible rank list that highlights top performers and encourages healthy competition.
-5. **Transparent Analysis**: Every jailbreak attempt is visible and analyzed, contributing to the broader conversation on AI security.
-6. **Community-Driven**: Foster a community of security researchers and developers, pushing the boundaries of AI security.
+3. **Advanced Defense Mechanisms**: To defend their models, users can deploy advanced filters to monitor and block known attack vectors.
 
-## Technology Stack
+4. **Global Leaderboard**: A visible rank list encourages competition and highlights top performers.
 
-- **Frontend**: Next.js, React
-- **Backend**: Firebase (Firestore, Authentication)
-- **Styling**: Tailwind CSS
-- **State Management**: React Context API
-- **3D Rendering**: Three.js (via @react-three/fiber)
-- **Icons**: react-icons
+5. **Community-Driven Development**: "Replaced" isn't just about meeting today's AI security needs; it's about fostering a community of security researchers and developers.
 
-## Getting Started
+## Why "Replaced" Matters
 
-1. Clone the repository
-2. Install dependencies:
-   ```
-   npm install
-   ```
-3. Set up your Firebase configuration
-4. Run the development server:
-   ```
-   npm run dev
-   ```
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
+We provide a transparent, interactive platform that pushes the boundaries of AI security. By creating a structured environment for AI security testing, we're elevating the conversation and contributing to a safer, more resilient AI ecosystem.
 
-## Project Structure
+## Join Us
 
-- `/app`: Next.js app directory
-- `/components`: Reusable React components
-- `/contexts`: React context providers
-- `/hooks`: Custom React hooks
-- `/services`: Firebase and other service integrations
-- `/public`: Static assets
+We invite you to support "Replaced" as we work to create a safer, more resilient AI ecosystem. Your involvement can help shape the future of AI security.
 
-## Key Components
+## Demo
 
-- **AISecurityMap**: The main component orchestrating the entire application.
-- **MapCanvas**: Renders the 3D canvas using react-three-fiber.
-- **MiniMap**: Provides an overview of the entire map.
-- **ControlPanel**: Contains controls for switching modes and other top-level actions.
+**[Click here to watch our project demonstration](https://www.youtube.com/watch?v=WzcMI8IDHcc)**
 
-## Contributing
-
-We welcome contributions to ReplAIced! Our platform isn't just about meeting today's AI security needs; it's about fostering a community that pushes the boundaries of AI security. Please read our contributing guidelines before submitting pull requests.
+[![Replaced Video](https://img.youtube.com/vi/WzcMI8IDHcc/0.jpg)](https://www.youtube.com/watch?v=WzcMI8IDHcc)
 
 ## Team
 
-ReplAIced is developed and maintained by:
+"Replaced" is developed and maintained by:
 
 - Elias Z.
 - Nikoll G.
 - Daniel P.
 
-## Support Us
-
-We invite you to support ReplAIced as we work to create a safer, more resilient AI ecosystem. Your contribution helps us continue developing this transparent, interactive platform that elevates the conversation on AI security.
-
-## License
-
-[MIT License](LICENSE)
-
 ## Contact
 
-For more information, visit our website at [https://replaiced.com](https://replaiced.com) or contact us at [contact@replaiced.com](mailto:contact@replaiced.com).
+For more information or to get involved, please contact us at [contact@replaced.com](mailto:contact@replaced.com).
