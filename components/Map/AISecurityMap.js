@@ -67,11 +67,11 @@ const AISecurityMapContent = () => {
   }, [handleMapZoomChange]);
 
   const mapCanvasStyle = useMemo(() => ({
-    height: isMobile ? 'calc(100vh - 200px)' : '100%', // Increased space for mobile
+    height: isMobile ? 'calc(100vh - 400px)' : '100%', // Doubled space for mobile
   }), [isMobile]);
 
   const containerStyle = useMemo(() => ({
-    paddingBottom: isMobile ? '80px' : '0', // Add padding at the bottom for mobile
+    paddingBottom: isMobile ? '160px' : '0', // Doubled padding at the bottom for mobile
   }), [isMobile]);
 
   return (
@@ -91,7 +91,7 @@ const AISecurityMapContent = () => {
           </div>
         )}
         
-        <div className={`absolute ${isMobile ? 'bottom-20' : 'bottom-2'} left-1 right-1 flex items-end justify-between`}>
+        <div className={`absolute ${isMobile ? 'bottom-40' : 'bottom-2'} left-1 right-1 flex items-end justify-between`}>
           <div className={`pointer-events-auto ${replayControlsStyle}`}>
             <AttackReplayControls isMapExpanded={isMapExpanded} isMobile={isMobile} />
           </div>
