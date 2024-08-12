@@ -36,6 +36,17 @@ const AISecurityMapContent = () => {
     setIsMapExpanded(expanded);
   }, [mapPosition, MAP_SIZE]);
 
+  useEffect(() => {
+    if (isMobile) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobile]);
+
   const miniMapSize = useMemo(() => {
     if (isMobile) return 80;
     if (isTablet) return 100;
@@ -66,17 +77,9 @@ const AISecurityMapContent = () => {
     }
   }, [handleMapZoomChange]);
 
-  const mapCanvasStyle = useMemo(() => ({
-    height: isMobile ? 'calc(100vh - 400px)' : '100%', // Doubled space for mobile
-  }), [isMobile]);
-
-  const containerStyle = useMemo(() => ({
-    paddingBottom: isMobile ? '160px' : '0', // Doubled padding at the bottom for mobile
-  }), [isMobile]);
-
   return (
-    <div className="flex flex-col h-full w-full bg-gray-900 relative" style={containerStyle}>
-      <div className="flex-grow relative" style={mapCanvasStyle}>
+    <div className={`flex flex-col h-full w-full bg-gray-900 relative ${isMobile ? 'overflow-hidden' : ''}`}>
+      <div className="flex-grow relative">
         <MapCanvas />
       </div>
       <div className="absolute inset-0 pointer-events-none">
@@ -91,7 +94,7 @@ const AISecurityMapContent = () => {
           </div>
         )}
         
-        <div className={`absolute ${isMobile ? 'bottom-40' : 'bottom-2'} left-1 right-1 flex items-end justify-between`}>
+        <div className="absolute bottom-2 left-1 right-1 flex items-end justify-between">
           <div className={`pointer-events-auto ${replayControlsStyle}`}>
             <AttackReplayControls isMapExpanded={isMapExpanded} isMobile={isMobile} />
           </div>
