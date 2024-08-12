@@ -1,35 +1,57 @@
 'use client'
 
-import React, { useState } from 'react';
+import React from 'react';
 import ControlPanel from '../../components/ControlPanel/ControlPanel_Component';
+import { useMapContext } from '../../contexts/MapContext';
+import { useMediaQuery } from 'react-responsive';
 
 export default function ArenaLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [mode, setMode] = useState('preview');
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
-
-  const switchMode = (newMode: string) => setMode(newMode);
-  const openCreateBoxModal = () => {/* Implement this function */};
-  const reloadBoxes = async () => {/* Implement this function */};
-  const clearAllBoxes = async () => {/* Implement this function */};
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const { 
+    mode, 
+    switchMode, 
+    isAttackModeAvailable, 
+    isLoading, 
+    openCreateBoxModal,
+    reloadBoxes,
+    clearAllBoxes,
+    setLastUpdateTime,
+    mapPosition,
+    mapZoom,
+    handleMapPositionChange,
+    handleMapZoomChange,
+    boxes,
+    lastUpdateTime
+  } = useMapContext();
 
   return (
-    <div className="arena-layout">
-      <ControlPanel 
-        mode={mode}
-        switchMode={switchMode}
-        openCreateBoxModal={openCreateBoxModal}
-        reloadBoxes={reloadBoxes}
-        clearAllBoxes={clearAllBoxes}
-        isAttackModeAvailable={true}
-        isLoading={isLoading}
-        setLastUpdateTime={setLastUpdateTime}
-      />
-      {children}
+    <div className="arena-layout flex flex-col h-screen overflow-hidden">
+      <div className="flex-shrink-0">
+        <ControlPanel 
+          mode={mode}
+          switchMode={switchMode}
+          openCreateBoxModal={openCreateBoxModal}
+          reloadBoxes={reloadBoxes}
+          clearAllBoxes={clearAllBoxes}
+          isAttackModeAvailable={isAttackModeAvailable}
+          isLoading={isLoading}
+          setLastUpdateTime={setLastUpdateTime}
+          onBoxCreated={reloadBoxes}
+          mapPosition={mapPosition}
+          mapZoom={mapZoom}
+          onMapPositionChange={handleMapPositionChange}
+          onMapZoomChange={handleMapZoomChange}
+          boxCount={boxes.length}
+          lastUpdateTime={lastUpdateTime}
+        />
+      </div>
+      <div className={`flex-grow ${isMobile ? 'h-[calc(100vh-64px)]' : ''} overflow-hidden`}>
+        {children}
+      </div>
     </div>
   );
 }

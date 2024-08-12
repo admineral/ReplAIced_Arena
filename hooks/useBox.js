@@ -29,7 +29,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { constrainPosition, generateRandomPosition, isPositionValid } from '../utils/mapUtils';
 import mapConfig from '../config/mapConfig';
 import { db } from '../firebase-config';
-import { collection, addDoc, getDocs, setDoc, doc, updateDoc, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, setDoc, doc, updateDoc, deleteDoc, writeBatch, query } from 'firebase/firestore';
 
 const useBoxManager = (MAP_SIZE) => {
   const [boxes, setBoxes] = useState([]);
@@ -77,18 +77,9 @@ const useBoxManager = (MAP_SIZE) => {
       await setDoc(doc(db, 'boxCoordinates', firestoreId), {
         x: newBox.x,
         y: newBox.y,
-        customId: customId
+        customId: customId,
+        ownerId: userId // Add this line to include the owner ID
       });
-      
-      // Create box-owner index
-      if (userId) {
-        await setDoc(doc(db, 'boxOwners', firestoreId), {
-          ownerId: userId,
-          customId: customId,
-          x: newBox.x,
-          y: newBox.y
-        });
-      }
       
       // Update local state
       setBoxes(prevBoxes => {

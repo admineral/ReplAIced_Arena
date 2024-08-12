@@ -5,22 +5,25 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
-import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaHome, FaUserCog } from 'react-icons/fa';
+import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaUserCog } from 'react-icons/fa';
+import { User } from 'firebase/auth';
 
 interface ArenaNavbarProps {
   mode: string;
   switchMode: (mode: string) => void;
   isAttackModeAvailable: boolean;
-  onGoToMyBox: (x: number, y: number) => void;
+  isAdmin: boolean;
+  user: User | null;
 }
 
 const ArenaNavbar: React.FC<ArenaNavbarProps> = ({ 
   mode, 
   switchMode, 
   isAttackModeAvailable,
-  onGoToMyBox
+  isAdmin,
+  user
 }) => {
-  const { user, logout, getUserBoxes, isAdmin } = useAuth();
+  const { logout } = useAuth();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const router = useRouter();
@@ -75,44 +78,62 @@ const ArenaNavbar: React.FC<ArenaNavbarProps> = ({
     router.push('/Login');
   };
 
-  const handleGoToMyBox = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (user) {
-      try {
-        const userBoxes = await getUserBoxes(user.uid);
-        if (userBoxes.length > 0) {
-          const boxData = userBoxes[0];
-          onGoToMyBox(boxData.x, boxData.y);
-        } else {
-          console.error('User has no boxes.');
-        }
-      } catch (error) {
-        console.error('Error getting user boxes:', error);
-      }
-    } else {
-      console.warn('No user logged in');
+  const renderNavButtons = () => {
+    if (!user) {
+      return null; // No buttons for non-logged-in users
     }
-    setShowMobileMenu(false);
+
+    if (isAdmin) {
+      // For admin users, show all buttons
+      return (
+        <>
+          <button
+            onClick={() => switchMode('create')}
+            className={`px-3 py-2 rounded-md text-sm font-medium ${
+              mode === 'create' ? 'bg-green-500 text-white' : 'text-gray-300 hover:bg-green-400 hover:text-white'
+            }`}
+          >
+            Create
+          </button>
+          <button
+            onClick={() => switchMode('preview')}
+            className={`px-3 py-2 rounded-md text-sm font-medium ${
+              mode === 'preview' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-blue-400 hover:text-white'
+            }`}
+          >
+            Preview
+          </button>
+          <button
+            onClick={() => switchMode('attack')}
+            className={`px-3 py-2 rounded-md text-sm font-medium ${
+              mode === 'attack' ? 'bg-red-500 text-white' : 'text-gray-300 hover:bg-red-400 hover:text-white'
+            } ${!isAttackModeAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={!isAttackModeAvailable}
+          >
+            Attack
+          </button>
+        </>
+      );
+    } else {
+      // For non-admin logged-in users, show only the Arena button
+      return (
+        <button
+          onClick={() => switchMode('preview')}
+          className={`px-3 py-2 rounded-md text-sm font-medium ${
+            mode === 'preview' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-blue-400 hover:text-white'
+          }`}
+        >
+          Arena
+        </button>
+      );
+    }
   };
-
-  const renderCreateButton = (onClick: () => void, className: string) => (
-    <button onClick={onClick} className={className}>
-      Create
-    </button>
-  );
-
-  const renderGoToBoxButton = (onClick: (e: React.MouseEvent) => void, className: string) => (
-    <button onClick={onClick} className={className}>
-      <FaHome className="mr-2" />
-     
-    </button>
-  );
 
   return (
     <nav className="bg-gray-800 bg-opacity-50">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         <div className="relative flex items-center justify-between h-16">
-          {/* Logo */}
+          {/* Logo and Title */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/">
               <Image
@@ -123,101 +144,80 @@ const ArenaNavbar: React.FC<ArenaNavbarProps> = ({
                 className="block h-8 w-auto"
               />
             </Link>
+            <span className="text-white font-bold ml-2 text-lg hidden sm:block">ReplAIced</span>
+            <span className="text-white font-bold ml-2 text-lg sm:hidden">ReplAIced</span>
           </div>
 
           {/* Desktop menu */}
           <div className="hidden sm:block sm:ml-6">
             <div className="flex space-x-4">
-              {user && (
-                <React.Fragment>
-                  {renderCreateButton(
-                    () => switchMode('create'),
-                    `px-3 py-2 rounded-md text-sm font-medium ${
-                      mode === 'create' ? 'bg-green-500 text-white' : 'text-gray-300 hover:bg-green-400 hover:text-white'
-                    }`
-                  )}
-                  {renderGoToBoxButton(
-                    handleGoToMyBox,
-                    'px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-blue-600 hover:text-white'
-                  )}
-                </React.Fragment>
-              )}
-              <button
-                onClick={() => switchMode('preview')}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  mode === 'preview' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-blue-400 hover:text-white'
-                }`}
-              >
-                Preview
-              </button>
-              {user && (
-                <button
-                  onClick={() => switchMode('attack')}
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    mode === 'attack' ? 'bg-red-500 text-white' : 'text-gray-300 hover:bg-red-400 hover:text-white'
-                  } ${!isAttackModeAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={!isAttackModeAvailable}
-                >
-                  Attack
-                </button>
-              )}
+              {renderNavButtons()}
             </div>
           </div>
 
-          {/* User menu */}
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-            {user ? (
-              <div className="ml-3 relative" ref={dropdownRef}>
-                <button
-                  className="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
-                  onMouseEnter={handleProfileMouseEnter}
-                  onMouseLeave={handleProfileMouseLeave}
-                >
-                  <Image
-                    src={user.photoURL || '/default-avatar.png'}
-                    alt="Profile"
-                    width={32}
-                    height={32}
-                    className="rounded-full border-2 border-blue-500 shadow-lg"
-                  />
-                </button>
-                {showProfileDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 border border-gray-700">
+          {/* Profile dropdown */}
+          <div className="hidden sm:ml-6 sm:block">
+            <div className="flex items-center">
+              {user ? (
+                <div className="ml-3 relative">
+                  <div>
                     <button
-                      onClick={handleGoToProfile}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
+                      className="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+                      onMouseEnter={handleProfileMouseEnter}
+                      onMouseLeave={handleProfileMouseLeave}
                     >
-                      <FaUser className="mr-2" />
-                      <span>Profile</span>
-                    </button>
-                    {isAdmin && (
-                      <Link 
-                        href="/AdminDashboard"
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
-                        onClick={() => setShowProfileDropdown(false)}
-                      >
-                        <FaUserCog className="mr-2" />
-                        <span>Admin Dashboard</span>
-                      </Link>
-                    )}
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center"
-                    >
-                      <FaSignOutAlt className="mr-2" />
-                      <span>Logout</span>
+                      <span className="sr-only">Open user menu</span>
+                      <Image
+                        className="h-8 w-8 rounded-full"
+                        src={user.photoURL || "/default-avatar.png"}
+                        alt=""
+                        width={32}
+                        height={32}
+                      />
                     </button>
                   </div>
-                )}
-              </div>
-            ) : (
-              <button
-                onClick={handleLogin}
-                className="bg-blue-600 px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
-              >
-                Login
-              </button>
-            )}
+                  {showProfileDropdown && (
+                    <div
+                      className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+                      role="menu"
+                      aria-orientation="vertical"
+                      aria-labelledby="user-menu"
+                      ref={dropdownRef}
+                      onMouseEnter={handleProfileMouseEnter}
+                      onMouseLeave={handleProfileMouseLeave}
+                    >
+                      <button
+                        onClick={handleGoToProfile}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Your Profile
+                      </button>
+                      {isAdmin && (
+                        <Link 
+                          href="/AdminDashboard"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Admin Dashboard
+                        </Link>
+                      )}
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={handleLogin}
+                  className="bg-blue-600 px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+                >
+                  Login
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Mobile menu button */}
@@ -241,48 +241,7 @@ const ArenaNavbar: React.FC<ArenaNavbarProps> = ({
             </button>
           </div>
           <div className="px-2 pt-2 pb-3 space-y-1 flex-grow">
-            {user && (
-              <React.Fragment>
-                {renderCreateButton(
-                  () => {
-                    switchMode('create');
-                    setShowMobileMenu(false);
-                  },
-                  `block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
-                    mode === 'create' ? 'bg-green-500 text-white' : 'text-gray-300 hover:bg-green-400 hover:text-white'
-                  }`
-                )}
-                {renderGoToBoxButton(
-                  handleGoToMyBox,
-                  'flex items-center w-full px-3 py-2 text-base font-medium text-white hover:bg-blue-600 transition-colors duration-300'
-                )}
-              </React.Fragment>
-            )}
-            <button
-              onClick={() => {
-                switchMode('preview');
-                setShowMobileMenu(false);
-              }}
-              className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
-                mode === 'preview' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-blue-400 hover:text-white'
-              }`}
-            >
-              Preview
-            </button>
-            {user && (
-              <button
-                onClick={() => {
-                  switchMode('attack');
-                  setShowMobileMenu(false);
-                }}
-                className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
-                  mode === 'attack' ? 'bg-red-500 text-white' : 'text-gray-300 hover:bg-red-400 hover:text-white'
-                } ${!isAttackModeAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={!isAttackModeAvailable}
-              >
-                Attack
-              </button>
-            )}
+            {renderNavButtons()}
           </div>
           {user ? (
             <>

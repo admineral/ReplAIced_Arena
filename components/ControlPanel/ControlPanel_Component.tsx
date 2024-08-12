@@ -7,9 +7,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useMapContext } from '../../contexts/MapContext';
 import { db } from '../../firebase-config';
 import { deleteDoc, doc } from 'firebase/firestore';
+import { FaInfoCircle } from 'react-icons/fa';
+import { formatLastUpdateTime } from '../Map/utils';
 
 // Custom hook for checking user box
-const useUserBox = (user:any, getUserBoxes:any) => {
+const useUserBox = (user: any, getUserBoxes: any, dependencies: any[] = []) => {
   const [userHasBox, setUserHasBox] = useState(false);
 
   useEffect(() => {
@@ -28,7 +30,7 @@ const useUserBox = (user:any, getUserBoxes:any) => {
     };
 
     checkUserBox();
-  }, [user, getUserBoxes]);
+  }, [user, getUserBoxes, ...dependencies]);
 
   return userHasBox;
 };
@@ -42,6 +44,13 @@ interface ControlPanelProps {
   isLoading: boolean;
   setLastUpdateTime: (date: Date) => void;
   openCreateBoxModal: () => void;
+  onBoxCreated: () => void;
+  mapPosition: { x: number; y: number };
+  mapZoom: number;
+  onMapPositionChange: (position: { x: number; y: number }) => void;
+  onMapZoomChange: (zoom: number) => void;
+  boxCount: number;
+  lastUpdateTime: Date;
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = React.memo(({ 
@@ -52,13 +61,21 @@ const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
   isAttackModeAvailable, 
   isLoading,
   setLastUpdateTime,
-  openCreateBoxModal
+  openCreateBoxModal,
+  onBoxCreated,
+  mapPosition,
+  mapZoom,
+  onMapPositionChange,
+  onMapZoomChange,
+  boxCount,
+  lastUpdateTime
 }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isInfoExpanded, setIsInfoExpanded] = useState(false);
   const { isAdmin, user, getUserBoxes } = useAuth();
-  const { setMapPosition, setMapZoom, forceReloadBoxes } = useMapContext();
+  const { forceReloadBoxes } = useMapContext();
 
-  const userHasBox = useUserBox(user, getUserBoxes);
+  const userHasBox = useUserBox(user, getUserBoxes, [user]);
 
   useEffect(() => {
     if (user && mode === 'create') {
@@ -105,22 +122,32 @@ const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
         const userBoxes = await getUserBoxes(user.uid);
         if (userBoxes.length > 0) {
           const boxData = userBoxes[0];
-          setMapPosition({ x: boxData.x, y: boxData.y });
-          setMapZoom(2);
+          onMapPositionChange({ x: boxData.x, y: boxData.y });
+          onMapZoomChange(2);
         }
       } catch (error) {
         console.error('Error getting user boxes:', error);
       }
     }
-  }, [user, getUserBoxes, setMapPosition, setMapZoom]);
+  }, [user, getUserBoxes, onMapPositionChange, onMapZoomChange]);
 
   const renderButtons = useMemo(() => (
     <div className="flex justify-center space-x-4 mt-4">
+      <button
+        onClick={() => setIsInfoExpanded(!isInfoExpanded)}
+        className="bg-gray-600 text-white rounded-full p-2 shadow-lg hover:bg-gray-700 transition-colors duration-300"
+        title="Box Info"
+      >
+        <FaInfoCircle className="h-5 w-5" />
+      </button>
       {user && !userHasBox && (
         <button
           className="bg-green-500 text-white rounded-full p-2 shadow-lg hover:bg-green-600 transition-colors duration-300"
           title="Create Box"
-          onClick={openCreateBoxModal}
+          onClick={() => {
+            openCreateBoxModal();
+            onBoxCreated();
+          }}
         >
           <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -169,23 +196,38 @@ const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
         </button>
       )}
     </div>
-  ), [user, userHasBox, isAdmin, isLoading, handleReload, handleGoToMyBox, handleClearAllBoxes, openCreateBoxModal]);
+  ), [user, userHasBox, isAdmin, isLoading, handleReload, handleGoToMyBox, handleClearAllBoxes, openCreateBoxModal, onBoxCreated, isInfoExpanded]);
+
+  const renderBoxInfo = useMemo(() => {
+    if (!isInfoExpanded) return null;
+    return (
+      <div className="absolute top-full left-0 mt-2 bg-gray-800 bg-opacity-70 text-white p-2 rounded-lg text-sm">
+        <div className="font-semibold">Boxes: {boxCount}</div>
+        <div className="text-gray-300 flex justify-between mt-2">
+          <span>Updated:</span>
+          <span className="ml-2">{formatLastUpdateTime(lastUpdateTime, new Date())}</span>
+        </div>
+      </div>
+    );
+  }, [isInfoExpanded, boxCount, lastUpdateTime]);
 
   return (
-    <>
+    <div className="relative">
       <ArenaNavbar 
         mode={mode}
         switchMode={switchMode}
         isAttackModeAvailable={isAttackModeAvailable}
-        onGoToMyBox={handleGoToMyBox}
+        isAdmin={isAdmin}
+        user={user}
       />
       {renderButtons}
+      {renderBoxInfo}
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleConfirmDelete}
       />
-    </>
+    </div>
   );
 });
 

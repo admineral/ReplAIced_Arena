@@ -1,27 +1,3 @@
-/**
- * NavigationWrapper Component
- * 
- * Context: Core layout and navigation management component for the entire application.
- * Global Purpose: Provides route-based rendering and context management for all pages.
- * Local Purpose: Manages navigation, authentication, and renders appropriate components based on the current route.
- * Key Features:
- * - Implements route-specific rendering for different pages (Landing, Arena, etc.)
- * - Manages MapContext and provides it to child components
- * - Handles user authentication state
- * - Manages map-related state and operations (loading boxes, switching modes, etc.)
- * - Implements scrolling behavior for the landing page
- * - Renders and manages various UI components:
- *   - ControlPanel for the Arena
- *   - MapCanvas and related overlays
- *   - MiniMap for navigation
- *   - Modal management for various interactions
- *   - Loading and error overlays
- * - Provides event handlers for map interactions
- * - Manages data loading and error states
- * - Implements responsive layout for different screen sizes
- * - Integrates with Next.js routing for client-side navigation
- */
-
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -43,6 +19,9 @@ import AttackReplayControls from '../AttackReplay/AttackReplayControls';
 import { useUpdateTimeInterval } from '../../hooks/useUpdateTimeInterval';
 import * as eventHandlers from '../Map/eventHandlers';
 import * as dataManagement from '../Map/dataManagement';
+import { BoxData } from '../../types/BoxTypes';
+import { useMediaQuery } from 'react-responsive';
+import AISecurityMap from '../Map/AISecurityMap';
 
 function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -54,9 +33,12 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
   const [isCreateBoxModalOpen, setIsCreateBoxModalOpen] = useState(false);
-  const [loadingTimeout, setLoadingTimeout] = useState(null);
+  const [loadingTimeout, setLoadingTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isTimedOut, setIsTimedOut] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
+  const [forceExpand, setForceExpand] = useState(false);
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
 
   const currentTime = useUpdateTimeInterval(lastUpdateTime);
 
@@ -76,24 +58,43 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
     updateBox,
     handleConfirmAttack,
     MAP_SIZE,
-    mapControls,
+    mapPosition,
+    mapZoom,
+    handleMapPositionChange,
+    handleMapZoomChange,
     switchMode,
     attackReplay,
+    addBox,
+    setBoxes,
+    loadBoxesFromFirebase,
+    clearAllBoxes,
   } = mapContext;
+
+  useEffect(() => {
+    const expanded = mapPosition.x < 0 || mapPosition.y < 0 || 
+                     mapPosition.x > MAP_SIZE || mapPosition.y > MAP_SIZE;
+    setIsMapExpanded(expanded);
+  }, [mapPosition, MAP_SIZE]);
 
   const openCreateBoxModal = eventHandlers.handleOpenCreateBoxModal(setIsCreateBoxModalOpen);
   const closeCreateBoxModal = eventHandlers.handleCloseCreateBoxModal(setIsCreateBoxModalOpen);
-  const createBox = eventHandlers.handleCreateBox(mapContext.addBox, MAP_SIZE, mapContext.setMapPosition, mapContext.setMapZoom, setIsCreateBoxModalOpen);
-  const handleMiniMapPositionChange = eventHandlers.handleMiniMapPositionChange(mapContext.setMapPosition);
-  const handleMiniMapZoomChange = eventHandlers.handleMiniMapZoomChange(mapContext.setMapZoom);
+  const createBox = eventHandlers.handleCreateBox(
+    (boxData: BoxData) => addBox(boxData, user?.uid),
+    MAP_SIZE,
+    handleMapPositionChange,
+    handleMapZoomChange,
+    setIsCreateBoxModalOpen
+  );
+  const handleMiniMapPositionChange = eventHandlers.handleMiniMapPositionChange(handleMapPositionChange);
+  const handleMiniMapZoomChange = eventHandlers.handleMiniMapZoomChange(handleMapZoomChange);
 
   const loadBoxes = useCallback(() => {
-    const loadBoxesFromFirebase = async () => {
+    const loadBoxesFromFirebaseWrapper = async () => {
       if (isArenaPage) {
         try {
-          const result = await mapContext.loadBoxesFromFirebase();
+          const result = await loadBoxesFromFirebase();
           console.log('Result from loadBoxesFromFirebase:', result);
-          return result; // This should already be an array of boxes
+          return result;
         } catch (error) {
           console.error('Error loading boxes from Firestore:', error);
           throw error;
@@ -104,7 +105,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
     };
 
     const loadBoxesHandler = dataManagement.handleLoadBoxes(
-      loadBoxesFromFirebase,
+      loadBoxesFromFirebaseWrapper,
       setIsLoading,
       setError,
       setIsTimedOut,
@@ -112,108 +113,81 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
       setLoadingTimeout,
       (boxes: any) => {
         console.log('Setting boxes:', boxes);
-        mapContext.setBoxes(boxes); // Use setBoxes instead of updateBox
+        setBoxes(boxes);
       }
     );
 
     return loadBoxesHandler();
-  }, [isArenaPage, mapContext.loadBoxesFromFirebase, mapContext.setBoxes, setIsLoading, setError, setIsTimedOut, setLastUpdateTime, setLoadingTimeout]);
+  }, [isArenaPage, loadBoxesFromFirebase, setBoxes]);
 
   const forceReloadBoxes = useCallback(async () => {
     console.log('Force reloading boxes');
     setIsLoading(true);
     try {
-      const boxes = await mapContext.loadBoxesFromFirebase(true);
+      const boxes = await loadBoxesFromFirebase(true);
       console.log('Boxes fetched during force reload:', boxes);
-      mapContext.setBoxes(boxes);
+      setBoxes(boxes);
       setLastUpdateTime(new Date());
+      setForceExpand(true);
+      setTimeout(() => setForceExpand(false), 100);
     } catch (error) {
-      console.error('Error force reloading boxes:', error);
+      console.error('Error during force reload:', error);
       setError('Failed to reload boxes. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  }, [mapContext, setLastUpdateTime, setError]);
+  }, [loadBoxesFromFirebase, setBoxes]);
 
-  const reloadBoxes = useCallback((forceRefresh = false) => {
-    const loadBoxesFromFirebase = async () => {
-      if (isArenaPage) {
-        try {
-          setIsLoading(true);
-          const result = await mapContext.loadBoxesFromFirebase(forceRefresh);
-          console.log('Result from loadBoxesFromFirebase:', result);
-          setLastUpdateTime(new Date());
-          return result;
-        } catch (error) {
-          console.error('Error loading boxes from Firestore:', error);
-          setError('Failed to load boxes. Please try again.');
-          throw error;
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
-        return [];
-      }
-    };
-
-    return dataManagement.handleLoadBoxes(
-      loadBoxesFromFirebase,
-      setIsLoading,
-      setError,
-      setIsTimedOut,
-      setLastUpdateTime,
-      setLoadingTimeout,
-      mapContext.setBoxes
-    )(forceRefresh);
-  }, [isArenaPage, mapContext, setError, setIsLoading, setIsTimedOut, setLastUpdateTime, setLoadingTimeout]);
-
-  const clearBoxes = useCallback(() => dataManagement.handleClearBoxes(mapContext.clearAllBoxes, setIsLoading, setError, setLastUpdateTime)(), [mapContext.clearAllBoxes]);
-  const retryLoading = useCallback(() => eventHandlers.handleRetry(loadingTimeout, loadBoxes)(), [loadingTimeout, loadBoxes]);
-
-  const scrollToSection = (sectionId: string) => {
-    setActiveSection(sectionId);
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const navbarHeight = 64;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth"
-      });
+  const clearBoxes = useCallback(async () => {
+    try {
+      await clearAllBoxes();
+      setLastUpdateTime(new Date());
+    } catch (error) {
+      console.error('Error clearing boxes:', error);
+      setError('Failed to clear boxes. Please try again.');
     }
-  };
+  }, [clearAllBoxes]);
+
+  const retryLoading = useCallback(() => {
+    if (loadingTimeout) {
+      clearTimeout(loadingTimeout);
+    }
+    setError(null);
+    setIsTimedOut(false);
+    loadBoxes();
+  }, [loadingTimeout, loadBoxes]);
+
+  const scrollToSection = useCallback((section: string) => {
+    const element = document.getElementById(section);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setActiveSection(section);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + window.innerHeight / 3;
-      const sections = ['home', 'about', 'features', 'join'];
+      const sections = ['home', 'about', 'features', 'contact'];
+      let currentSection = 'home';
 
       for (const section of sections) {
         const element = document.getElementById(section);
         if (element) {
-          const { offsetTop, offsetHeight } = element;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-            setActiveSection(section);
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= 100) {
+            currentSection = section;
+          } else {
             break;
           }
         }
       }
+
+      setActiveSection(currentSection);
     };
 
-    if (isLandingPage) {
-      window.addEventListener('scroll', handleScroll);
-    }
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [isLandingPage]);
-
-  useEffect(() => {
-    setActiveSection('home');
-  }, [isLandingPage]);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (isArenaPage) {
@@ -238,7 +212,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
 
   if (isArenaPage) {
     return (
-      <div className="flex flex-col h-screen w-screen bg-gray-900">
+      <div className="flex flex-col h-screen w-screen bg-gray-900 overflow-hidden">
         <div className="relative z-20">
           <ControlPanel 
             mode={mode}
@@ -249,54 +223,17 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
             isAttackModeAvailable={isAttackModeAvailable}
             isLoading={isLoading}
             setLastUpdateTime={setLastUpdateTime}
+            onBoxCreated={() => loadBoxes()}
+            mapPosition={mapPosition}
+            mapZoom={mapZoom}
+            onMapPositionChange={handleMapPositionChange}
+            onMapZoomChange={handleMapZoomChange}
+            boxCount={boxes.length}
+            lastUpdateTime={lastUpdateTime}
           />
         </div>
-        <div className="flex-grow relative z-10">
-          <MapCanvas />
-          <div className="absolute inset-0 pointer-events-none">
-            {mode === 'attack' && (
-              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 pointer-events-auto">
-                <AttackGuidedTour
-                  step={selectedBox && targetBox ? 2 : selectedBox ? 1 : 0}
-                  selectedBox={selectedBox}
-                  targetBox={targetBox}
-                  isAttacking={isAttacking}
-                />
-              </div>
-            )}
-            
-            <div className="absolute bottom-0 left-0 right-0 flex justify-between items-end p-4 z-20">
-              <div className="pointer-events-auto">
-                <BoxesInfoDisplay 
-                  boxCount={boxes.length}
-                  lastUpdateTime={lastUpdateTime}
-                  currentTime={currentTime}
-                />
-              </div>
-              
-              <div className="pointer-events-auto flex-grow mx-4 max-w-3xl">
-                <AttackReplayControls />
-              </div>
-              
-              <div className="pointer-events-auto">
-                <MiniMap 
-                  boxes={boxes} 
-                  mapSize={MAP_SIZE} 
-                  currentPosition={mapControls.position}
-                  currentZoom={mapControls.zoom}
-                  onPositionChange={handleMiniMapPositionChange}
-                  onZoomChange={handleMiniMapZoomChange}
-                  miniMapSize={200}
-                  miniMapZoom={1.5}
-                  boxSize={4}
-                  padding={8}
-                  backgroundColor="rgba(0, 0, 0, 0.7)"
-                  borderColor="#4a5568"
-                  viewRectColor="#ffd700"
-                />
-              </div>
-            </div>
-          </div>
+        <div className="flex-grow relative z-10 overflow-hidden">
+          <AISecurityMap />
         </div>
         
         <ModalManager
