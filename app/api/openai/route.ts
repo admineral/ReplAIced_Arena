@@ -7,8 +7,15 @@ interface ChatCompletionMessageParam {
   name?: string;
 }
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const openaiApiKey = process.env.OPENAI_API_KEY;
+const googleApiKey = process.env.GOOGLE_API_KEY;
+
+if (!openaiApiKey || !googleApiKey) {
+  throw new Error('Missing API keys');
+}
+
+const openai = new OpenAI({ apiKey: openaiApiKey });
+const genAI = new GoogleGenerativeAI(googleApiKey);
 
 export async function POST(req: Request) {
   console.log('Received POST request to /api/ai');
@@ -80,7 +87,7 @@ async function handleGemini(messages: ChatCompletionMessageParam[], temperature:
   console.log('Sending request to Gemini API');
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
   const chat = model.startChat({
-    history: messages.slice(1).map(msg => ({ role: msg.role, parts: [{ text: msg.content }] })),
+    history: messages.slice(1).map(msg => ({ role: msg.role as "user" | "model", parts: [{ text: msg.content }] })),
     generationConfig: { temperature },
   });
 
