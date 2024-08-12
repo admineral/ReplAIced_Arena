@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { db } from '@/firebase-config';
 import { collection, addDoc } from 'firebase/firestore';
 import KeyAnimation from './KeyAnimation';
+import { useAuth } from '@/contexts/AuthContext';
 
 const LazyVideo = dynamic(() => import('./LazyVideo'), { ssr: false });
 
@@ -18,10 +19,22 @@ interface Feature {
   link?: string;
 }
 
+interface Article {
+  id: string;
+  title: string;
+  content: string;
+  published: boolean;
+}
+
+
+
+
 export default function LandingPageContent() {
   const [activeSection, setActiveSection] = useState<string>('home');
   const sectionsRef = useRef<{ [key: string]: HTMLElement | null }>({});
   const router = useRouter();
+  const { user, getUserArticles } = useAuth();
+  const [articles, setArticles] = useState<Article[]>([]); // Add this line to define articles state
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,6 +65,16 @@ export default function LandingPageContent() {
     sectionsRef.current['features'] = document.getElementById('features');
     sectionsRef.current['join'] = document.getElementById('join');
   }, []);
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+        if (!user?.uid) return; // Use optional chaining to check user and user.uid
+        const userArticles = await getUserArticles(user.uid); // Holen der Artikel des Benutzers
+        setArticles(userArticles);
+    };
+
+    fetchArticles();
+  }, [user, getUserArticles]);
 
   const handleGetStarted = () => {
     router.push('/Arena');
@@ -89,7 +112,7 @@ export default function LandingPageContent() {
     },
     { 
       title: "Global Leaderboard", 
-      icon: "📊", 
+      icon: "", 
       description: "Compete on a visible rank list that highlights top performers.",
       link: "/GlobalRank"
     }
