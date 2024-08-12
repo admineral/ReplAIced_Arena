@@ -61,7 +61,10 @@ const AISecurityMapContent = () => {
     updateBox,
     handleConfirmAttack,
     MAP_SIZE,
-    mapControls,
+    mapPosition,
+    mapZoom,
+    handleMapPositionChange,
+    handleMapZoomChange,
     switchMode,
     attackReplay,
   } = mapContext;
@@ -69,9 +72,9 @@ const AISecurityMapContent = () => {
   // Event handlers
   const openCreateBoxModal = eventHandlers.handleOpenCreateBoxModal(setIsCreateBoxModalOpen);
   const closeCreateBoxModal = eventHandlers.handleCloseCreateBoxModal(setIsCreateBoxModalOpen);
-  const createBox = eventHandlers.handleCreateBox(mapContext.addBox, MAP_SIZE, mapContext.setMapPosition, mapContext.setMapZoom, setIsCreateBoxModalOpen);
-  const handleMiniMapPositionChange = eventHandlers.handleMiniMapPositionChange(mapContext.setMapPosition);
-  const handleMiniMapZoomChange = eventHandlers.handleMiniMapZoomChange(mapContext.setMapZoom);
+  const createBox = eventHandlers.handleCreateBox(mapContext.addBox, MAP_SIZE, handleMapPositionChange, handleMapZoomChange, setIsCreateBoxModalOpen);
+  const handleMiniMapPositionChange = eventHandlers.handleMiniMapPositionChange(handleMapPositionChange);
+  const handleMiniMapZoomChange = eventHandlers.handleMiniMapZoomChange(handleMapZoomChange);
 
   // Data management
   const loadBoxes = useCallback(
@@ -87,13 +90,13 @@ const AISecurityMapContent = () => {
   );
 
   const reloadBoxes = useCallback(() => {
-    const currentPosition = mapContext.mapControls.position;
+    const currentPosition = mapPosition;
     dataManagement.handleReloadBoxes(loadBoxes, true)().then(() => {
-      mapContext.setMapPosition(currentPosition);
+      handleMapPositionChange(currentPosition);
       setForceExpand(true);
       setTimeout(() => setForceExpand(false), 100); // Reset forceExpand after a short delay
     });
-  }, [loadBoxes, mapContext]);
+  }, [loadBoxes, mapPosition, handleMapPositionChange]);
 
   const clearBoxes = useCallback(() => dataManagement.handleClearBoxes(mapContext.clearAllBoxes, setIsLoading, setError, setLastUpdateTime)(), [mapContext.clearAllBoxes]);
   const retryLoading = useCallback(() => eventHandlers.handleRetry(loadingTimeout, loadBoxes)(), [loadingTimeout, loadBoxes]);
@@ -175,8 +178,8 @@ const AISecurityMapContent = () => {
               <MiniMap 
                 boxes={boxes} 
                 mapSize={MAP_SIZE} 
-                currentPosition={mapControls.position}
-                currentZoom={mapControls.zoom}
+                currentPosition={mapPosition}
+                currentZoom={mapZoom}
                 onPositionChange={handleMiniMapPositionChange}
                 onZoomChange={handleMiniMapZoomChange}
                 miniMapSize={isMobile ? 150 : 200}

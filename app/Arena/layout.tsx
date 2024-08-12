@@ -17,7 +17,11 @@ export default function ArenaLayout({
     openCreateBoxModal,
     reloadBoxes,
     clearAllBoxes,
-    setLastUpdateTime
+    setLastUpdateTime,
+    mapPosition,
+    mapZoom,
+    handleMapPositionChange,
+    handleMapZoomChange
   } = useMapContext();
 
   return (
@@ -32,6 +36,10 @@ export default function ArenaLayout({
         isLoading={isLoading}
         setLastUpdateTime={setLastUpdateTime}
         onBoxCreated={reloadBoxes}
+        mapPosition={mapPosition}
+        mapZoom={mapZoom}
+        onMapPositionChange={handleMapPositionChange}
+        onMapZoomChange={handleMapZoomChange}
       />
       {children}
     </div>

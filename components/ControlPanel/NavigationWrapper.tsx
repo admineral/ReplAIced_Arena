@@ -43,7 +43,7 @@ import AttackReplayControls from '../AttackReplay/AttackReplayControls';
 import { useUpdateTimeInterval } from '../../hooks/useUpdateTimeInterval';
 import * as eventHandlers from '../Map/eventHandlers';
 import * as dataManagement from '../Map/dataManagement';
-import { BoxData } from '../../types/BoxTypes'; // Make sure to import or define this type
+import { BoxData } from '../../types/BoxTypes';
 
 function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -55,7 +55,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
   const [isCreateBoxModalOpen, setIsCreateBoxModalOpen] = useState(false);
-  const [loadingTimeout, setLoadingTimeout] = useState(null);
+  const [loadingTimeout, setLoadingTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isTimedOut, setIsTimedOut] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [forceExpand, setForceExpand] = useState(false);
@@ -78,30 +78,37 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
     updateBox,
     handleConfirmAttack,
     MAP_SIZE,
-    mapControls,
+    mapPosition,
+    mapZoom,
+    handleMapPositionChange,
+    handleMapZoomChange,
     switchMode,
     attackReplay,
+    addBox,
+    setBoxes,
+    loadBoxesFromFirebase,
+    clearAllBoxes,
   } = mapContext;
 
   const openCreateBoxModal = eventHandlers.handleOpenCreateBoxModal(setIsCreateBoxModalOpen);
   const closeCreateBoxModal = eventHandlers.handleCloseCreateBoxModal(setIsCreateBoxModalOpen);
   const createBox = eventHandlers.handleCreateBox(
-    (boxData: BoxData) => mapContext.addBox(boxData, user?.uid),
+    (boxData: BoxData) => addBox(boxData, user?.uid),
     MAP_SIZE,
-    mapContext.setMapPosition,
-    mapContext.setMapZoom,
+    handleMapPositionChange,
+    handleMapZoomChange,
     setIsCreateBoxModalOpen
   );
-  const handleMiniMapPositionChange = eventHandlers.handleMiniMapPositionChange(mapContext.setMapPosition);
-  const handleMiniMapZoomChange = eventHandlers.handleMiniMapZoomChange(mapContext.setMapZoom);
+  const handleMiniMapPositionChange = eventHandlers.handleMiniMapPositionChange(handleMapPositionChange);
+  const handleMiniMapZoomChange = eventHandlers.handleMiniMapZoomChange(handleMapZoomChange);
 
   const loadBoxes = useCallback(() => {
-    const loadBoxesFromFirebase = async () => {
+    const loadBoxesFromFirebaseWrapper = async () => {
       if (isArenaPage) {
         try {
-          const result = await mapContext.loadBoxesFromFirebase();
+          const result = await loadBoxesFromFirebase();
           console.log('Result from loadBoxesFromFirebase:', result);
-          return result; // This should already be an array of boxes
+          return result;
         } catch (error) {
           console.error('Error loading boxes from Firestore:', error);
           throw error;
@@ -112,7 +119,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
     };
 
     const loadBoxesHandler = dataManagement.handleLoadBoxes(
-      loadBoxesFromFirebase,
+      loadBoxesFromFirebaseWrapper,
       setIsLoading,
       setError,
       setIsTimedOut,
@@ -120,110 +127,81 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
       setLoadingTimeout,
       (boxes: any) => {
         console.log('Setting boxes:', boxes);
-        mapContext.setBoxes(boxes); // Use setBoxes instead of updateBox
+        setBoxes(boxes);
       }
     );
 
     return loadBoxesHandler();
-  }, [isArenaPage, mapContext.loadBoxesFromFirebase, mapContext.setBoxes, setIsLoading, setError, setIsTimedOut, setLastUpdateTime, setLoadingTimeout]);
+  }, [isArenaPage, loadBoxesFromFirebase, setBoxes]);
 
   const forceReloadBoxes = useCallback(async () => {
     console.log('Force reloading boxes');
     setIsLoading(true);
     try {
-      const boxes = await mapContext.loadBoxesFromFirebase(true);
+      const boxes = await loadBoxesFromFirebase(true);
       console.log('Boxes fetched during force reload:', boxes);
-      mapContext.setBoxes(boxes);
+      setBoxes(boxes);
       setLastUpdateTime(new Date());
+      setForceExpand(true);
+      setTimeout(() => setForceExpand(false), 100);
     } catch (error) {
-      console.error('Error force reloading boxes:', error);
+      console.error('Error during force reload:', error);
       setError('Failed to reload boxes. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  }, [mapContext, setLastUpdateTime, setError]);
+  }, [loadBoxesFromFirebase, setBoxes]);
 
-  const reloadBoxes = useCallback((forceRefresh = false) => {
-    const loadBoxesFromFirebase = async () => {
-      if (isArenaPage) {
-        try {
-          setIsLoading(true);
-          const result = await mapContext.loadBoxesFromFirebase(forceRefresh);
-          console.log('Result from loadBoxesFromFirebase:', result);
-          setLastUpdateTime(new Date());
-          setForceExpand(true);
-          setTimeout(() => setForceExpand(false), 100); // Reset forceExpand after a short delay
-          return result;
-        } catch (error) {
-          console.error('Error loading boxes from Firestore:', error);
-          setError('Failed to load boxes. Please try again.');
-          throw error;
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
-        return [];
-      }
-    };
-
-    return dataManagement.handleLoadBoxes(
-      loadBoxesFromFirebase,
-      setIsLoading,
-      setError,
-      setIsTimedOut,
-      setLastUpdateTime,
-      setLoadingTimeout,
-      mapContext.setBoxes
-    )(forceRefresh);
-  }, [isArenaPage, mapContext, setError, setIsLoading, setIsTimedOut, setLastUpdateTime, setLoadingTimeout]);
-
-  const clearBoxes = useCallback(() => dataManagement.handleClearBoxes(mapContext.clearAllBoxes, setIsLoading, setError, setLastUpdateTime)(), [mapContext.clearAllBoxes]);
-  const retryLoading = useCallback(() => eventHandlers.handleRetry(loadingTimeout, loadBoxes)(), [loadingTimeout, loadBoxes]);
-
-  const scrollToSection = (sectionId: string) => {
-    setActiveSection(sectionId);
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const navbarHeight = 64;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth"
-      });
+  const clearBoxes = useCallback(async () => {
+    try {
+      await clearAllBoxes();
+      setLastUpdateTime(new Date());
+    } catch (error) {
+      console.error('Error clearing boxes:', error);
+      setError('Failed to clear boxes. Please try again.');
     }
-  };
+  }, [clearAllBoxes]);
+
+  const retryLoading = useCallback(() => {
+    if (loadingTimeout) {
+      clearTimeout(loadingTimeout);
+    }
+    setError(null);
+    setIsTimedOut(false);
+    loadBoxes();
+  }, [loadingTimeout, loadBoxes]);
+
+  const scrollToSection = useCallback((section: string) => {
+    const element = document.getElementById(section);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setActiveSection(section);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + window.innerHeight / 3;
-      const sections = ['home', 'about', 'features', 'join'];
+      const sections = ['home', 'about', 'features', 'contact'];
+      let currentSection = 'home';
 
       for (const section of sections) {
         const element = document.getElementById(section);
         if (element) {
-          const { offsetTop, offsetHeight } = element;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-            setActiveSection(section);
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= 100) {
+            currentSection = section;
+          } else {
             break;
           }
         }
       }
+
+      setActiveSection(currentSection);
     };
 
-    if (isLandingPage) {
-      window.addEventListener('scroll', handleScroll);
-    }
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [isLandingPage]);
-
-  useEffect(() => {
-    setActiveSection('home');
-  }, [isLandingPage]);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (isArenaPage) {
@@ -259,7 +237,11 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
             isAttackModeAvailable={isAttackModeAvailable}
             isLoading={isLoading}
             setLastUpdateTime={setLastUpdateTime}
-            onBoxCreated={() => loadBoxes()} // Added this line
+            onBoxCreated={() => loadBoxes()}
+            mapPosition={mapPosition}
+            mapZoom={mapZoom}
+            onMapPositionChange={handleMapPositionChange}
+            onMapZoomChange={handleMapZoomChange}
           />
         </div>
         <div className="flex-grow relative z-10">
@@ -294,8 +276,8 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
                 <MiniMap 
                   boxes={boxes} 
                   mapSize={MAP_SIZE} 
-                  currentPosition={mapControls.position}
-                  currentZoom={mapControls.zoom}
+                  currentPosition={mapPosition}
+                  currentZoom={mapZoom}
                   onPositionChange={handleMiniMapPositionChange}
                   onZoomChange={handleMiniMapZoomChange}
                   miniMapSize={200}

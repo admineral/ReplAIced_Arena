@@ -10,15 +10,14 @@ import { useDrag } from '@use-gesture/react';
 
 const CameraController = () => {
   const { camera } = useThree();
-  const { mapControls } = useMapContext();
-  const { position, zoom } = mapControls;
+  const { mapPosition, mapZoom } = useMapContext();
 
   useEffect(() => {
-    console.log('CameraController: Updating camera position:', position);
-    camera.position.set(position.x, position.y, 100);
-    camera.zoom = zoom * 50;
+    console.log('CameraController: Updating camera position:', mapPosition);
+    camera.position.set(mapPosition.x, mapPosition.y, 100);
+    camera.zoom = mapZoom * 50;
     camera.updateProjectionMatrix();
-  }, [camera, position, zoom]);
+  }, [camera, mapPosition, mapZoom]);
 
   return null;
 };
@@ -60,7 +59,12 @@ const MapCanvas = () => {
     handleBoxClick,
     handleBoxDoubleClick,
     handleBoxDrag,
-    mapControls,
+    mapPosition,
+    mapZoom,
+    handleMapPositionChange,
+    handleMapZoomChange,
+    handleCanvasDrag,
+    handleZoom,
     attackReplay
   } = useMapContext();
 
@@ -94,10 +98,10 @@ const MapCanvas = () => {
   const bind = useDrag(({ delta: [dx, dy], event }) => {
     if (!isOverNode) {
       event.stopPropagation();
-      const dragSpeedFactor = mapConfig.dragSpeed / mapControls.zoom;
+      const dragSpeedFactor = mapConfig.dragSpeed / mapZoom;
       const moveX = mapConfig.invertDragX ? -dx : dx;
       const moveY = mapConfig.invertDragY ? -dy : dy;
-      mapControls.handleCanvasDrag(moveX * dragSpeedFactor, moveY * dragSpeedFactor);
+      handleCanvasDrag(moveX * dragSpeedFactor, moveY * dragSpeedFactor);
     }
   }, { filterTaps: true });
 
@@ -108,7 +112,7 @@ const MapCanvas = () => {
 
     const handleWheel = (e) => {
       e.preventDefault();
-      mapControls.handleZoom(e.deltaY > 0 ? -1 : 1);
+      handleZoom(e.deltaY > 0 ? -1 : 1);
     };
 
     canvas.addEventListener('wheel', handleWheel);
@@ -116,7 +120,7 @@ const MapCanvas = () => {
     return () => {
       canvas.removeEventListener('wheel', handleWheel);
     };
-  }, [mapControls]);
+  }, [handleZoom]);
 
   // Set up attack visualization trigger
   useEffect(() => {

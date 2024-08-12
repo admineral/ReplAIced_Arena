@@ -17,7 +17,8 @@
  * - connections: Array of connection objects between boxes
  * - selectedBox: Currently selected box for attack or configuration
  * - targetBox: Target box for attack
- * - mapControls: Position and zoom state for map navigation
+ * - mapPosition: Current position of the map view
+ * - mapZoom: Current zoom level of the map
  * - user: Current authenticated user (null if not logged in)
  * - isLoading: Loading state for box loading operations
  * 
@@ -28,6 +29,7 @@
  * 4. Providing context values for child components
  * 5. Responsive map size calculation based on screen size
  * 6. User authentication state management
+ * 7. Centralized map position and zoom management
  ****************************************************************************/
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import useBoxManager from '../hooks/useBox';
@@ -77,6 +79,15 @@ export const MapProvider = ({ children }) => {
   const [replayDate, setReplayDate] = useState(new Date());
   const attackReplay = useAttackReplay(replayDate);
 
+  const { 
+    position: mapPosition, 
+    zoom: mapZoom, 
+    handleCanvasDrag, 
+    handleZoom, 
+    setPosition: setMapPosition, 
+    setZoom: setMapZoom 
+  } = useMapControls();
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -104,9 +115,8 @@ export const MapProvider = ({ children }) => {
     clearAllBoxes
   } = boxManager;
 
-  const [boxes, setBoxes] = useState([]); // Add this line
+  const [boxes, setBoxes] = useState([]);
 
-  // Use useEffect to update the boxes state when managedBoxes changes
   useEffect(() => {
     setBoxes(managedBoxes);
   }, [managedBoxes]);
@@ -126,7 +136,14 @@ export const MapProvider = ({ children }) => {
     confirmAttack 
   } = attackManager;
 
-  const mapControls = useMapControls();
+  const handleMapPositionChange = useCallback((newPosition) => {
+    console.log('MapContext: Setting map position to:', newPosition);
+    setMapPosition(newPosition);
+  }, [setMapPosition]);
+
+  const handleMapZoomChange = useCallback((newZoom) => {
+    setMapZoom(newZoom);
+  }, [setMapZoom]);
 
   const handleBoxClick = useCallback((boxId) => {
     console.log('handleBoxClick called:', boxId);
@@ -191,26 +208,12 @@ export const MapProvider = ({ children }) => {
     }, 5000); // Adjust this timeout to match your animation duration
   }, [confirmAttack, setIsAttackModalOpen, startAttackAnimation, selectedBox, targetBox]);
 
-  const setMapPosition = useCallback((newPosition) => {
-    console.log('MapContext: Setting map position to:', newPosition);
-    mapControls.setPosition(newPosition);
-    // Force a re-render of components that depend on map position
-    setMode(prevMode => {
-      console.log('MapContext: Forcing re-render, current mode:', prevMode);
-      return prevMode;
-    });
-  }, [mapControls, setMode]);
-
-  const setMapZoom = useCallback((newZoom) => {
-    mapControls.setZoom(newZoom);
-  }, [mapControls]);
-
   useEffect(() => {
-    console.log('MapContext: Map position changed:', mapControls.position);
-  }, [mapControls.position]);
+    console.log('MapContext: Map position changed:', mapPosition);
+  }, [mapPosition]);
 
   const forceReloadBoxes = useCallback(async () => {
-    const currentPosition = mapControls.position;
+    const currentPosition = mapPosition;
     setIsLoading(true);
     try {
       const boxes = await loadBoxesFromFirebase(true);
@@ -219,9 +222,9 @@ export const MapProvider = ({ children }) => {
       console.error('Error force reloading boxes:', error);
     } finally {
       setIsLoading(false);
-      setMapPosition(currentPosition);
+      handleMapPositionChange(currentPosition);
     }
-  }, [loadBoxesFromFirebase, setBoxes, mapControls.position, setMapPosition]);
+  }, [loadBoxesFromFirebase, setBoxes, mapPosition, handleMapPositionChange]);
 
   const contextValue = {
     MAP_SIZE,
@@ -248,9 +251,12 @@ export const MapProvider = ({ children }) => {
     handleConfirmAttack,
     isAttackModeAvailable,
     startAttackAnimation,
-    mapControls,
-    setMapPosition,
-    setMapZoom,
+    mapPosition,
+    mapZoom,
+    handleMapPositionChange,
+    handleMapZoomChange,
+    handleCanvasDrag,
+    handleZoom,
     loadBoxesFromFirebase,
     clearAllBoxes,
     user,

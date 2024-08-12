@@ -43,6 +43,10 @@ interface ControlPanelProps {
   setLastUpdateTime: (date: Date) => void;
   openCreateBoxModal: () => void;
   onBoxCreated: () => void;
+  mapPosition: { x: number; y: number };
+  mapZoom: number;
+  onMapPositionChange: (position: { x: number; y: number }) => void;
+  onMapZoomChange: (zoom: number) => void;
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = React.memo(({ 
@@ -54,11 +58,15 @@ const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
   isLoading,
   setLastUpdateTime,
   openCreateBoxModal,
-  onBoxCreated
+  onBoxCreated,
+  mapPosition,
+  mapZoom,
+  onMapPositionChange,
+  onMapZoomChange
 }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const { isAdmin, user, getUserBoxes } = useAuth();
-  const { setMapPosition, setMapZoom, forceReloadBoxes } = useMapContext();
+  const { forceReloadBoxes } = useMapContext();
 
   const userHasBox = useUserBox(user, getUserBoxes, [user]);
 
@@ -107,14 +115,14 @@ const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
         const userBoxes = await getUserBoxes(user.uid);
         if (userBoxes.length > 0) {
           const boxData = userBoxes[0];
-          setMapPosition({ x: boxData.x, y: boxData.y });
-          setMapZoom(2);
+          onMapPositionChange({ x: boxData.x, y: boxData.y });
+          onMapZoomChange(2);
         }
       } catch (error) {
         console.error('Error getting user boxes:', error);
       }
     }
-  }, [user, getUserBoxes, setMapPosition, setMapZoom]);
+  }, [user, getUserBoxes, onMapPositionChange, onMapZoomChange]);
 
   const renderButtons = useMemo(() => (
     <div className="flex justify-center space-x-4 mt-4">
