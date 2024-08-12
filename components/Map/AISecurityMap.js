@@ -37,17 +37,17 @@ const AISecurityMapContent = () => {
   }, [mapPosition, MAP_SIZE]);
 
   const miniMapSize = useMemo(() => {
-    if (isMobile) return 100;
-    if (isTablet) return 120;
-    return 150;
+    if (isMobile) return 80;
+    if (isTablet) return 100;
+    return 120;
   }, [isMobile, isTablet]);
 
   const replayControlsStyle = useMemo(() => {
-    if (isMobile) return "w-full";
-    if (isTablet) return `w-[calc(100%-${miniMapSize + 32}px)]`;
+    if (isMobile) return "w-full mb-2";
+    if (isTablet) return `w-[calc(100%-${miniMapSize + 16}px)]`;
     return isMapExpanded 
-      ? `w-[calc(100%-${miniMapSize + 48}px)]` 
-      : `w-[calc(100%-${miniMapSize + 32}px)]`;
+      ? `w-[calc(100%-${miniMapSize + 32}px)]` 
+      : `w-[calc(100%-${miniMapSize + 16}px)]`;
   }, [isMobile, isTablet, isMapExpanded, miniMapSize]);
 
   return (
@@ -65,29 +65,27 @@ const AISecurityMapContent = () => {
           </div>
         )}
         
-        <div className="absolute bottom-4 left-4 right-4 flex flex-col items-start">
-          <div className="flex w-full items-end justify-between">
-            <div className={`pointer-events-auto ${replayControlsStyle}`}>
-              <AttackReplayControls isMapExpanded={isMapExpanded} isMobile={isMobile} />
-            </div>
-            
-            <div className="pointer-events-auto ml-4">
-              <MiniMap 
-                boxes={boxes} 
-                mapSize={MAP_SIZE} 
-                currentPosition={mapPosition}
-                currentZoom={mapZoom}
-                onPositionChange={handleMiniMapPositionChange}
-                onZoomChange={handleMiniMapZoomChange}
-                miniMapSize={miniMapSize}
-                miniMapZoom={1.5}
-                boxSize={4}
-                padding={8}
-                backgroundColor="rgba(0, 0, 0, 0.7)"
-                borderColor="#4a5568"
-                viewRectColor="#ffd700"
-              />
-            </div>
+        <div className={`absolute bottom-2 left-2 right-2 flex ${isMobile ? 'flex-col' : 'flex-row'} items-end justify-between`}>
+          <div className={`pointer-events-auto ${replayControlsStyle}`}>
+            <AttackReplayControls isMapExpanded={isMapExpanded} isMobile={isMobile} />
+          </div>
+          
+          <div className={`pointer-events-auto ${isMobile ? 'w-full' : 'ml-2'}`}>
+            <MiniMap 
+              boxes={boxes} 
+              mapSize={MAP_SIZE} 
+              currentPosition={mapPosition}
+              currentZoom={mapZoom}
+              onPositionChange={handleMiniMapPositionChange}
+              onZoomChange={handleMiniMapZoomChange}
+              miniMapSize={miniMapSize}
+              miniMapZoom={1.5}
+              boxSize={3}
+              padding={4}
+              backgroundColor="rgba(0, 0, 0, 0.7)"
+              borderColor="#4a5568"
+              viewRectColor="#ffd700"
+            />
           </div>
         </div>
       </div>
