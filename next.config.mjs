@@ -23,8 +23,13 @@ const nextConfig = {
         hostname: 'firebasestorage.googleapis.com',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: 'img.youtube.com',
+        pathname: '**',
+      },
     ],
-    domains: ['firebasestorage.googleapis.com'],
+    domains: ['firebasestorage.googleapis.com', 'img.youtube.com'],
   },
 };
 

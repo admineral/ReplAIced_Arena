@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import LandingPageNavbar from './LandingPageNavbar';
 import Link from 'next/link';
 import { db } from '@/firebase-config';
@@ -146,6 +147,8 @@ export default function LandingPageContent() {
     }
   };
 
+  const [showVideo, setShowVideo] = useState(false);
+
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden text-white bg-gray-900">
       {/* Lazy loaded Video Background */}
@@ -192,6 +195,21 @@ export default function LandingPageContent() {
               <div className="md:w-1/2 flex justify-center">
                 <KeyAnimation />
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Video Section */}
+        <section id="video" className="py-24 bg-gradient-to-b from-blue-900/80 via-gray-900/80 to-black/80">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl sm:text-4xl font-bold text-center text-blue-400 mb-12">Watch Our Demo</h2>
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              <iframe
+                src="https://www.youtube.com/embed/WzcMI8IDHcc"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute top-0 left-0 w-full h-full rounded-lg"
+              ></iframe>
             </div>
           </div>
         </section>

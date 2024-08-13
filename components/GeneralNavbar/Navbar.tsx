@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { User } from 'firebase/auth';
-import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt, FaHome, FaGamepad, FaListOl, FaUserCog } from 'react-icons/fa';
+import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt, FaHome, FaGamepad, FaListOl, FaUserCog, FaVideo } from 'react-icons/fa';
 
 interface NavbarProps {
   user?: User | null;
@@ -16,6 +16,7 @@ export default function Navbar({ user: propUser }: NavbarProps) {
   const { user: contextUser, logout, isAdmin } = useAuth();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -72,6 +73,7 @@ export default function Navbar({ user: propUser }: NavbarProps) {
     { href: '/', text: 'Home', icon: FaHome },
     { href: '/Arena', text: 'Arena', icon: FaGamepad },
     { href: '/GlobalRank', text: 'Ranklist', icon: FaListOl },
+    { href: '#', text: 'Demo', icon: FaVideo, onClick: () => setShowVideo(true) },
   ];
 
   return (
@@ -92,8 +94,9 @@ export default function Navbar({ user: propUser }: NavbarProps) {
             <div className="hidden md:flex ml-10 items-baseline space-x-4">
               {navItems.map((item) => (
                 <Link 
-                  key={item.href} 
-                  href={item.href} 
+                  key={item.text} 
+                  href={item.href}
+                  onClick={item.onClick}
                   className={`
                     px-4 py-2 rounded-full text-sm font-medium
                     transition-all duration-300 ease-in-out
@@ -208,7 +211,7 @@ export default function Navbar({ user: propUser }: NavbarProps) {
           <div className="px-2 pt-2 pb-3 space-y-1 flex-grow">
             {navItems.map((item) => (
               <Link 
-                key={item.href} 
+                key={item.text} 
                 href={item.href}
                 className={`
                   flex items-center space-x-2
@@ -218,7 +221,13 @@ export default function Navbar({ user: propUser }: NavbarProps) {
                     : 'text-gray-300 hover:bg-blue-400 hover:text-white'}
                   transition-colors duration-300
                 `}
-                onClick={toggleMobileMenu}
+                onClick={(e) => {
+                  if (item.onClick) {
+                    e.preventDefault();
+                    item.onClick();
+                  }
+                  toggleMobileMenu();
+                }}
               >
                 <item.icon className="w-5 h-5" />
                 <span>{item.text}</span>
@@ -267,6 +276,26 @@ export default function Navbar({ user: propUser }: NavbarProps) {
           )}
         </div>
       </div>
+
+      {/* Video Modal */}
+      {showVideo && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="relative w-full max-w-4xl aspect-w-16 aspect-h-9">
+            <button 
+              onClick={() => setShowVideo(false)}
+              className="absolute top-4 right-4 text-white text-2xl z-10"
+            >
+              <FaTimes />
+            </button>
+            <iframe
+              src="https://www.youtube.com/embed/WzcMI8IDHcc?autoplay=1"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full rounded-lg"
+            ></iframe>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
