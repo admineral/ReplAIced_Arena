@@ -27,7 +27,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLandingPage = pathname === '/';
   const isArenaPage = pathname === '/Arena';
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const mapContext = useMapContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -190,10 +190,10 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (isArenaPage) {
+    if (isArenaPage && !isAdmin) {
       switchMode('preview');
     }
-  }, [isArenaPage, switchMode]);
+  }, [isArenaPage, isAdmin, switchMode]);
 
   useEffect(() => {
     if (mode === 'preview' && isArenaPage) {

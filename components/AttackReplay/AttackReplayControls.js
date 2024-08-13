@@ -39,7 +39,8 @@ const AttackMarker = ({ marker, maxTime, onMarkerClick }) => {
 };
 
 const AttackReplayControls = ({ isMapExpanded, isMobile }) => {
-  const { attackReplay, setMode, setMapPosition, setMapZoom, boxes } = useMapContext();
+  const { attackReplay, setMode, boxes } = useMapContext();
+  const { handleMapPositionChange, handleMapZoomChange } = useMapContext();
   const { 
     currentTime, 
     isPlaying, 
@@ -98,16 +99,16 @@ const AttackReplayControls = ({ isMapExpanded, isMobile }) => {
         const centerX = (attacker.x + target.x) / 2;
         const centerY = (attacker.y + target.y) / 2;
         
-        setMapPosition({ x: centerX, y: centerY });
+        handleMapPositionChange({ x: centerX, y: centerY });
         
         const distance = Math.sqrt(Math.pow(target.x - attacker.x, 2) + Math.pow(target.y - attacker.y, 2));
         const newZoomLevel = Math.max(1, 5 / distance);
-        setMapZoom(newZoomLevel);
+        handleMapZoomChange(newZoomLevel);
 
         triggerAttackVisualization(clickedAttack);
       }
     }
-  }, [handleAttackMarkerClick, setMode, setMapPosition, setMapZoom, boxes, triggerAttackVisualization]);
+  }, [handleAttackMarkerClick, setMode, handleMapPositionChange, handleMapZoomChange, boxes, triggerAttackVisualization]);
 
   return (
     <div className={`w-full bg-gray-800 bg-opacity-95 p-4 rounded-lg shadow-lg relative`}>

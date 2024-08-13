@@ -78,10 +78,8 @@ const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
   const userHasBox = useUserBox(user, getUserBoxes, [user]);
 
   useEffect(() => {
-    if (user && mode === 'create') {
-      switchMode('preview');
-    }
-  }, [user, mode, switchMode]);
+    // This useEffect has been removed
+  }, []);
 
   const handleReload = useCallback(() => {
     console.log('Reloading boxes');
@@ -216,7 +214,7 @@ const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
       <ArenaNavbar 
         mode={mode}
         switchMode={switchMode}
-        isAttackModeAvailable={isAttackModeAvailable}
+        isAttackModeAvailable={isAttackModeAvailable || isAdmin}
         isAdmin={isAdmin}
         user={user}
       />
