@@ -14,6 +14,7 @@ interface ChatProps {
   onPasswordSubmit: (password: string) => Promise<boolean>;
   orbitName: string;
   isResponding: boolean;
+  combinedSystemPrompt: string;
 }
 
 const MiniatureAnimation = () => (
@@ -34,6 +35,7 @@ export default function Chat({
   onPasswordSubmit,
   orbitName,
   isResponding,
+  combinedSystemPrompt,
 }: ChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -116,6 +118,7 @@ export default function Chat({
               onSendMessage={(id, message) => {}}
               orbitName={orbitName}
               onMinimize={handleMinimize}
+              combinedSystemPrompt={combinedSystemPrompt}
             />
             <button
               className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white p-2 rounded-full hover:bg-gray-600 transition-colors duration-300"

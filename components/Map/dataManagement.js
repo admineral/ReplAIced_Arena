@@ -19,12 +19,10 @@ let boxCache = {
 const CACHE_EXPIRATION_TIME = 60000; // 1 minute in milliseconds
 
 export const validateBoxData = (boxData) => {
-    const requiredFields = ['x', 'y', 'type', 'id', 'difficulty', 'createdAt', 'createdBy', 'secretWord'];
+    const requiredFields = ['x', 'y', 'type', 'id', 'difficulty', 'createdAt', 'createdBy', 'secretWord', 'combinedSystemPrompt'];
     const hasRequiredFields = requiredFields.every(field => field in boxData);
     
-    const hasSystemPrompt = 'systemPrompt' in boxData || 'combinedSystemPrompt' in boxData;
-    
-    if (!hasRequiredFields || !hasSystemPrompt) {
+    if (!hasRequiredFields) {
         console.warn('Invalid box data:', boxData);
         return false;
     }

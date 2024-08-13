@@ -166,10 +166,11 @@ export default function AttackMain({
             onPasswordSubmit={handlePasswordSubmit}
             isPasswordMode={isPasswordMode}
             activeOrbitId={defenderBoxId || ''}
-            systemMessage={orbitConfig.combinedSystemPrompt}
+            systemMessage={orbitConfig.systemPrompt}
             temperature={orbitConfig.temperature || 0.7}
             orbitName={orbitConfig.name || 'Unknown Orbit'}
             isResponding={isResponding}
+            combinedSystemPrompt={orbitConfig.combinedSystemPrompt}
           />
         </div>
       ) : (

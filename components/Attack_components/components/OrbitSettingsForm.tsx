@@ -22,9 +22,10 @@ interface OrbitConfig {
 interface OrbitSettingsFormProps {
   orbitId: string;
   onClose: () => void;
+  combinedSystemPrompt: string; // Added combinedSystemPrompt prop
 }
 
-const OrbitSettingsForm: React.FC<OrbitSettingsFormProps> = ({ orbitId, onClose }) => {
+const OrbitSettingsForm: React.FC<OrbitSettingsFormProps> = ({ orbitId, onClose, combinedSystemPrompt }) => {
   const [config, setConfig] = useState<OrbitConfig>({
     name: '',
     systemPrompt: '',

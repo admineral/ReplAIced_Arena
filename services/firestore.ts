@@ -49,6 +49,7 @@ interface Activity {
 interface OrbitConfig {
   name: string;
   systemPrompt: string;
+  combinedSystemPrompt: string;
   secretWord: string;
   difficulty: string;
   type: string;
@@ -282,6 +283,7 @@ export const getBoxConfig = async (boxId: string): Promise<OrbitConfig | null> =
       return {
         name: boxData.name || 'Unknown Orbit',
         systemPrompt: boxData.systemPrompt || '',
+        combinedSystemPrompt: boxData.combinedSystemPrompt || '',
         secretWord: boxData.secretWord || '',
         difficulty: boxData.difficulty || 'medium',
         type: boxData.type || 'default',

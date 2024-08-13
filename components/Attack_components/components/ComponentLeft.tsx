@@ -21,9 +21,10 @@ interface ComponentLeftProps {
   onSendMessage: (id: string, message: string) => void;
   orbitName: string;
   onMinimize: () => void;
+  combinedSystemPrompt: string;
 }
 
-export default function ComponentLeft({ id, systemMessage, temperature, onSendMessage, orbitName, onMinimize }: ComponentLeftProps) {
+export default function ComponentLeft({ id, systemMessage, temperature, onSendMessage, orbitName, onMinimize, combinedSystemPrompt }: ComponentLeftProps) {
   const [secretText, setSecretText] = useState('');
   const [hacked, setHacked] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -118,6 +119,7 @@ export default function ComponentLeft({ id, systemMessage, temperature, onSendMe
           <OrbitSettingsForm 
             orbitId={id}
             onClose={handleSettingsClick}
+            combinedSystemPrompt={combinedSystemPrompt}
           />
         </div>
       </div>
