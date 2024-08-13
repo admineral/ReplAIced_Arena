@@ -212,7 +212,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
 
   if (isArenaPage) {
     return (
-      <div className="flex flex-col h-screen w-screen bg-gray-900 overflow-hidden">
+      <div className="flex flex-col h-screen w-screen bg-gray-900">
         <div className="relative z-20">
           <ControlPanel 
             mode={mode}
@@ -232,7 +232,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
             lastUpdateTime={lastUpdateTime}
           />
         </div>
-        <div className="flex-grow relative z-10 overflow-hidden">
+        <div className="flex-grow relative z-10">
           <AISecurityMap />
         </div>
         

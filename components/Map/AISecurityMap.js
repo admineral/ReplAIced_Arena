@@ -78,7 +78,7 @@ const AISecurityMapContent = () => {
   }, [handleMapZoomChange]);
 
   return (
-    <div className={`flex flex-col h-full w-full bg-gray-900 relative ${isMobile ? 'overflow-hidden' : ''}`}>
+    <div className="flex flex-col h-full w-full bg-gray-900 relative">
       <div className="flex-grow relative">
         <MapCanvas />
       </div>
