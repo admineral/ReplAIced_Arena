@@ -83,6 +83,7 @@ export default function LandingPageNavbar({ activeSection, scrollToSection }: La
 
   const navItems = [
     { id: 'about', text: 'About' },
+    { id: 'video', text: 'Demo' },
     { id: 'features', text: 'Features' },
     { id: 'join', text: 'Join' },
     { id: 'globalRank', text: 'Global Rank', href: '/GlobalRank' },

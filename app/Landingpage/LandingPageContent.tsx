@@ -63,6 +63,7 @@ export default function LandingPageContent() {
   useEffect(() => {
     sectionsRef.current['home'] = document.getElementById('home');
     sectionsRef.current['about'] = document.getElementById('about');
+    sectionsRef.current['video'] = document.getElementById('video');  // Add this line
     sectionsRef.current['features'] = document.getElementById('features');
     sectionsRef.current['join'] = document.getElementById('join');
   }, []);
