@@ -38,7 +38,7 @@ const AISecurityMapContent = () => {
 
   useEffect(() => {
     if (isMobile) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = '';
     } else {
       document.body.style.overflow = '';
     }
@@ -78,7 +78,7 @@ const AISecurityMapContent = () => {
   }, [handleMapZoomChange]);
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-900 relative">
+    <div className={`flex flex-col h-full w-full bg-gray-900 relative`}>
       <div className="flex-grow relative">
         <MapCanvas />
       </div>
@@ -94,7 +94,7 @@ const AISecurityMapContent = () => {
           </div>
         )}
         
-        <div className="absolute bottom-2 left-1 right-1 flex items-end justify-between">
+        <div className={`absolute left-1 right-1 flex items-end justify-between ${isMobile ? 'bottom-24' : 'bottom-2'}`}>
           <div className={`pointer-events-auto ${replayControlsStyle}`}>
             <AttackReplayControls isMapExpanded={isMapExpanded} isMobile={isMobile} />
           </div>
@@ -119,6 +119,7 @@ const AISecurityMapContent = () => {
           </div>
         </div>
       </div>
+      {isMobile && <div className="h-20" />} {/* Add extra space at the bottom on mobile */}
     </div>
   );
 };

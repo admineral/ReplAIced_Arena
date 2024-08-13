@@ -212,8 +212,27 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
 
   if (isArenaPage) {
     return (
-      <div className="flex flex-col min-h-screen w-full bg-gray-900">
-        <div className="flex-grow relative">
+      <div className="flex flex-col h-screen w-screen bg-gray-900 overflow-hidden">
+        <div className="relative z-20">
+          <ControlPanel 
+            mode={mode}
+            switchMode={switchMode}
+            openCreateBoxModal={openCreateBoxModal}
+            reloadBoxes={forceReloadBoxes}
+            clearAllBoxes={clearBoxes}
+            isAttackModeAvailable={isAttackModeAvailable}
+            isLoading={isLoading}
+            setLastUpdateTime={setLastUpdateTime}
+            onBoxCreated={() => loadBoxes()}
+            mapPosition={mapPosition}
+            mapZoom={mapZoom}
+            onMapPositionChange={handleMapPositionChange}
+            onMapZoomChange={handleMapZoomChange}
+            boxCount={boxes.length}
+            lastUpdateTime={lastUpdateTime}
+          />
+        </div>
+        <div className="flex-grow relative z-10 overflow-hidden">
           <AISecurityMap />
         </div>
         
