@@ -68,6 +68,7 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
     setBoxes,
     loadBoxesFromFirebase,
     clearAllBoxes,
+    forceReloadBoxes,
   } = mapContext;
 
   useEffect(() => {
@@ -119,24 +120,6 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
 
     return loadBoxesHandler();
   }, [isArenaPage, loadBoxesFromFirebase, setBoxes]);
-
-  const forceReloadBoxes = useCallback(async () => {
-    console.log('Force reloading boxes');
-    setIsLoading(true);
-    try {
-      const boxes = await loadBoxesFromFirebase(true);
-      console.log('Boxes fetched during force reload:', boxes);
-      setBoxes(boxes);
-      setLastUpdateTime(new Date());
-      setForceExpand(true);
-      setTimeout(() => setForceExpand(false), 100);
-    } catch (error) {
-      console.error('Error during force reload:', error);
-      setError('Failed to reload boxes. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [loadBoxesFromFirebase, setBoxes]);
 
   const clearBoxes = useCallback(async () => {
     try {
@@ -196,10 +179,17 @@ function NavigationWrapperContent({ children }: { children: React.ReactNode }) {
   }, [isArenaPage, isAdmin, switchMode]);
 
   useEffect(() => {
-    if (mode === 'preview' && isArenaPage) {
+    if (mode === 'preview' && isArenaPage && boxes.length === 0) {
       loadBoxes();
     }
-  }, [mode, loadBoxes, isArenaPage]);
+  }, [mode, loadBoxes, isArenaPage, boxes.length]);
+
+  useEffect(() => {
+    if (isArenaPage) {
+      console.log('Arena page loaded, forcing refresh');
+      forceReloadBoxes();
+    }
+  }, [isArenaPage, forceReloadBoxes]);
 
   if (isLandingPage) {
     return (
