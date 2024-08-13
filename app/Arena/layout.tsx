@@ -29,7 +29,7 @@ export default function ArenaLayout({
   } = useMapContext();
 
   return (
-    <div className="arena-layout flex flex-col h-screen overflow-hidden">
+    <div className="arena-layout flex flex-col h-screen">
       <div className="flex-shrink-0">
         <ControlPanel 
           mode={mode}
@@ -49,7 +49,7 @@ export default function ArenaLayout({
           lastUpdateTime={lastUpdateTime}
         />
       </div>
-      <div className={`flex-grow ${isMobile ? 'h-[calc(100vh-64px)]' : ''} overflow-hidden`}>
+      <div className={`flex-grow ${isMobile ? 'h-[calc(100vh-64px)]' : ''}`}>
         {children}
       </div>
     </div>
