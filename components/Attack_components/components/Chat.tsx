@@ -135,7 +135,7 @@ export default function Chat({
             <div className="flex items-center space-x-3">
               <MiniatureAnimation />
               <div className="flex items-center space-x-2">
-                <span className="text-gray-400 font-medium">Orbit Settings</span>
+                <span className="text-gray-400 font-medium cursor-pointer hover:text-blue-400 transition-colors duration-300">Click here to enter secret</span>
               </div>
             </div>
             <IoChevronUp size={20} className="text-gray-400" />

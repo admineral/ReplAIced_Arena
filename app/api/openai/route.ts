@@ -25,6 +25,12 @@ export async function POST(req: Request) {
     intendedModel?: string
   };
 
+  console.log('Received request with properties:');
+  console.log('messages:', messages);
+  console.log('customSystemMessage:', customSystemMessage);
+  console.log('customTemperature:', customTemperature);
+  console.log('intendedModel:', intendedModel);
+
   if (!Array.isArray(messages) || messages.some(msg => typeof msg.content !== 'string')) {
     return new Response(JSON.stringify({ error: 'Invalid messages format' }), { status: 400 });
   }
@@ -33,19 +39,25 @@ export async function POST(req: Request) {
   const updatedMessages = systemMessage ? [systemMessage, ...messages] : messages;
   const temperature = customTemperature ?? 0.7;
 
+  console.log('Processed request data:');
+  console.log('updatedMessages:', updatedMessages);
+  console.log('temperature:', temperature);
   console.log(`Model: ${intendedModel}`);
   console.log(`System prompt: ${systemMessage?.content}`);
   console.log(`User message: ${messages[messages.length - 1].content}`);
 
   try {
+    console.log(`Handling request with ${intendedModel === 'openai' ? 'OpenAI' : 'Gemini'} API`);
     const stream = intendedModel === 'openai' 
       ? await handleOpenAI(updatedMessages, temperature)
       : await handleGemini(updatedMessages, temperature);
 
+    console.log('Stream created successfully');
     return new Response(stream, {
       headers: { 'Content-Type': 'text/event-stream' },
     });
   } catch (error) {
+    console.error('Error occurred:', error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'An unexpected error occurred' }), { status: 500 });
   }
 }
